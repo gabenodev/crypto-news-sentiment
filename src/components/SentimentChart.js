@@ -47,4 +47,4 @@ function SentimentChart() {
   );
 }
 s;
-export default SentimentChart;
+asdasexport default SentimentChart;
