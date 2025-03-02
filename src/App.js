@@ -3,6 +3,7 @@ import React from "react";
 import Header from "./components/Header";
 import SentimentChart from "./components/SentimentChart"; // SentimentChart rămâne aici
 import NewsCard from "./components/NewsCard"; // Importăm NewsCard pentru a-l folosi
+import AltcoinSeason from "./components/AltcoinSeason";
 import Footer from "./components/Footer";
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
       <SentimentChart /> {/* SentimentChart rămâne acolo */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Aici doar includem NewsCard */}
+        <AltcoinSeason />
         <NewsCard />
       </main>
       <Footer />
