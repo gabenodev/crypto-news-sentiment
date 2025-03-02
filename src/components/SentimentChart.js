@@ -27,47 +27,51 @@ ChartJS.register(
 
 function SentimentChart() {
   const [sentimentData, setSentimentData] = useState({
-    labels: [], // Etichete pentru axa X
-    datasets: [
-      {
-        label: "Sentiment Trend (Fear & Greed Index)",
-        data: [], // Datele pentru axa Y
-        fill: false, // Linia nu va fi umplută
-        borderColor: "rgb(75, 192, 192)", // Culoare linie
-        tension: 0.1, // Liniile vor fi mai puțin ondulate
-      },
-    ],
+    labels: [],
+    datasets: [],
   });
+  const [timeframe, setTimeframe] = useState("365"); // Default la 1 an (365 zile)
 
-  const fetchSentimentData = async () => {
+  // Fetch data în funcție de intervalul de timp selectat
+  const fetchSentimentData = async (limit) => {
     try {
-      const response = await axios.get(
-        "https://api.alternative.me/fng/?limit=365&format=json" // URL-ul pentru Fear and Greed Index pe 1 an
+      let url = "";
+      // Verificăm dacă vrem să luăm datele pentru întreaga perioadă
+      if (limit === "max") {
+        // API-ul nu acceptă o valoare directă de "max", deci folosim 2000
+        url = "https://api.alternative.me/fng/?limit=2000&format=json";
+      } else {
+        url = `https://api.alternative.me/fng/?limit=${limit}&format=json`;
+      }
+
+      const response = await axios.get(url);
+
+      const sentimentScores = response.data.data.map((item) =>
+        parseInt(item.value)
+      );
+      const sentimentTimestamps = response.data.data.map((item) =>
+        format(new Date(item.timestamp * 1000), "MMM dd, yyyy")
       );
 
-      const sentimentScores = response.data.data.map((item) => item.value); // Valorile sentimentului
-      const sentimentTimestamps = response.data.data.map(
-        (item) => item.timestamp
-      ); // Timestamp-urile
-
-      // Formatarea timestamp-urilor
-      const formattedTimestamps = sentimentTimestamps.map(
-        (timestamp) => format(new Date(timestamp * 1000), "MMM dd, yyyy") // Formatarea timestamp-urilor
-      );
-
-      // Inversăm ordinea datelor pentru a avea cea mai recentă dată în dreapta
-      const reversedTimestamps = formattedTimestamps.reverse();
+      // Inversăm datele pentru a avea cea mai recentă dată în dreapta
+      const reversedTimestamps = sentimentTimestamps.reverse();
       const reversedScores = sentimentScores.reverse();
 
       setSentimentData({
-        labels: reversedTimestamps, // Folosim timestamp-urile inversate pe axa X
+        labels: reversedTimestamps,
         datasets: [
           {
             label: "Sentiment Trend (Fear & Greed Index)",
-            data: reversedScores, // Valorile de sentiment inversate pe axa Y
+            data: reversedScores,
             fill: false,
-            borderColor: "rgb(75, 192, 192)", // Culoare linie
-            tension: 0.1, // Liniile vor fi mai puțin ondulate
+            borderColor: "#23d996", // Culoare linie turcoaz
+            backgroundColor: "#23d996", // Culoare linie turcoaz
+            tension: 0.1,
+            pointBackgroundColor: "#23d996", // Culoare puncte turcoaz
+            pointBorderColor: "#23d996", // Culoare puncte turcoaz
+            pointRadius: 3, // Puncte mai mici
+            pointHoverRadius: 4, // Puncte la hover
+            borderWidth: 2, // Grosimea liniei
           },
         ],
       });
@@ -77,38 +81,23 @@ function SentimentChart() {
   };
 
   useEffect(() => {
-    fetchSentimentData();
-  }, []);
+    fetchSentimentData(timeframe); // Fetch data când se schimbă intervalul de timp
+  }, [timeframe]);
 
-  // Configurarea opțiunilor pentru grafic
+  const handleTimeframeChange = (e) => {
+    setTimeframe(e.target.value);
+  };
+
   const options = {
     responsive: true,
     scales: {
       x: {
-        title: {
-          display: true,
-          text: "Date", // Eticheta axei X
-        },
-        ticks: {
-          autoSkip: true,
-          maxTicksLimit: 10, // Limităm numărul de etichete pe axa X
-          maxRotation: 45, // Permitem rotirea etichetelor pentru a economisi spațiu
-          minRotation: 0, // Prevenim rotirea etichetelor pe axa X
-          autoSkipPadding: 10, // Adăugăm un padding pentru a preveni suprapunerea
-        },
-        // Setăm axa X să fie inversată astfel încât să avem ordinea corectă
-        reverse: false, // Axa X trebuie să fie de la dreapta la stânga
+        title: { display: true, text: "Date" },
+        ticks: { autoSkip: true, maxTicksLimit: 10, maxRotation: 45 },
       },
       y: {
-        title: {
-          display: true,
-          text: "Fear and Greed Index",
-        },
-        ticks: {
-          min: 0,
-          max: 100,
-          stepSize: 10,
-        },
+        title: { display: true, text: "Fear and Greed Index" },
+        ticks: { min: 0, max: 100, stepSize: 10 },
       },
     },
   };
@@ -118,6 +107,20 @@ function SentimentChart() {
       <h2 className="text-3xl font-semibold text-gray-800">
         Market Sentiment (Fear and Greed Index)
       </h2>
+      <div className="mt-6">
+        {/* Dropdown pentru alegerea intervalului de timp */}
+        <select
+          value={timeframe}
+          onChange={handleTimeframeChange}
+          className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md appearance-none"
+        >
+          <option value="7">Last 7 Days</option>
+          <option value="30">Last 30 Days</option>
+          <option value="365">Last 1 Year</option>
+          <option value="max">All Time</option>{" "}
+          {/* Noua opțiune pentru toată perioada */}
+        </select>
+      </div>
       <div className="mt-6">
         <Line data={sentimentData} options={options} />
       </div>
