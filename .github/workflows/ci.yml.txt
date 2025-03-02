@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
     branches:
-      - master  # sau orice branch default ai
+      - master
 
 jobs:
   build:
@@ -23,6 +23,9 @@ jobs:
 
       - name: Set NODE_OPTIONS
         run: echo "NODE_OPTIONS=--experimental-vm-modules" >> $GITHUB_ENV
+
+      - name: Patch Axios Import
+        run: echo "import axios from 'axios'; export default axios;" > node_modules/axios/index.js
 
       - name: Build Project
         run: npm run build
