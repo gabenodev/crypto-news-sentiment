@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - master  # sau orice branch default ai
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.14.0
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Set NODE_OPTIONS
+        run: echo "NODE_OPTIONS=--experimental-vm-modules" >> $GITHUB_ENV
+
+      - name: Build Project
+        run: npm run build
+
+      - name: Run Tests
+        run: node --experimental-vm-modules node_modules/.bin/jest
