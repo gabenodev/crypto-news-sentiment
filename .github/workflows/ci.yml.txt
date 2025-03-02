@@ -1,40 +1,28 @@
-name: CI Workflow
+name: CI
 
-# Ce va declanșa acest workflow
 on:
-  push:
-    branches:
-      - main
-      - feature/*  # Se rulează și pe branch-urile de tip feature
   pull_request:
     branches:
-      - main  # Se rulează pe PR-uri ce merg în branch-ul `main`
+      - master
+  push:
+    branches:
+      - master
 
 jobs:
   build:
-    runs-on: windows-latest 
+    runs-on: windows-latest
 
     steps:
-      # 1. Check-out repository
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@v2
 
-      # 2. Setează versiunea de Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: '22'  # Poți schimba la versiunea necesară pentru proiectul tău
+          node-version: '14'
 
-      # 3. Instalează dependențele
       - name: Install dependencies
         run: npm install
 
-      # 4. Rulează testele
       - name: Run tests
         run: npm test
-
-      # 5. Construiește aplicația (dacă vrei să construiești un build)
-      - name: Build project
-        run: npm run build
-
-      # 6. (Opțional) Poți adăuga alte taskuri, de exemplu pentru a face deploy sau a verifica alte tipuri de erori
