@@ -10,11 +10,14 @@ function App() {
   return (
     <div className="App bg-gray-100 min-h-screen">
       <Header />
-      <SentimentChart /> {/* SentimentChart rămâne acolo */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Aici doar includem NewsCard */}
-        <AltcoinSeason />
-        <NewsCard />
+        <div className="space-y-12">
+          {" "}
+          {/* Adăugăm spațiere uniformă între componente */}
+          <SentimentChart />
+          <AltcoinSeason />
+          <NewsCard />
+        </div>
       </main>
       <Footer />
     </div>
