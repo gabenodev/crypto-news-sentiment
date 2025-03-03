@@ -42,8 +42,6 @@ const AltcoinSeason = () => {
           (coin) => !excludedCoins.includes(coin.id)
         );
 
-        console.log("All Altcoins:", filteredData);
-
         let outperformingCountTemp = 0;
         const totalAltcoinsTemp = filteredData.length;
         const outperformingCoinsTemp = [];
@@ -56,31 +54,25 @@ const AltcoinSeason = () => {
 
         for (let coin of filteredData) {
           if (
-            coin.price_change_percentage_24h &&
+            coin.price_change_percentage_24h >
             bitcoin.price_change_percentage_24h
           ) {
-            if (
-              coin.price_change_percentage_24h >
-              bitcoin.price_change_percentage_24h
-            ) {
-              outperformingCountTemp++;
-              outperformingCoinsTemp.push({
-                name: coin.name,
-                priceChange: coin.price_change_percentage_24h,
-              });
-            }
+            outperformingCountTemp++;
+            outperformingCoinsTemp.push({
+              name: coin.name,
+              priceChange: coin.price_change_percentage_24h,
+              image: coin.image,
+            });
           }
         }
 
         setOutperformingCount(outperformingCountTemp);
         setTotalAltcoins(totalAltcoinsTemp);
         setOutperformingCoins(outperformingCoinsTemp);
-
-        const percentageTemp =
-          (outperformingCountTemp / totalAltcoinsTemp) * 100;
-        setPercentage(percentageTemp);
-
-        setIsAltcoinSeason(percentageTemp >= 75);
+        setPercentage((outperformingCountTemp / totalAltcoinsTemp) * 100);
+        setIsAltcoinSeason(
+          (outperformingCountTemp / totalAltcoinsTemp) * 100 >= 75
+        );
       } catch (error) {
         console.error("Error fetching altcoin season data:", error);
         setIsAltcoinSeason(false);
@@ -92,72 +84,63 @@ const AltcoinSeason = () => {
     fetchAltcoinSeasonData();
   }, []);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  if (loading) return <div>Loading...</div>;
 
-  let barColor = "#ff4444";
-
-  if (percentage >= 80) {
-    barColor = "#16a34a";
-  } else if (percentage >= 60) {
-    barColor = "#4ade80";
-  } else if (percentage >= 40) {
-    barColor = "#fcd34d";
-  } else if (percentage >= 20) {
-    barColor = "#fb923c";
-  } else {
-    barColor = "#ff4444";
-  }
+  const barColor =
+    percentage >= 80
+      ? "#16a34a"
+      : percentage >= 60
+      ? "#4ade80"
+      : percentage >= 40
+      ? "#fcd34d"
+      : percentage >= 20
+      ? "#fb923c"
+      : "#ff4444";
 
   return (
     <div className="p-6 max-w-lg mx-auto rounded-lg bg-white shadow-xl">
       <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-        {isAltcoinSeason
-          ? "It's Altcoin Season (75% of the Top 50 coins are outperforming Bitcoin)"
-          : "It's not Altcoin Season."}
+        {isAltcoinSeason ? "It's Altcoin Season!" : "It's not Altcoin Season."}
       </h2>
-
       <div className="w-full bg-gray-300 h-4 rounded-full mb-4">
         <div
           className="h-4 rounded-full"
-          style={{
-            width: `${percentage}%`,
-            backgroundColor: barColor,
-          }}
+          style={{ width: `${percentage}%`, backgroundColor: barColor }}
         ></div>
       </div>
-
       <p className="text-lg text-gray-600">
         {outperformingCount} of {totalAltcoins} altcoins have performed better
         than Bitcoin in the last 24 hours.
       </p>
-
-      {/* Eticheta pentru 24H */}
       <p className="text-gray-500 mt-2 text-sm">Price Change in the Last 24H</p>
-
       {outperformingCoins.length > 0 && (
-        <div className="mt-4">
-          <h3 className="font-semibold text-lg text-gray-800">
+        <div className="mt-6">
+          <h3 className="font-semibold text-xl text-gray-800 mb-4">
             Coins outperforming Bitcoin:
           </h3>
-          <ul className="list-disc pl-5 mt-2 space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {outperformingCoins.map((coin, index) => (
-              <li key={index} className="text-left text-gray-700">
-                <div className="flex justify-between">
-                  <span className="font-medium">{coin.name}</span>
-                  <span
-                    className={`font-medium ${
-                      coin.priceChange > 0 ? "text-green-500" : "text-red-500"
-                    }`}
-                  >
-                    {coin.priceChange > 0 ? "+" : ""}
-                    {coin.priceChange.toFixed(2)}%
+              <div
+                key={index}
+                className="flex items-center justify-between p-4 bg-gray-100 rounded-lg shadow-sm"
+              >
+                <div className="flex items-center space-x-3">
+                  <img src={coin.image} alt={coin.name} className="w-8 h-8" />
+                  <span className="font-medium dark:text-white text-black">
+                    {coin.name}
                   </span>
                 </div>
-              </li>
+                <span
+                  className={`font-medium ${
+                    coin.priceChange > 0 ? "text-green-600" : "text-red-500"
+                  }`}
+                >
+                  {coin.priceChange > 0 ? "+" : ""}
+                  {coin.priceChange.toFixed(2)}%
+                </span>
+              </div>
             ))}
-          </ul>
+          </div>
         </div>
       )}
     </div>
