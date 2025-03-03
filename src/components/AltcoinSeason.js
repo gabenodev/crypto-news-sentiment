@@ -33,11 +33,16 @@ const AltcoinSeason = () => {
           "wrapped-ethereum",
           "usds",
           "wrapped-eeth",
+          "bitcoin-cash",
+          "wrapped-ust",
+          "susds",
         ];
 
         const filteredData = data.filter(
           (coin) => !excludedCoins.includes(coin.id)
         );
+
+        console.log("All Altcoins:", filteredData);
 
         let outperformingCountTemp = 0;
         const totalAltcoinsTemp = filteredData.length;

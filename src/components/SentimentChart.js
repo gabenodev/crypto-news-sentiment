@@ -30,7 +30,7 @@ function SentimentChart() {
     labels: [],
     datasets: [],
   });
-  const [timeframe, setTimeframe] = useState("365"); // Default la 1 an (365 zile)
+  const [timeframe, setTimeframe] = useState("7"); // Default la 1 an (365 zile)
 
   // Fetch data în funcție de intervalul de timp selectat
   const fetchSentimentData = async (limit) => {
