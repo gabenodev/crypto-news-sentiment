@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html.dark .bg-gray-100 {
+  background-color: #2d3748; /* Fundal în dark mode */
+}
+
 body {
   background-color: #fefefe; /* Fundal clar */
   font-family: "Inter", sans-serif;
