@@ -57,7 +57,7 @@ function NewsCard() {
             href={article.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 inline-block text-blue-600 hover:text-blue-800 transition duration-200"
+            className="mt-4 inline-block text-blue-600 hover:text-blue-800 transition duration-200 dark:text-black dark:hover:text-blue-400"
           >
             Read more
           </a>
