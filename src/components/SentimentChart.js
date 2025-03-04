@@ -33,17 +33,12 @@ function SentimentChart() {
   });
   const [timeframe, setTimeframe] = useState("7"); // Default la 7 zile
 
-  // Fetch data în funcție de intervalul de timp selectat
   const fetchSentimentData = async (limit) => {
     try {
-      let url = "";
-      // Verificăm dacă vrem să luăm datele pentru întreaga perioadă
-      if (limit === "max") {
-        // API-ul nu acceptă o valoare directă de "max", deci folosim 2000
-        url = "https://api.alternative.me/fng/?limit=2000&format=json";
-      } else {
-        url = `https://api.alternative.me/fng/?limit=${limit}&format=json`;
-      }
+      let url =
+        limit === "max"
+          ? "https://api.alternative.me/fng/?limit=2000&format=json"
+          : `https://api.alternative.me/fng/?limit=${limit}&format=json`;
 
       const response = await axios.get(url);
 
@@ -54,25 +49,21 @@ function SentimentChart() {
         format(new Date(item.timestamp * 1000), "MMM dd, yyyy")
       );
 
-      // Inversăm datele pentru a avea cea mai recentă dată în dreapta
-      const reversedTimestamps = sentimentTimestamps.reverse();
-      const reversedScores = sentimentScores.reverse();
-
       setSentimentData({
-        labels: reversedTimestamps,
+        labels: sentimentTimestamps.reverse(),
         datasets: [
           {
             label: "Sentiment Trend (Fear & Greed Index)",
-            data: reversedScores,
+            data: sentimentScores.reverse(),
             fill: false,
-            borderColor: "#23d996", // Culoare linie turcoaz
-            backgroundColor: "#23d996", // Culoare linie turcoaz
+            borderColor: "#23d996",
+            backgroundColor: "#23d996",
             tension: 0.1,
-            pointBackgroundColor: "#23d996", // Culoare puncte turcoaz
-            pointBorderColor: "#23d996", // Culoare puncte turcoaz
-            pointRadius: 3, // Puncte mai mici
-            pointHoverRadius: 4, // Puncte la hover
-            borderWidth: 2, // Grosimea liniei
+            pointBackgroundColor: "#23d996",
+            pointBorderColor: "#23d996",
+            pointRadius: 3,
+            pointHoverRadius: 4,
+            borderWidth: 2,
           },
         ],
       });
@@ -82,7 +73,7 @@ function SentimentChart() {
   };
 
   useEffect(() => {
-    fetchSentimentData(timeframe); // Fetch data când se schimbă intervalul de timp
+    fetchSentimentData(timeframe);
   }, [timeframe]);
 
   const handleTimeframeChange = (e) => {
@@ -105,6 +96,7 @@ function SentimentChart() {
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      {/* Titlu principal */}
       <h2 className="text-3xl font-semibold text-gray-800 dark:text-white text-black">
         Market Sentiment (Fear and Greed Index)
       </h2>
@@ -114,7 +106,7 @@ function SentimentChart() {
         <select
           value={timeframe}
           onChange={handleTimeframeChange}
-          className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md appearance-none"
+          className="bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-white px-4 py-2 rounded-md appearance-none"
         >
           <option value="7">Last 7 Days</option>
           <option value="30">Last 30 Days</option>
@@ -128,11 +120,56 @@ function SentimentChart() {
         <Line data={sentimentData} options={options} />
       </div>
 
-      {/* Indicatorul Fear and Greed Index deasupra graficului */}
-      <div className="mt-6 flex flex-col items-center">
+      {/* Card pentru SentimentGauge - Arată mai bine și mai echilibrat */}
+      <div className="mt-8 flex flex-col items-center">
         {sentimentData.datasets.length > 0 && (
-          <SentimentGauge value={sentimentData.datasets[0].data.slice(-1)[0]} />
+          <div className="w-full max-w-lg p-6 rounded-lg shadow-lg bg-white dark:bg-gray-900">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
+              Fear & Greed Index Today
+            </h3>
+            <div className="flex flex-col items-center">
+              <SentimentGauge
+                value={sentimentData.datasets[0].data.slice(-1)[0]}
+              />
+              <p className="mt-4 text-gray-700 dark:text-gray-300 text-center">
+                The current market sentiment is based on multiple factors such
+                as volatility, volume, and social media trends.
+              </p>
+            </div>
+          </div>
         )}
+      </div>
+
+      {/* Explicația graficelor */}
+      <div className="mt-12 p-6 rounded-lg shadow-md bg-white dark:bg-gray-900">
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+          Understanding the Fear & Greed Index
+        </h3>
+        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+          The <strong>Fear & Greed Index</strong> is a crucial sentiment
+          indicator that reflects investor emotions in the market. Ranging from{" "}
+          <strong>0</strong> (extreme fear) to <strong>100</strong> (extreme
+          greed), it helps traders identify potential market reversals.
+        </p>
+
+        <h4 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-6">
+          📈 Sentiment Trend Chart
+        </h4>
+        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+          The line chart above shows historical fluctuations of the Fear & Greed
+          Index. By analyzing past trends, traders can gauge whether the market
+          sentiment is shifting towards optimism or pessimism.
+        </p>
+
+        <h4 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-6">
+          🎯 Fear & Greed Gauge
+        </h4>
+        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+          The gauge below provides a real-time snapshot of market sentiment. A
+          needle pointing toward fear suggests bearishness, while a shift toward
+          greed indicates bullish momentum. This tool is best used alongside
+          technical and fundamental analysis.
+        </p>
       </div>
     </section>
   );
