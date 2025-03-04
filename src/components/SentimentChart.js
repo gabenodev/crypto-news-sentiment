@@ -1,4 +1,5 @@
 // src/components/SentimentChart.js
+import SentimentGauge from "./SentimentGauge";
 import React, { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 import axios from "axios";
@@ -30,7 +31,7 @@ function SentimentChart() {
     labels: [],
     datasets: [],
   });
-  const [timeframe, setTimeframe] = useState("7"); // Default la 1 an (365 zile)
+  const [timeframe, setTimeframe] = useState("7"); // Default la 7 zile
 
   // Fetch data în funcție de intervalul de timp selectat
   const fetchSentimentData = async (limit) => {
@@ -107,8 +108,9 @@ function SentimentChart() {
       <h2 className="text-3xl font-semibold text-gray-800 dark:text-white text-black">
         Market Sentiment (Fear and Greed Index)
       </h2>
+
+      {/* Dropdown pentru alegerea intervalului de timp */}
       <div className="mt-6">
-        {/* Dropdown pentru alegerea intervalului de timp */}
         <select
           value={timeframe}
           onChange={handleTimeframeChange}
@@ -117,12 +119,20 @@ function SentimentChart() {
           <option value="7">Last 7 Days</option>
           <option value="30">Last 30 Days</option>
           <option value="365">Last 1 Year</option>
-          <option value="max">All Time</option>{" "}
-          {/* Noua opțiune pentru toată perioada */}
+          <option value="max">All Time</option>
         </select>
       </div>
+
+      {/* Graficul Sentimentului (Fear and Greed Index) */}
       <div className="mt-6">
         <Line data={sentimentData} options={options} />
+      </div>
+
+      {/* Indicatorul Fear and Greed Index deasupra graficului */}
+      <div className="mt-6 flex flex-col items-center">
+        {sentimentData.datasets.length > 0 && (
+          <SentimentGauge value={sentimentData.datasets[0].data.slice(-1)[0]} />
+        )}
       </div>
     </section>
   );
