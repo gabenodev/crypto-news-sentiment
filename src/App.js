@@ -6,20 +6,20 @@ import AltcoinSeason from "./components/AltcoinSeason";
 import Footer from "./components/Footer";
 
 function App() {
-  const [activeTab, setActiveTab] = useState("news"); // Setăm tab-ul activ, default este "news"
+  const [activeTab, setActiveTab] = useState("news");
 
   return (
-    <div className="App bg-gray-100 min-h-screen">
+    <div className="App bg-gray-100 min-h-screen flex flex-col">
       <Header setActiveTab={setActiveTab} />{" "}
-      {/* Transmitere funcție setActiveTab către Header */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Conținutul crește pentru a umple spațiul disponibil */}
+      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="space-y-12">
-          {/* Afișează componenta corespunzătoare bazat pe tab-ul activ */}
           {activeTab === "sentiment" && <SentimentChart />}
           {activeTab === "altcoin" && <AltcoinSeason />}
           {activeTab === "news" && <NewsCard />}
         </div>
       </main>
+      {/* Footer-ul rămâne jos */}
       <Footer />
     </div>
   );

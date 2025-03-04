@@ -12,7 +12,6 @@ const AltcoinSeason = () => {
     const fetchAltcoinSeasonData = async () => {
       try {
         setLoading(true);
-
         const response = await fetch(
           "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1"
         );
@@ -40,12 +39,17 @@ const AltcoinSeason = () => {
           "first-digital-usd",
           "paypal-usd",
           "usual-usd",
+          "binance-staked-sol",
+          "solv-protocol-solvbtc-bbn",
+          "lombard-staked-btc",
+          "wrapped-avax",
+          "solv-btc",
         ];
 
         const filteredData = data.filter(
           (coin) => !excludedCoins.includes(coin.id)
         );
-        console.log("Lista de altcoinuri:", filteredData);
+        console.log("Filtered data:", filteredData);
         let outperformingCountTemp = 0;
         const totalAltcoinsTemp = filteredData.length;
         const outperformingCoinsTemp = [];
@@ -84,53 +88,65 @@ const AltcoinSeason = () => {
         setLoading(false);
       }
     };
-
     fetchAltcoinSeasonData();
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading)
+    return <div className="text-center text-gray-700 text-lg">Loading...</div>;
 
   const barColor =
     percentage >= 80
-      ? "#16a34a"
+      ? "bg-green-600"
       : percentage >= 60
-      ? "#4ade80"
+      ? "bg-green-400"
       : percentage >= 40
-      ? "#fcd34d"
+      ? "bg-yellow-400"
       : percentage >= 20
-      ? "#fb923c"
-      : "#ff4444";
+      ? "bg-orange-400"
+      : "bg-red-500";
 
   return (
-    <div className="p-6 max-w-lg mx-auto rounded-lg bg-white shadow-xl">
-      <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-        {isAltcoinSeason ? "It's Altcoin Season!" : "It's not Altcoin Season."}
+    <div className="p-6 max-w-2xl mx-auto rounded-lg bg-white shadow-2xl dark:bg-gray-900 transition duration-300">
+      <h2 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white text-center">
+        {isAltcoinSeason
+          ? "It's Altcoin Season! 🚀"
+          : "It's not Altcoin Season. 📉"}
       </h2>
-      <div className="w-full bg-gray-300 h-4 rounded-full mb-4">
+      <div className="relative w-full bg-gray-300 h-4 rounded-full mb-6 overflow-hidden">
         <div
-          className="h-4 rounded-full"
-          style={{ width: `${percentage}%`, backgroundColor: barColor }}
+          className={`h-4 rounded-full transition-all duration-500 ${barColor}`}
+          style={{ width: `${percentage}%` }}
         ></div>
       </div>
-      <p className="text-lg text-gray-600">
-        {outperformingCount} of {totalAltcoins} altcoins have performed better
-        than Bitcoin in the last 24 hours.
+      <p className="text-lg text-gray-700 dark:text-gray-300 text-center mb-4">
+        <span className="font-semibold text-gray-900 dark:text-white">
+          {outperformingCount}
+        </span>{" "}
+        out of
+        <span className="font-semibold text-gray-900 dark:text-white">
+          {" "}
+          {totalAltcoins}{" "}
+        </span>
+        altcoins have outperformed Bitcoin in the last 24 hours.
       </p>
-      <p className="text-gray-500 mt-2 text-sm">Price Change in the Last 24H</p>
       {outperformingCoins.length > 0 && (
         <div className="mt-6">
-          <h3 className="font-semibold text-xl text-gray-800 mb-4">
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4 text-center">
             Coins outperforming Bitcoin:
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {outperformingCoins.map((coin, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-4 bg-gray-100 rounded-lg shadow-sm"
+                className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md hover:scale-105 transition-transform"
               >
                 <div className="flex items-center space-x-3">
-                  <img src={coin.image} alt={coin.name} className="w-8 h-8" />
-                  <span className="font-medium dark:text-white text-black">
+                  <img
+                    src={coin.image}
+                    alt={coin.name}
+                    className="w-8 h-8 rounded-full"
+                  />
+                  <span className="font-medium text-gray-900 dark:text-white">
                     {coin.name}
                   </span>
                 </div>
