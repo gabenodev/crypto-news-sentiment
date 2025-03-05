@@ -37,6 +37,14 @@ function Header({ setActiveTab }) {
           >
             Sentiment Trend
           </button>
+
+          {/* Adăugăm butonul pentru Whale Transactions */}
+          <button
+            className="text-white hover:text-teal-300 transition duration-300"
+            onClick={() => setActiveTab("whaleTransactions")} // Actualizează tab-ul activ la "whaleTransactions"
+          >
+            Whale Transactions
+          </button>
         </nav>
       </div>
     </header>
