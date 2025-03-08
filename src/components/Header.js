@@ -5,9 +5,9 @@ function Header({ setActiveTab }) {
   return (
     <header className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-6 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center w-full">
+        <div className="flex justify-between items-center">
           {/* Title */}
-          <h1 className="text-3xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-green-400 text-left w-full">
+          <h1 className="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-green-400">
             SentimentX
           </h1>
 
