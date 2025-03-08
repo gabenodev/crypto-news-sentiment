@@ -7,7 +7,7 @@ function Header({ setActiveTab }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center">
           {/* Title */}
-          <h1 className="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-green-400">
+          <h1 className="text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-300 to-green-400 text-left ">
             SentimentX
           </h1>
 
@@ -26,7 +26,7 @@ function Header({ setActiveTab }) {
                 className="text-white hover:text-teal-300 transition duration-300"
                 onClick={() => setActiveTab("altcoin")}
               >
-                AltcoinSeason Index
+                Altcoin Season Index
               </button>
 
               <button
