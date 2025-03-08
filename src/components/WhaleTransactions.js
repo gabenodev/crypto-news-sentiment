@@ -119,7 +119,10 @@ const WhaleTransactions = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h2 className="text-3xl font-bold text-center text-indigo-700 mb-8">
+      <h2
+        className="text-3xl font-bold text-center mb-8 
+  text-indigo-700 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-teal-300 dark:to-green-400"
+      >
         Whale Transactions
       </h2>
       {loading ? (
