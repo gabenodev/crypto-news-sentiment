@@ -44,6 +44,10 @@ const AltcoinSeason = () => {
           "lombard-staked-btc",
           "wrapped-avax",
           "solv-btc",
+          "binance-peg-weth",
+          "kelp-dao-restaked-eth",
+          "mantle-staked-ether",
+          "rocket-pool-eth",
         ];
 
         const filteredData = data.filter(
@@ -105,8 +109,10 @@ const AltcoinSeason = () => {
       ? "bg-orange-400"
       : "bg-red-500";
 
+  outperformingCoins.sort((a, b) => b.priceChange - a.priceChange);
+
   return (
-    <div className="p-6 max-w-2xl mx-auto rounded-lg bg-white shadow-2xl dark:bg-gray-900 transition duration-300">
+    <div className="p-6 max-w-4xl mx-auto rounded-lg bg-white shadow-2xl dark:bg-gray-900 transition duration-300">
       <h2 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white text-center">
         {isAltcoinSeason
           ? "It's Altcoin Season! 🚀"
