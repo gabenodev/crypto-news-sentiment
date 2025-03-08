@@ -11,40 +11,43 @@ function Header({ setActiveTab }) {
             SentimentX
           </h1>
 
-          {/* Night Toggle */}
-          <NightToggle />
+          {/* Navigation and Night Toggle */}
+          <div className="flex items-center space-x-8">
+            {/* Navigation */}
+            <nav className="flex space-x-8 text-lg font-semibold">
+              <button
+                className="text-white hover:text-teal-300 transition duration-300"
+                onClick={() => setActiveTab("news")}
+              >
+                News
+              </button>
+
+              <button
+                className="text-white hover:text-teal-300 transition duration-300"
+                onClick={() => setActiveTab("altcoin")}
+              >
+                AltcoinSeason Index
+              </button>
+
+              <button
+                className="text-white hover:text-teal-300 transition duration-300"
+                onClick={() => setActiveTab("sentiment")}
+              >
+                Sentiment Trend
+              </button>
+
+              <button
+                className="text-white hover:text-teal-300 transition duration-300"
+                onClick={() => setActiveTab("whaleTransactions")}
+              >
+                Whale Transactions
+              </button>
+            </nav>
+
+            {/* Night Toggle */}
+            <NightToggle />
+          </div>
         </div>
-
-        {/* Navigation */}
-        <nav className="mt-6 flex justify-center space-x-8 text-lg font-semibold">
-          <button
-            className="text-white hover:text-teal-300 transition duration-300"
-            onClick={() => setActiveTab("news")}
-          >
-            News
-          </button>
-
-          <button
-            className="text-white hover:text-teal-300 transition duration-300"
-            onClick={() => setActiveTab("altcoin")}
-          >
-            AltcoinSeason Index
-          </button>
-
-          <button
-            className="text-white hover:text-teal-300 transition duration-300"
-            onClick={() => setActiveTab("sentiment")}
-          >
-            Sentiment Trend
-          </button>
-
-          <button
-            className="text-white hover:text-teal-300 transition duration-300"
-            onClick={() => setActiveTab("whaleTransactions")}
-          >
-            Whale Transactions
-          </button>
-        </nav>
       </div>
     </header>
   );
