@@ -12,6 +12,7 @@ import {
 const AltcoinChart = ({ coin, onClose }) => {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false); // Stare pentru dimensiunea graficului
 
   useEffect(() => {
     const fetchHistoricalData = async () => {
@@ -56,10 +57,25 @@ const AltcoinChart = ({ coin, onClose }) => {
   const yDomain = [Math.max(0, minPrice - margin), maxPrice + margin];
 
   return (
-    <div className="w-96 p-4 bg-white dark:bg-gray-900 shadow-lg rounded-lg max-h-[500px] overflow-y-auto">
-      <button onClick={onClose} className="text-gray-700 dark:text-white mb-4">
-        Close
-      </button>
+    <div
+      className={`${
+        isExpanded ? "w-[600px]" : "w-96"
+      } p-4 bg-white dark:bg-gray-900 shadow-lg rounded-lg flex flex-col`}
+    >
+      <div className="flex justify-between items-center mb-4">
+        <button
+          onClick={onClose}
+          className="text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300"
+        >
+          Close
+        </button>
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300"
+        >
+          {isExpanded ? "Minimize" : "Expand"}
+        </button>
+      </div>
       <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
         {coin.name}
       </h2>
@@ -73,8 +89,8 @@ const AltcoinChart = ({ coin, onClose }) => {
         className="w-12 h-12 rounded-full mb-4"
       />
 
-      <div className="w-full h-48">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="flex-1">
+        <ResponsiveContainer width="100%" height={isExpanded ? 400 : 200}>
           <LineChart data={chartData}>
             <CartesianGrid
               strokeDasharray="none"
