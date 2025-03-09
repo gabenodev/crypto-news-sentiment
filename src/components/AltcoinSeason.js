@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import AltcoinChart from "./AltcoinChart";
 
 const AltcoinSeason = () => {
   const [isAltcoinSeason, setIsAltcoinSeason] = useState(null);
@@ -7,6 +9,7 @@ const AltcoinSeason = () => {
   const [totalAltcoins, setTotalAltcoins] = useState(0);
   const [percentage, setPercentage] = useState(0);
   const [outperformingCoins, setOutperformingCoins] = useState([]);
+  const [selectedCoin, setSelectedCoin] = useState(null);
 
   useEffect(() => {
     const fetchAltcoinSeasonData = async () => {
@@ -74,6 +77,7 @@ const AltcoinSeason = () => {
               name: coin.name,
               priceChange: coin.price_change_percentage_24h,
               image: coin.image,
+              id: coin.id, // Adaugă id-ul coin-ului
             });
           }
         }
@@ -144,7 +148,8 @@ const AltcoinSeason = () => {
             {outperformingCoins.map((coin, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md hover:scale-105 transition-transform"
+                onClick={() => setSelectedCoin(coin)}
+                className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md hover:scale-105 transition-transform cursor-pointer"
               >
                 <div className="flex items-center space-x-3">
                   <img
@@ -169,6 +174,14 @@ const AltcoinSeason = () => {
           </div>
         </div>
       )}
+      <AnimatePresence>
+        {selectedCoin && (
+          <AltcoinChart
+            coin={selectedCoin}
+            onClose={() => setSelectedCoin(null)}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
