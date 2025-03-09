@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import {
   LineChart,
   Line,
@@ -22,16 +21,14 @@ const AltcoinChart = ({ coin, onClose }) => {
         );
         const data = await response.json();
 
-        // Transformăm datele primite într-un format corect pentru Recharts
         const formattedData = data.prices.map((priceData) => ({
           date: new Date(priceData[0]).toLocaleDateString("en-GB", {
             day: "2-digit",
             month: "2-digit",
-          }), // Format: DD/MM
-          price: priceData[1].toFixed(2), // Prețul cu 2 zecimale
+          }),
+          price: priceData[1].toFixed(2),
         }));
 
-        // Setăm datele
         setChartData(formattedData);
       } catch (error) {
         console.error("Error fetching historical data:", error);
@@ -45,66 +42,40 @@ const AltcoinChart = ({ coin, onClose }) => {
 
   if (loading) {
     return (
-      <motion.div
-        initial={{ opacity: 0, x: 50 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: 50 }}
-        className="fixed top-0 right-0 h-full w-1/3 bg-white dark:bg-gray-800 shadow-lg p-6"
-      >
-        <button
-          onClick={onClose}
-          className="text-gray-700 dark:text-white mb-4"
-        >
-          Close
-        </button>
+      <div className="w-96 p-4 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
         <p className="text-gray-700 dark:text-gray-300">Loading chart...</p>
-      </motion.div>
+      </div>
     );
   }
 
-  // Calculăm minimul și maximul pentru axa Y
   const prices = chartData.map((data) => parseFloat(data.price));
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
-
-  // Ajustăm domeniul Y cu un factor de scalare
   const priceRange = maxPrice - minPrice;
-  const margin = priceRange * 0.05; // 5% marjă de ajustare
-
-  // Setăm domeniul pe baza min și max cu marja adăugată
-  const yDomain = [
-    Math.max(0, minPrice - margin), // Adăugăm marja de jos
-    maxPrice + margin, // Adăugăm marja de sus
-  ];
+  const margin = priceRange * 0.05;
+  const yDomain = [Math.max(0, minPrice - margin), maxPrice + margin];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 50 }}
-      className="fixed top-0 right-0 h-full w-1/3 bg-white dark:bg-gray-800 shadow-lg p-6"
-    >
+    <div className="w-96 p-4 bg-white dark:bg-gray-900 shadow-lg rounded-lg max-h-[500px] overflow-y-auto">
       <button onClick={onClose} className="text-gray-700 dark:text-white mb-4">
         Close
       </button>
-      <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
         {coin.name}
       </h2>
-      <p className="text-gray-700 dark:text-gray-300 mb-6">
+      <p className="text-gray-700 dark:text-gray-300 mb-4">
         Price Change: {coin.priceChange > 0 ? "+" : ""}
         {coin.priceChange.toFixed(2)}%
       </p>
       <img
         src={coin.image}
         alt={coin.name}
-        className="w-16 h-16 rounded-full mb-6"
+        className="w-12 h-12 rounded-full mb-4"
       />
 
-      {/* Graficul */}
-      <div className="w-full h-64">
+      <div className="w-full h-48">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData}>
-            {/* Eliminăm dungi punctate și grila de fundal */}
             <CartesianGrid
               strokeDasharray="none"
               stroke="#eee"
@@ -115,18 +86,18 @@ const AltcoinChart = ({ coin, onClose }) => {
               dataKey="date"
               tick={{
                 fill: "#666",
-                fontSize: 12,
-                angle: 0, // Fără unghi
-                textAnchor: "middle", // Alinierea orizontală
+                fontSize: 10,
+                angle: 0,
+                textAnchor: "middle",
               }}
-              interval={Math.floor(chartData.length / 7)} // Setăm intervalul la aproximativ o etichetă pe zi
+              interval={Math.floor(chartData.length / 7)}
               axisLine={{ stroke: "#666" }}
             />
             <YAxis
-              tickFormatter={(value) => `$${parseFloat(value).toFixed(2)}`} // Formatarea valorilor de pe axa Y
-              tick={{ fill: "#666", fontSize: 12 }}
+              tickFormatter={(value) => `$${parseFloat(value).toFixed(2)}`}
+              tick={{ fill: "#666", fontSize: 10 }}
               axisLine={{ stroke: "#666" }}
-              domain={yDomain} // Setăm domeniul pentru axa Y
+              domain={yDomain}
             />
             <Tooltip
               contentStyle={{
@@ -135,19 +106,17 @@ const AltcoinChart = ({ coin, onClose }) => {
                 borderRadius: "4px",
               }}
             />
-            {/* Eliminăm legenda */}
-            {/* <Legend /> */}
             <Line
               type="monotone"
               dataKey="price"
-              stroke="#23d996" // Culoare turcoaz
-              strokeWidth={3}
-              dot={false} // Elimină punctele de pe grafic
+              stroke="#23d996"
+              strokeWidth={2}
+              dot={false}
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
