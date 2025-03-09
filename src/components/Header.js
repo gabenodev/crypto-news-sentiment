@@ -93,8 +93,8 @@ function Header({ setActiveTab }) {
           </div>
         </div>
 
-        {/* Linie de separare subtilă */}
-        <div className="border-b border-gray-700 my-4"></div>
+        {/* Linie de separare cu gradient */}
+        <div className="my-4 h-px bg-gradient-to-r from-teal-400 to-green-500"></div>
 
         {/* Informații despre crypto */}
         <div className="flex space-x-8 text-sm font-medium text-gray-300">
