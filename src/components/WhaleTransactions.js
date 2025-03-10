@@ -29,6 +29,17 @@ const whaleWallets = {
   "0x5c985e89dde482efe97ea9f1950ad149eb73829b": "Huobi 2",
   "0xdc76cd25977e0a5ae17155770273ad58648900d3": "KuCoin",
   "0x2b5634c42055806a59e9107ed44d43c426e58258": "KuCoin 2",
+  "0x00000000219ab540356cBB839Cbe05303d7705Fa": "Beacon Deposit Contract",
+  "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2": "wrapped Ether",
+  "0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8": "Binance 7",
+  "0x49048044D57e1C92A77f79988d21Fa8fAF74E97e": "Base: Base Portal",
+  "0x40B38765696e3d5d8d9d834D8AaD4bB6e418E489": "Robingood",
+  "0x8315177aB297bA92A06054cE80a67Ed4DBd7ed3a": "Arbitrum: Bridge",
+  "0x0E58e8993100F1CBe45376c410F97f4893d9BfCD": "Upbit 41",
+  "0xF977814e90dA44bFA03b6295A0616a897441aceC": "Binance 20",
+  "0x47ac0Fb4F2D84898e4D9E7b4DaB3C24507a6D503": "Binance-Peg Tokens",
+  "0xbEb5Fc579115071764c7423A4f12eDde41f106Ed": "Optimism",
+
   // Adaugă mai multe adrese aici
 };
 
@@ -67,6 +78,19 @@ const WhaleTransactions = () => {
         blockchain: "ETH",
         apiKey: API_KEY_ETH,
       },
+      {
+        name: "Kraken",
+        address: "0x34ea4138580435b5a521e460035edb19df1938c1",
+        blockchain: "ETH",
+        apiKey: API_KEY_ETH,
+      },
+      {
+        name: "Huobi",
+        address: "0x46340b20830761efd32832a74d7169b29feb9758",
+        blockchain: "ETH",
+        apiKey: API_KEY_ETH,
+      },
+      // Adaugă mai multe wallet-uri aici
     ];
 
     const allTransactions = [];
@@ -86,7 +110,7 @@ const WhaleTransactions = () => {
         if (data.status === "1") {
           // Filtrează tranzacțiile (converteste hexazecimal în număr)
           const filteredTransactions = data.result.filter(
-            (tx) => parseFloat(tx.value) > 10 ** 18
+            (tx) => parseFloat(tx.value) > 10 ** 18 * 100 // Filtrează tranzacții mai mari de 100 ETH
           );
 
           const transactionsWithData = filteredTransactions.map((tx) => {
