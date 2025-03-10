@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { FaBitcoin, FaEthereum, FaChartLine, FaGlobe } from "react-icons/fa"; // Importă iconițele
 import NightToggle from "./NightToggle"; // Importă componenta NightToggle
 
 function Header({ setActiveTab }) {
@@ -100,26 +101,30 @@ function Header({ setActiveTab }) {
         <div className="flex space-x-8 text-sm font-medium text-gray-300">
           {/* Bitcoin Dominance */}
           <div className="flex items-center space-x-2">
-            <span className="text-teal-400">BTC Dominance</span>
-            <span>{cryptoData.bitcoinDominance.toFixed(2)}%</span>
+            <FaBitcoin className="text-yellow-400" /> {/* Iconița Bitcoin */}
+            <span>
+              BTC Dominance: {cryptoData.bitcoinDominance.toFixed(2)}%
+            </span>
           </div>
 
           {/* Ethereum Dominance */}
           <div className="flex items-center space-x-2">
-            <span className="text-purple-400">ETH Dominance</span>
-            <span>{cryptoData.ethereumDominance.toFixed(2)}%</span>
+            <FaEthereum className="text-purple-400" /> {/* Iconița Ethereum */}
+            <span>
+              ETH Dominance: {cryptoData.ethereumDominance.toFixed(2)}%
+            </span>
           </div>
 
           {/* 24h Volume */}
           <div className="flex items-center space-x-2">
-            <span className="text-yellow-400">Vol</span>
-            <span>${cryptoData.totalVolume24h.toLocaleString()}</span>
+            <FaChartLine className="text-green-400" /> {/* Iconița Volume */}
+            <span>Vol: ${cryptoData.totalVolume24h.toLocaleString()}</span>
           </div>
 
           {/* Market Cap */}
           <div className="flex items-center space-x-2">
-            <span className="text-blue-400">Market Cap</span>
-            <span>${cryptoData.totalMarketCap.toLocaleString()}</span>
+            <FaGlobe className="text-blue-400" /> {/* Iconița Market Cap */}
+            <span>Cap: ${cryptoData.totalMarketCap.toLocaleString()}</span>
             <span
               className={
                 cryptoData.marketCapChange24h >= 0
