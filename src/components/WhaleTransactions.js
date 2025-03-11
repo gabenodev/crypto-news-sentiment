@@ -10,7 +10,7 @@ const WhaleTransactions = () => {
   const loadTransactions = async (page) => {
     setLoading(true);
     const { transactions: fetchedTransactions, totalPages: fetchedTotalPages } =
-      await fetchWhaleTransactions(page, 1000); // Filtrează tranzacții mai mari de 1000 ETH
+      await fetchWhaleTransactions(page, 100); // Filtrează tranzacții mai mari de 1000 ETH
     setTransactions(fetchedTransactions);
     setTotalPages(fetchedTotalPages);
     setLoading(false);

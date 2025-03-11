@@ -4,11 +4,11 @@ import { formatDistanceToNow } from "date-fns";
 const whaleWallets = {
   // Adrese Ethereum - Exchange-uri
   "0x742d35cc6634c0532925a3b844bc454e4438f44e": "Binance",
-  "0x5a52e96bacdabb82fd05763e25335261b270efcb": "Binance 2",
   "0x28c6c06298d514db089934071355e5743bf21d60": "Binance 3",
   "0x21a31ee1afc51d94c2efccaa2092ad1028285549": "Binance 4",
   "0x56eddb7aa87536c09ccc2793473599fd21a8b17f": "Bitfinex",
   "0x77134cbc06cb00b66f4c7e623d5fdbf6777635ec": "Bitfinex 2",
+  "0x5a52e96bacdabb82fd05763e25335261b270efcb": "Binance 2",
   "0x6cc5f688a315f3dc28a7781717a9a798a59fda7b": "OKX",
   "0xe92d1a43df510f82c66382592a047d288f85226f": "OKX 2",
   "0xa7efae728d2936e78bda97dc267687568dd593f3": "OKX 3",
@@ -248,70 +248,108 @@ export const fetchWhaleTransactions = async (page, filterValue) => {
 
   const allTransactions = [];
 
-  for (let wallet of wallets) {
-    const { address, blockchain, apiKey, name } = wallet;
-    const url =
-      blockchain === "ETH"
-        ? `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=${page}&offset=100&sort=desc&apikey=${apiKey}`
-        : `https://api.bscscan.com/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=${page}&offset=100&sort=desc&apikey=${apiKey}`;
+  // Calculează timestamp-ul pentru acum și acum minus 30 de zile
+  const now = Math.floor(Date.now() / 1000); // Timestamp curent în secunde
+  const thirtyDaysAgo = now - 30 * 24 * 60 * 60; // Timestamp pentru acum 30 de zile
+
+  // Funcție pentru a obține numărul block-ului corespunzător unui timestamp
+  const getBlockNumberByTimestamp = async (timestamp) => {
+    const url = `https://api.etherscan.io/api?module=block&action=getblocknobytime&timestamp=${timestamp}&closest=before&apikey=${API_KEY_ETH}`;
 
     try {
       const response = await fetch(url);
       const data = await response.json();
-      console.log(data);
-
+      console.log("Block number API response:", data); // Log răspunsul API-ului
       if (data.status === "1") {
-        // Filtrează tranzacțiile (converteste hexazecimal în număr)
-        const filteredTransactions = data.result.filter(
-          (tx) => parseFloat(tx.value) > 10 ** 18 * filterValue // Filtrează tranzacții mai mari de filterValue ETH
-        );
-
-        const transactionsWithData = filteredTransactions.map((tx) => {
-          let exchange = "Unknown";
-
-          // Normalizează adresele pentru comparație (converteste la litere mici)
-          const fromAddress = tx.from.toLowerCase();
-          const toAddress = tx.to.toLowerCase();
-
-          // Verificăm 'from' și 'to' pentru a atribui exchange-ul
-          console.log(
-            `Checking addresses: From ${fromAddress} -> To ${toAddress}`
-          );
-          console.log("whaleWallets[fromAddress]:", whaleWallets[fromAddress]);
-          console.log("whaleWallets[toAddress]:", whaleWallets[toAddress]);
-          if (whaleWallets[fromAddress]) {
-            exchange = whaleWallets[fromAddress];
-          } else if (whaleWallets[toAddress]) {
-            exchange = whaleWallets[toAddress];
-          }
-
-          return {
-            hash: tx.hash,
-            from: tx.from,
-            to: tx.to,
-            value: tx.value / 10 ** 18,
-            blockchain,
-            exchange,
-            date: new Date(tx.timeStamp * 1000).toLocaleString(),
-            fee: tx.gasUsed ? (tx.gasUsed * tx.gasPrice) / 10 ** 18 : "N/A",
-            block: tx.blockNumber,
-            age: formatDistanceToNow(new Date(tx.timeStamp * 1000)),
-            icon:
-              blockchain === "ETH" ? (
-                <FaEthereum className="text-cyan-400 text-xl" />
-              ) : (
-                <FaBitcoin className="text-yellow-400 text-xl" />
-              ),
-            timeStamp: tx.timeStamp, // Adăugăm timeStamp pentru sortare
-          };
-        });
-
-        allTransactions.push(...transactionsWithData);
+        return data.result; // Returnează numărul block-ului
       } else {
-        console.error(`No transactions found for wallet: ${name}`);
+        console.error("Error fetching block number:", data.message);
+        return null;
       }
     } catch (error) {
-      console.error("Error fetching transactions:", error);
+      console.error("Error fetching block number:", error);
+      return null;
+    }
+  };
+
+  // Obține numărul block-ului pentru acum 30 de zile
+  const startBlock = await getBlockNumberByTimestamp(thirtyDaysAgo);
+  if (!startBlock) {
+    console.error("Could not fetch start block number.");
+    return { transactions: [], totalPages: 0 };
+  }
+
+  // Funcție pentru a face un request cu delay
+  const fetchWithDelay = async (url, delay) => {
+    return new Promise((resolve) => {
+      setTimeout(async () => {
+        try {
+          const response = await fetch(url);
+          const data = await response.json();
+          console.log("Transaction API response:", data); // Log răspunsul API-ului
+          resolve(data);
+        } catch (error) {
+          console.error("Error fetching transactions:", error);
+          resolve(null);
+        }
+      }, delay);
+    });
+  };
+
+  // Parcurge fiecare wallet cu un delay între request-uri
+  for (let i = 0; i < wallets.length; i++) {
+    const wallet = wallets[i];
+    const { address, blockchain, apiKey, name } = wallet;
+
+    // Construiește URL-ul cu startblock și endblock
+    const url =
+      blockchain === "ETH"
+        ? `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=${startBlock}&endblock=99999999&page=${page}&offset=100&sort=desc&apikey=${apiKey}`
+        : `https://api.bscscan.com/api?module=account&action=txlist&address=${address}&startblock=${startBlock}&endblock=99999999&page=${page}&offset=100&sort=desc&apikey=${apiKey}`;
+
+    // Așteaptă 200 ms între fiecare request pentru a nu depăși limita de 5 request-uri pe secundă
+    const data = await fetchWithDelay(url, i * 200);
+
+    if (data && data.status === "1") {
+      const filteredTransactions = data.result.filter(
+        (tx) => parseFloat(tx.value) > 10 ** 18 * filterValue
+      );
+
+      const transactionsWithData = filteredTransactions.map((tx) => {
+        let exchange = "Unknown";
+        const fromAddress = tx.from.toLowerCase();
+        const toAddress = tx.to.toLowerCase();
+
+        if (whaleWallets[fromAddress]) {
+          exchange = whaleWallets[fromAddress];
+        } else if (whaleWallets[toAddress]) {
+          exchange = whaleWallets[toAddress];
+        }
+
+        return {
+          hash: tx.hash,
+          from: tx.from,
+          to: tx.to,
+          value: tx.value / 10 ** 18,
+          blockchain,
+          exchange,
+          date: new Date(tx.timeStamp * 1000).toLocaleString(),
+          fee: tx.gasUsed ? (tx.gasUsed * tx.gasPrice) / 10 ** 18 : "N/A",
+          block: tx.blockNumber,
+          age: formatDistanceToNow(new Date(tx.timeStamp * 1000)),
+          icon:
+            blockchain === "ETH" ? (
+              <FaEthereum className="text-cyan-400 text-xl" />
+            ) : (
+              <FaBitcoin className="text-yellow-400 text-xl" />
+            ),
+          timeStamp: tx.timeStamp,
+        };
+      });
+
+      allTransactions.push(...transactionsWithData);
+    } else {
+      console.error(`No transactions found for wallet: ${name}`);
     }
   }
 
