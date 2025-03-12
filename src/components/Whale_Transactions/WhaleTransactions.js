@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { fetchWhaleTransactions } from "./EthScan";
-import { PulseLoader } from "react-spinners";
 import { motion, AnimatePresence } from "framer-motion";
 
 const WhaleTransactions = () => {
@@ -46,12 +45,83 @@ const WhaleTransactions = () => {
           exit={{ opacity: 0 }}
           className="text-center text-xl text-gray-600 dark:text-gray-400"
         >
-          <PulseLoader color="#3B82F6" size={15} />
-          <p className="mt-4">Loading transactions...</p>
+          {/* Animație de puncte îmbunătățită */}
+          <div className="flex justify-center items-center space-x-2 mb-4">
+            {[0, 0.2, 0.4].map((delay, index) => (
+              <motion.div
+                key={index}
+                animate={{
+                  y: ["0%", "-60%", "0%"],
+                  opacity: [0.8, 1, 0.8],
+                  scale: [1, 1.3, 1],
+                }}
+                transition={{
+                  duration: 0.6,
+                  repeat: Infinity,
+                  repeatType: "mirror",
+                  delay,
+                }}
+                className={`w-4 h-4 rounded-full ${
+                  index === 0
+                    ? "bg-cyan-400"
+                    : index === 1
+                    ? "bg-teal-400"
+                    : "bg-blue-500"
+                }`}
+              />
+            ))}
+          </div>
+          {/* Text animat îmbunătățit */}
+          <motion.p
+            animate={{
+              opacity: [0.5, 1, 0.5],
+              y: ["0%", "-10%", "0%"],
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+            }}
+            className="mt-4 mb-6 text-lg font-semibold text-gray-700 dark:text-gray-300"
+          >
+            Loading transactions...
+          </motion.p>
+
           <p className="text-sm text-gray-500 dark:text-gray-400">
             This might take a while. I am looking for over 1 million
             transactions.
           </p>
+
+          {/* Skeleton Loading pentru tranzacții */}
+          <div className="mt-8 space-y-4">
+            {[...Array(5)].map((_, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white dark:bg-gray-900 rounded-2xl p-6 max-w-3xl mx-auto shadow-lg"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-24"></div>
+                      <div className="h-3 bg-gray-300 dark:bg-gray-700 rounded w-16"></div>
+                    </div>
+                  </div>
+                  <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-20"></div>
+                </div>
+                <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {[...Array(6)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="h-3 bg-gray-300 dark:bg-gray-700 rounded"
+                    ></div>
+                  ))}
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </motion.div>
       ) : (
         <motion.div
