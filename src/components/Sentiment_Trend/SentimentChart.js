@@ -56,7 +56,7 @@ function SentimentChart() {
             label: "Sentiment Trend (Fear & Greed Index)",
             data: sentimentScores.reverse(),
             fill: false,
-            borderColor: "#23d996",
+            borderColor: "#23d996", // Verde pentru linia graficului
             backgroundColor: "#23d996",
             tension: 0.1,
             pointBackgroundColor: "#23d996",
@@ -84,12 +84,30 @@ function SentimentChart() {
     responsive: true,
     scales: {
       x: {
-        title: { display: true, text: "Date" },
-        ticks: { autoSkip: true, maxTicksLimit: 10, maxRotation: 45 },
+        title: { display: true, text: "Date", color: "#A0AEC0" }, // Culoare text axa X
+        ticks: {
+          autoSkip: true,
+          maxTicksLimit: 10,
+          maxRotation: 45,
+          color: "#A0AEC0",
+        }, // Culoare ticks axa X
+        grid: { color: "#2D3748" }, // Culoare grid axa X
       },
       y: {
-        title: { display: true, text: "Fear and Greed Index" },
-        ticks: { min: 0, max: 100, stepSize: 10 },
+        title: {
+          display: true,
+          text: "Fear and Greed Index",
+          color: "#A0AEC0",
+        }, // Culoare text axa Y
+        ticks: { min: 0, max: 100, stepSize: 10, color: "#A0AEC0" }, // Culoare ticks axa Y
+        grid: { color: "#2D3748" }, // Culoare grid axa Y
+      },
+    },
+    plugins: {
+      legend: {
+        labels: {
+          color: "#A0AEC0", // Culoare text legenda
+        },
       },
     },
   };
@@ -97,7 +115,7 @@ function SentimentChart() {
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
       {/* Titlu principal */}
-      <h2 className="text-3xl font-semibold text-gray-800 dark:text-white text-black">
+      <h2 className="text-3xl font-semibold text-gray-800 dark:text-white">
         Market Sentiment (Fear and Greed Index)
       </h2>
 
@@ -106,7 +124,7 @@ function SentimentChart() {
         <select
           value={timeframe}
           onChange={handleTimeframeChange}
-          className="bg-gray-200 text-gray-700 dark:bg-gray-800 dark:text-white px-4 py-2 rounded-md appearance-none"
+          className="bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-white px-4 py-2 rounded-md appearance-none"
         >
           <option value="7">Last 7 Days</option>
           <option value="30">Last 30 Days</option>
@@ -120,10 +138,10 @@ function SentimentChart() {
         <Line data={sentimentData} options={options} />
       </div>
 
-      {/* Card pentru SentimentGauge - Arată mai bine și mai echilibrat */}
+      {/* Card pentru SentimentGauge */}
       <div className="mt-8 flex flex-col items-center">
         {sentimentData.datasets.length > 0 && (
-          <div className="w-full max-w-lg p-6 rounded-lg shadow-lg bg-white dark:bg-gray-900">
+          <div className="w-full max-w-lg p-6 rounded-lg shadow-lg bg-white dark:bg-gray-800">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
               Fear & Greed Index Today
             </h3>
@@ -141,8 +159,8 @@ function SentimentChart() {
       </div>
 
       {/* Explicația graficelor */}
-      <div className="mt-12 p-6 rounded-lg shadow-md bg-white dark:bg-gray-900">
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+      <div className="mt-12 p-6 rounded-lg shadow-md bg-white dark:bg-gray-800">
+        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
           Understanding the Fear & Greed Index
         </h3>
         <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -152,7 +170,7 @@ function SentimentChart() {
           greed), it helps traders identify potential market reversals.
         </p>
 
-        <h4 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-6">
+        <h4 className="text-xl font-semibold text-gray-900 dark:text-white mt-6">
           📈 Sentiment Trend Chart
         </h4>
         <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -161,7 +179,7 @@ function SentimentChart() {
           sentiment is shifting towards optimism or pessimism.
         </p>
 
-        <h4 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mt-6">
+        <h4 className="text-xl font-semibold text-gray-900 dark:text-white mt-6">
           🎯 Fear & Greed Gauge
         </h4>
         <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
