@@ -55,6 +55,7 @@ const AltcoinSeason = () => {
         const filteredData = data.filter(
           (coin) => !excludedCoins.includes(coin.id)
         );
+        console.log("Datele filtrate:", filteredData);
         let outperformingCountTemp = 0;
         const totalAltcoinsTemp = filteredData.length;
         const outperformingCoinsTemp = [];
