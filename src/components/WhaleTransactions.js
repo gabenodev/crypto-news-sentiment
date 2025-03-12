@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { fetchWhaleTransactions } from "./EthScan";
+import { PulseLoader } from "react-spinners";
+import { motion, AnimatePresence } from "framer-motion";
 
 const WhaleTransactions = () => {
   const [transactions, setTransactions] = useState([]);
@@ -29,26 +31,44 @@ const WhaleTransactions = () => {
     <div className="container mx-auto p-6 dark:bg-gray-900 dark:text-white">
       <h2
         className="text-3xl font-bold text-center mb-8 
-    text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
-    dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-teal-300 dark:to-green-400"
+        text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
+        dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-teal-300 dark:to-green-400"
       >
         Whale Transactions
       </h2>
 
-      {/* Bara orizontală */}
       <hr className="border-t border-gray-200 dark:border-gray-700 mb-8" />
 
       {loading ? (
-        <p className="text-center text-xl text-gray-600 dark:text-gray-400">
-          Loading transactions...
-        </p>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="text-center text-xl text-gray-600 dark:text-gray-400"
+        >
+          <PulseLoader color="#3B82F6" size={15} />
+          <p className="mt-4">Loading transactions...</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            This might take a while. I am looking for over 1 million
+            transactions.
+          </p>
+        </motion.div>
       ) : (
-        <div className="bg-white dark:bg-gray-900 rounded-lg p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white dark:bg-gray-900 rounded-lg p-6"
+        >
           {transactions.length > 0 ? (
-            <div className="space-y-2">
+            <AnimatePresence>
               {transactions.map((tx, index) => (
-                <div
+                <motion.div
                   key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
                   className="p-3 border-b border-gray-200 dark:border-gray-700"
                 >
                   <div className="flex items-center justify-between">
@@ -121,9 +141,9 @@ const WhaleTransactions = () => {
                       </a>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </AnimatePresence>
           ) : (
             <p className="text-center text-xl text-gray-600 dark:text-gray-400">
               No large transactions available at the moment.
@@ -133,7 +153,7 @@ const WhaleTransactions = () => {
           {/* Butoane de paginare */}
           <div className="flex justify-center mt-6 space-x-4">
             <button
-              onClick={() => setPage(1)} // Revino la pagina 1
+              onClick={() => setPage(1)}
               disabled={page === 1}
               className="px-4 py-2 bg-indigo-500 text-white rounded-lg disabled:bg-gray-300 dark:disabled:bg-gray-600"
             >
@@ -157,7 +177,7 @@ const WhaleTransactions = () => {
               Next
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );
