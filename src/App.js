@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import Header from "./components/Header";
-import SentimentChart from "./components/SentimentChart";
-import NewsCard from "./components/NewsCard";
-import AltcoinSeason from "./components/AltcoinSeason";
-import WhaleTransactions from "./components/WhaleTransactions"; // Importă componenta WhaleTransactions
-import Footer from "./components/Footer";
+import Header from "./components/Layout/Header";
+import SentimentChart from "./components/Sentiment_Trend/SentimentChart";
+import NewsCard from "./components/News/NewsCard";
+import AltcoinSeason from "./components/Altcoin_Season/AltcoinSeason";
+import WhaleTransactions from "./components/Whale_Transactions/WhaleTransactions"; // Importă componenta WhaleTransactions
+import Footer from "./components/Layout/Footer";
 
 function App() {
   const [activeTab, setActiveTab] = useState("news");
