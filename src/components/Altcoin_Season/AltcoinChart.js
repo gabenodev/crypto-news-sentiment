@@ -21,7 +21,10 @@ const AltcoinChart = ({ coin, onClose }) => {
     const now = Date.now();
 
     // Blochează cererile dacă se apasă prea repede
-    if (now - lastRequestTimeRef.current < 3000) {
+    if (
+      lastRequestTimeRef.current !== 0 &&
+      now - lastRequestTimeRef.current < 3000
+    ) {
       setTooManyRequests(true);
       setTimeout(() => setTooManyRequests(false), 2000);
       return;
