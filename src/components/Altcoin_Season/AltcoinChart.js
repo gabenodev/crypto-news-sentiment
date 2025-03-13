@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   LineChart,
   Line,
@@ -15,19 +15,19 @@ const AltcoinChart = ({ coin, onClose }) => {
   const [error, setError] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [tooManyRequests, setTooManyRequests] = useState(false);
-  const [lastRequestTime, setLastRequestTime] = useState(0);
+  const lastRequestTimeRef = useRef(0); // Folosim useRef pentru lastRequestTime
 
   useEffect(() => {
     const now = Date.now();
 
     // Blochează cererile dacă se apasă prea repede
-    if (now - lastRequestTime < 3000) {
+    if (now - lastRequestTimeRef.current < 3000) {
       setTooManyRequests(true);
       setTimeout(() => setTooManyRequests(false), 2000);
       return;
     }
 
-    setLastRequestTime(now);
+    lastRequestTimeRef.current = now; // Actualizăm lastRequestTimeRef
     setLoading(true);
     setError(null);
 
@@ -66,7 +66,7 @@ const AltcoinChart = ({ coin, onClose }) => {
     };
 
     fetchHistoricalData();
-  }, [coin.id]);
+  }, [coin.id]); // Doar depindem de coin.id
 
   if (tooManyRequests) {
     return (
