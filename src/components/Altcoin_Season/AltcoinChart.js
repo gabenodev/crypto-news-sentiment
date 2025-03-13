@@ -12,15 +12,41 @@ import {
 const AltcoinChart = ({ coin, onClose }) => {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isExpanded, setIsExpanded] = useState(false); // Stare pentru dimensiunea graficului
+  const [error, setError] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [tooManyRequests, setTooManyRequests] = useState(false);
+  const [lastRequestTime, setLastRequestTime] = useState(0);
 
   useEffect(() => {
+    const now = Date.now();
+
+    // Blochează cererile dacă se apasă prea repede
+    if (now - lastRequestTime < 3000) {
+      setTooManyRequests(true);
+      setTimeout(() => setTooManyRequests(false), 2000);
+      return;
+    }
+
+    setLastRequestTime(now);
+    setLoading(true);
+    setError(null);
+
     const fetchHistoricalData = async () => {
       try {
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // Delay de 1 secundă
+
         const response = await fetch(
-          `https://api.coingecko.com/api/v3/coins/${coin.id}/market_chart?vs_currency=usd&days=7`
+          `http://localhost:5000/api/altcoin-season-chart?coinId=${coin.id}`
         );
+
+        if (!response.ok) {
+          throw new Error(`Server returned status: ${response.status}`);
+        }
+
         const data = await response.json();
+        if (!data || !data.prices) {
+          throw new Error("Invalid data format: prices not found");
+        }
 
         const formattedData = data.prices.map((priceData) => ({
           date: new Date(priceData[0]).toLocaleDateString("en-GB", {
@@ -33,6 +59,7 @@ const AltcoinChart = ({ coin, onClose }) => {
         setChartData(formattedData);
       } catch (error) {
         console.error("Error fetching historical data:", error);
+        setError("Failed to fetch data. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -41,10 +68,26 @@ const AltcoinChart = ({ coin, onClose }) => {
     fetchHistoricalData();
   }, [coin.id]);
 
+  if (tooManyRequests) {
+    return (
+      <div className="w-96 p-4 bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 rounded-lg shadow-lg">
+        <p>⚠️ Too many requests... slow down!</p>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="w-96 p-4 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
-        <p className="text-gray-700 dark:text-gray-300">Loading chart...</p>
+        <p className="text-gray-700 dark:text-gray-300">⏳ Loading chart...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-96 p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg shadow-lg">
+        <p>❌ {error}</p>
       </div>
     );
   }

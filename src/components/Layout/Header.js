@@ -11,7 +11,7 @@ function Header({ setActiveTab }) {
     marketCapChange24h: 0,
   });
 
-  useEffect(() => {
+  /*useEffect(() => {
     // Funcție pentru a obține datele de la CoinGecko
     const fetchCoinGeckoData = async () => {
       try {
@@ -42,7 +42,7 @@ function Header({ setActiveTab }) {
     };
 
     fetchCoinGeckoData();
-  }, []);
+  }, []);*/
 
   return (
     <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6 shadow-sm">
