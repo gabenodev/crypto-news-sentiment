@@ -9,6 +9,32 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+const CustomTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const dataPoint = payload[0].payload; // Accesăm punctul de date complet
+    const fullDate = dataPoint.fullDate.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+
+    return (
+      <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
+        <p className="text-sm text-gray-900 dark:text-white">
+          <strong>Date:</strong> {fullDate}
+        </p>
+        <p className="text-sm text-gray-900 dark:text-white">
+          <strong>Price:</strong> ${payload[0].value}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const AltcoinChart = ({ coin, onClose }) => {
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,6 +68,7 @@ const AltcoinChart = ({ coin, onClose }) => {
             month: "2-digit",
           }),
           price: priceData[1].toFixed(2),
+          fullDate: new Date(priceData[0]), // Adăugăm un câmp pentru data și ora completă
         }));
 
         setChartData(formattedData);
@@ -99,18 +126,23 @@ const AltcoinChart = ({ coin, onClose }) => {
           {isExpanded ? "Minimize" : "Expand"}
         </button>
       </div>
-      <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-        {coin.name}
-      </h2>
+      <div className="flex items-center mb-2">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+          {coin.name}
+        </h2>
+        <img
+          src={coin.image}
+          alt={coin.name}
+          className="w-8 h-8 rounded-full ml-2"
+        />
+      </div>
       <p className="text-gray-700 dark:text-gray-300 mb-4">
-        Price Change: {coin.priceChange > 0 ? "+" : ""}
-        {coin.priceChange.toFixed(2)}%
+        Price Change:{" "}
+        <span style={{ color: coin.priceChange > 0 ? "#16a34a" : "#dc2626" }}>
+          {coin.priceChange > 0 ? "+" : ""}
+          {coin.priceChange.toFixed(2)}%
+        </span>
       </p>
-      <img
-        src={coin.image}
-        alt={coin.name}
-        className="w-12 h-12 rounded-full mb-4"
-      />
 
       <div className="flex-1">
         <ResponsiveContainer width="100%" height={isExpanded ? 400 : 200}>
@@ -138,13 +170,7 @@ const AltcoinChart = ({ coin, onClose }) => {
               axisLine={{ stroke: "#666" }}
               domain={yDomain}
             />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#fff",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-              }}
-            />
+            <Tooltip content={<CustomTooltip />} />
             <Line
               type="monotone"
               dataKey="price"
