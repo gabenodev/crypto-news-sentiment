@@ -50,7 +50,7 @@ const AltcoinChart = ({ coin, onClose }) => {
         await new Promise((resolve) => setTimeout(resolve, 1000)); // Delay de 1 secundă
 
         const response = await fetch(
-          `http://localhost:5000/api/altcoin-season-chart?coinId=${coin.id}`
+          `https://sentimentx-backend.vercel.app/api/altcoin-season-chart?coinId=${coin.id}`
         );
 
         if (!response.ok) {

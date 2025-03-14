@@ -16,7 +16,7 @@ const AltcoinSeason = () => {
         setLoading(true);
         // Face cererea către serverul backend (Vercel)
         const response = await fetch(
-          "http://localhost:5000/api/altcoin-season"
+          "https://sentimentx-backend.vercel.app/api/altcoin-season"
         );
         const data = await response.json();
 
