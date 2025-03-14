@@ -88,6 +88,11 @@ const fetchAltcoinSeasonChartData = async (coinId) => {
   return response.json();
 };
 
+// Ruta pentru rădăcină
+app.get("/", (req, res) => {
+  res.send("Backend is running!");
+});
+
 // Endpoint pentru altcoin season
 app.get("/api/altcoin-season", async (req, res) => {
   try {
