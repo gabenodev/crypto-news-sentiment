@@ -10,6 +10,14 @@ import {
 } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Funcție helper pentru formatarea prețului
+const formatPrice = (price) => {
+  if (price < 0.001) {
+    return price.toFixed(6); // Afișează 6 zecimale pentru prețuri foarte mici
+  }
+  return price.toFixed(2); // Afișează 2 zecimale pentru prețuri mai mari
+};
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     const dataPoint = payload[0].payload;
@@ -28,7 +36,7 @@ const CustomTooltip = ({ active, payload, label }) => {
           <strong>Date:</strong> {fullDate}
         </p>
         <p className="text-sm text-gray-900 dark:text-white">
-          <strong>Price:</strong> ${payload[0].value}
+          <strong>Price:</strong> ${formatPrice(payload[0].value)}
         </p>
       </div>
     );
@@ -95,7 +103,7 @@ const AltcoinChart = ({ coin, onClose }) => {
             day: "2-digit",
             month: "2-digit",
           }),
-          price: priceData[1].toFixed(2),
+          price: priceData[1], // Păstrează valoarea originală fără formatare
           fullDate: new Date(priceData[0]),
         }));
         setChartData(formattedData);
@@ -106,7 +114,7 @@ const AltcoinChart = ({ coin, onClose }) => {
         setRank(rank);
       } catch (error) {
         console.error("Error fetching data:", error);
-        setError("Failed to fetch data. Please try again later.");
+        setError("Too many requests. Please try again later.");
       } finally {
         setLoading(false);
       }
@@ -135,7 +143,7 @@ const AltcoinChart = ({ coin, onClose }) => {
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
   const priceRange = maxPrice - minPrice;
-  const margin = priceRange * 0.05;
+  const margin = priceRange * 0.1; // Adaugă un margin de 10% pentru a evita comprimarea graficului
   const yDomain = [Math.max(0, minPrice - margin), maxPrice + margin];
 
   return (
@@ -212,7 +220,7 @@ const AltcoinChart = ({ coin, onClose }) => {
                 axisLine={{ stroke: "#666" }}
               />
               <YAxis
-                tickFormatter={(value) => `$${parseFloat(value).toFixed(2)}`}
+                tickFormatter={(value) => `$${formatPrice(value)}`} // Folosește funcția formatPrice
                 tick={{ fill: "#666", fontSize: 10 }}
                 axisLine={{ stroke: "#666" }}
                 domain={yDomain}
