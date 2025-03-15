@@ -13,7 +13,14 @@ function NewsCard() {
         const response = await axios.get(
           `https://sentimentx-backend.vercel.app/api/news`
         );
-        setNews(response.data.articles || []);
+
+        // Verifică dacă răspunsul este un array și setează starea `news`
+        if (Array.isArray(response.data)) {
+          setNews(response.data);
+          console.log("News array populated:", response.data); // Afișează array-ul populat
+        } else {
+          setNews([]);
+        }
       } catch (error) {
         console.error("Error fetching news:", error);
         setNews([]);
@@ -37,12 +44,13 @@ function NewsCard() {
       </div>
     );
 
-  if (news.length === 0)
+  if (news.length === 0) {
     return (
       <p className="text-center text-xl text-gray-600 dark:text-gray-300">
         No news found.
       </p>
     );
+  }
 
   const filteredNews = news.filter((article) =>
     article.title.toLowerCase().includes(searchTerm.toLowerCase())
