@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { motion } from "framer-motion"; // Importăm framer-motion
 
 function NewsCard() {
   const [news, setNews] = useState([]);
@@ -14,10 +15,9 @@ function NewsCard() {
           `https://sentimentx-backend.vercel.app/api/news`
         );
 
-        // Verifică dacă răspunsul este un array și setează starea `news`
         if (Array.isArray(response.data)) {
           setNews(response.data);
-          console.log("News array populated:", response.data); // Afișează array-ul populat
+          console.log("News array populated:", response.data);
         } else {
           setNews([]);
         }
@@ -90,9 +90,18 @@ function NewsCard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         {sortedNews.map((article, index) => (
-          <div
+          <motion.div
             key={index}
             className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all ease-in-out transform hover:scale-105"
+            initial={{ opacity: 0, y: 20 }} // Începem cu opacitate 0 și o ușoară deplasare în jos
+            animate={{ opacity: 1, y: 0 }} // Ajungem la opacitate 1 și fără deplasare
+            exit={{ opacity: 0, y: 20 }} // Ieșirea include opacitate 0 și deplasare în jos
+            transition={{
+              duration: 0.5, // Durata animației
+              delay: index * 0.1, // Întârziere între carduri
+              ease: "easeOut", // Efect de easing
+            }}
+            whileHover={{ scale: 1.05 }} // Animație de hover
           >
             <img
               src={article.urlToImage || "https://picsum.photos/150"}
@@ -115,7 +124,7 @@ function NewsCard() {
             >
               Read more
             </a>
-          </div>
+          </motion.div>
         ))}
       </div>
     </div>
