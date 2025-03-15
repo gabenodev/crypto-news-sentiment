@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { motion, AnimatePresence } from "framer-motion";
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -138,91 +139,97 @@ const AltcoinChart = ({ coin, onClose }) => {
   const yDomain = [Math.max(0, minPrice - margin), maxPrice + margin];
 
   return (
-    <div
-      className={`${
-        isExpanded ? "w-[600px]" : "w-96"
-      } p-4 bg-white dark:bg-gray-900 shadow-lg rounded-lg flex flex-col`}
-    >
-      <div className="flex justify-between items-center mb-4">
-        <button
-          onClick={onClose}
-          className="text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300"
-        >
-          Close
-        </button>
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300"
-        >
-          {isExpanded ? "Minimize" : "Expand"}
-        </button>
-      </div>
-      <div className="flex items-center mb-2">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-          {coin.name}
-        </h2>
-        <img
-          src={coin.image}
-          alt={coin.name}
-          className="w-8 h-8 rounded-full ml-2"
-        />
-      </div>
-      <p className="text-gray-700 dark:text-gray-300 mb-4">
-        Price Change:{" "}
-        <span style={{ color: coin.priceChange > 0 ? "#16a34a" : "#dc2626" }}>
-          {coin.priceChange > 0 ? "+" : ""}
-          {coin.priceChange.toFixed(2)}%
-        </span>
-      </p>
-      {marketCap !== null && rank !== null && (
-        <>
-          <p className="text-gray-700 dark:text-gray-300 mb-2">
-            <strong>Market Cap:</strong> ${marketCap.toLocaleString()}
-          </p>
-          <p className="text-gray-700 dark:text-gray-300 mb-4">
-            <strong>Rank:</strong> #{rank}
-          </p>
-        </>
-      )}
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 50 }}
+        transition={{ duration: 0.3 }}
+        className={`${
+          isExpanded ? "w-[600px]" : "w-96"
+        } p-4 bg-white dark:bg-gray-900 shadow-lg rounded-lg flex flex-col`}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <button
+            onClick={onClose}
+            className="text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300"
+          >
+            Close
+          </button>
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300"
+          >
+            {isExpanded ? "Minimize" : "Expand"}
+          </button>
+        </div>
+        <div className="flex items-center mb-2">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            {coin.name}
+          </h2>
+          <img
+            src={coin.image}
+            alt={coin.name}
+            className="w-8 h-8 rounded-full ml-2"
+          />
+        </div>
+        <p className="text-gray-700 dark:text-gray-300 mb-4">
+          Price Change:{" "}
+          <span style={{ color: coin.priceChange > 0 ? "#16a34a" : "#dc2626" }}>
+            {coin.priceChange > 0 ? "+" : ""}
+            {coin.priceChange.toFixed(2)}%
+          </span>
+        </p>
+        {marketCap !== null && rank !== null && (
+          <>
+            <p className="text-gray-700 dark:text-gray-300 mb-2">
+              <strong>Market Cap:</strong> ${marketCap.toLocaleString()}
+            </p>
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              <strong>Rank:</strong> #{rank}
+            </p>
+          </>
+        )}
 
-      <div className="flex-1">
-        <ResponsiveContainer width="100%" height={isExpanded ? 400 : 200}>
-          <LineChart data={chartData}>
-            <CartesianGrid
-              strokeDasharray="none"
-              stroke="#eee"
-              vertical={false}
-              horizontal={false}
-            />
-            <XAxis
-              dataKey="date"
-              tick={{
-                fill: "#666",
-                fontSize: 10,
-                angle: 0,
-                textAnchor: "middle",
-              }}
-              interval={Math.floor(chartData.length / 7)}
-              axisLine={{ stroke: "#666" }}
-            />
-            <YAxis
-              tickFormatter={(value) => `$${parseFloat(value).toFixed(2)}`}
-              tick={{ fill: "#666", fontSize: 10 }}
-              axisLine={{ stroke: "#666" }}
-              domain={yDomain}
-            />
-            <Tooltip content={<CustomTooltip />} />
-            <Line
-              type="monotone"
-              dataKey="price"
-              stroke="#23d996"
-              strokeWidth={2}
-              dot={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+        <div className="flex-1">
+          <ResponsiveContainer width="100%" height={isExpanded ? 400 : 200}>
+            <LineChart data={chartData}>
+              <CartesianGrid
+                strokeDasharray="none"
+                stroke="#eee"
+                vertical={false}
+                horizontal={false}
+              />
+              <XAxis
+                dataKey="date"
+                tick={{
+                  fill: "#666",
+                  fontSize: 10,
+                  angle: 0,
+                  textAnchor: "middle",
+                }}
+                interval={Math.floor(chartData.length / 7)}
+                axisLine={{ stroke: "#666" }}
+              />
+              <YAxis
+                tickFormatter={(value) => `$${parseFloat(value).toFixed(2)}`}
+                tick={{ fill: "#666", fontSize: 10 }}
+                axisLine={{ stroke: "#666" }}
+                domain={yDomain}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Line
+                type="monotone"
+                dataKey="price"
+                stroke="#23d996"
+                strokeWidth={2}
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

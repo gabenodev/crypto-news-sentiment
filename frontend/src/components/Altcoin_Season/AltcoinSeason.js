@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import AltcoinChart from "./AltcoinChart";
 
 const AltcoinSeason = () => {
@@ -14,7 +15,6 @@ const AltcoinSeason = () => {
     const fetchAltcoinSeasonData = async () => {
       try {
         setLoading(true);
-        // Face cererea către serverul backend (Vercel)
         const response = await fetch(
           "https://sentimentx-backend.vercel.app/api/altcoin-season"
         );
@@ -179,14 +179,22 @@ const AltcoinSeason = () => {
       </div>
 
       {/* Cardul cu graficul */}
-      {selectedCoin && (
-        <div className="sticky top-20">
-          <AltcoinChart
-            coin={selectedCoin}
-            onClose={() => setSelectedCoin(null)}
-          />
-        </div>
-      )}
+      <AnimatePresence>
+        {selectedCoin && (
+          <motion.div
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 50 }}
+            transition={{ duration: 0.3 }}
+            className="sticky top-20"
+          >
+            <AltcoinChart
+              coin={selectedCoin}
+              onClose={() => setSelectedCoin(null)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
