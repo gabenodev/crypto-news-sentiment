@@ -131,4 +131,9 @@ app.get("/api/altcoin-season-chart", async (req, res) => {
   }
 });
 
+// Pornește serverul
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
 module.exports = app;
