@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { motion } from "framer-motion"; // Importăm framer-motion
+import { motion } from "framer-motion";
 
 function NewsCard() {
   const [news, setNews] = useState([]);
@@ -92,16 +92,19 @@ function NewsCard() {
         {sortedNews.map((article, index) => (
           <motion.div
             key={index}
-            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-2xl transition-all ease-in-out transform hover:scale-105"
-            initial={{ opacity: 0, y: 20 }} // Începem cu opacitate 0 și o ușoară deplasare în jos
-            animate={{ opacity: 1, y: 0 }} // Ajungem la opacitate 1 și fără deplasare
-            exit={{ opacity: 0, y: 20 }} // Ieșirea include opacitate 0 și deplasare în jos
+            className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg hover:shadow-2xl"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
             transition={{
-              duration: 0.5, // Durata animației
-              delay: index * 0.1, // Întârziere între carduri
-              ease: "easeOut", // Efect de easing
+              duration: 0.4, // Redusă durata pentru a face animația mai rapidă
+              delay: index * 0.1,
+              ease: "easeInOut", // Folosește easing uniform pentru o tranziție lină
             }}
-            whileHover={{ scale: 1.05 }} // Animație de hover
+            whileHover={{
+              scale: 1.05,
+              transition: { duration: 0.2, ease: "easeInOut" }, // Animație mai rapidă la hover
+            }}
           >
             <img
               src={article.urlToImage || "https://picsum.photos/150"}
