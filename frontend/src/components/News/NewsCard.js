@@ -34,12 +34,12 @@ function NewsCard() {
 
   if (loading)
     return (
-      <div className="flex justify-center items-center h-screen bg-gradient-to-r from-blue-500 to-purple-500 dark:from-gray-800 dark:to-black text-white">
-        <div className="flex flex-col items-center">
-          <div className="text-lg font-semibold animate-pulse">
+      <div className="flex justify-center items-center h-40 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-gray-800 dark:to-gray-900 text-white rounded-lg shadow-2xl mx-4 p-6">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="text-xl font-semibold animate-pulse">
             Fetching latest news...
           </div>
-          <div className="mt-4 w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-10 h-10 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
         </div>
       </div>
     );
