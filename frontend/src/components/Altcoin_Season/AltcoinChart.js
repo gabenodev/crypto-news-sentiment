@@ -191,10 +191,10 @@ const AltcoinChart = ({ coin, onClose }) => {
         {marketCap !== null && rank !== null && (
           <>
             <p className="text-gray-700 dark:text-gray-300 mb-2">
-              <strong>Market Cap:</strong> ${marketCap.toLocaleString()}
+              <strong>Rank</strong> #{rank}
             </p>
             <p className="text-gray-700 dark:text-gray-300 mb-4">
-              <strong>Rank:</strong> #{rank}
+              <strong>Market Cap:</strong> ${marketCap.toLocaleString()}
             </p>
           </>
         )}

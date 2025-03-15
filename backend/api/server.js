@@ -3,9 +3,12 @@ const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
+const axios = require("axios");
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const NEWS_API_KEY = process.env.NEWS_API_KEY;
 
 // Middleware pentru CORS
 app.use(cors());
@@ -27,6 +30,10 @@ const cache = {
     lastUpdated: null,
   },
   altcoinSeasonChart: {}, // Cache separat pentru fiecare coinId
+  news: {
+    data: null,
+    lastUpdated: null,
+  },
 };
 
 // Funcție generică pentru gestionarea cache-ului
@@ -35,17 +42,14 @@ const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
   let cacheEntry;
 
   if (cacheId) {
-    // Dacă avem un cacheId (de exemplu, coinId), folosim cache-ul specific
     if (!cache[cacheKey][cacheId]) {
       cache[cacheKey][cacheId] = { data: null, lastUpdated: null };
     }
     cacheEntry = cache[cacheKey][cacheId];
   } else {
-    // Altfel, folosim cache-ul global
     cacheEntry = cache[cacheKey];
   }
 
-  // Verificăm dacă datele din cache sunt încă valide (1 minut)
   if (
     cacheEntry.data &&
     cacheEntry.lastUpdated &&
@@ -54,13 +58,34 @@ const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
     return cacheEntry.data;
   }
 
-  // Dacă cache-ul este expirat, facem o nouă cerere
   return fetchFunction().then((data) => {
     cacheEntry.data = data;
     cacheEntry.lastUpdated = now;
     return data;
   });
 };
+
+// Funcție pentru a obține știri crypto
+const fetchCryptoNews = async () => {
+  const response = await axios.get(
+    `https://newsapi.org/v2/everything?q=crypto&apiKey=${NEWS_API_KEY}`
+  );
+  return response.data.articles || [];
+};
+
+// Endpoint pentru știri crypto
+app.get("/api/news", async (req, res) => {
+  try {
+    const data = await getCachedData("news", fetchCryptoNews);
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching crypto news:", error);
+    res.status(500).json({
+      error: "Failed to fetch news",
+      details: error.message,
+    });
+  }
+});
 
 // Funcție pentru a obține datele de la CoinGecko pentru /api/altcoin-season
 const fetchAltcoinSeasonData = async () => {
@@ -75,8 +100,6 @@ const fetchAltcoinSeasonData = async () => {
   return response.json();
 };
 
-// Funcție pentru a obține datele de la CoinGecko pentru /api/altcoin-season-chart
-// Vercel automate deploy test
 const fetchAltcoinSeasonChartData = async (coinId) => {
   const response = await fetch(
     `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=30`
@@ -89,12 +112,10 @@ const fetchAltcoinSeasonChartData = async (coinId) => {
   return response.json();
 };
 
-// Ruta pentru rădăcină
 app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
 
-// Endpoint pentru altcoin season
 app.get("/api/altcoin-season", async (req, res) => {
   try {
     const data = await getCachedData("altcoinSeason", fetchAltcoinSeasonData);
@@ -108,7 +129,6 @@ app.get("/api/altcoin-season", async (req, res) => {
   }
 });
 
-// Endpoint pentru altcoin season chart
 app.get("/api/altcoin-season-chart", async (req, res) => {
   const { coinId } = req.query;
 
@@ -120,7 +140,7 @@ app.get("/api/altcoin-season-chart", async (req, res) => {
     const data = await getCachedData(
       "altcoinSeasonChart",
       () => fetchAltcoinSeasonChartData(coinId),
-      coinId // Trecem coinId ca cacheId
+      coinId
     );
     res.json(data);
   } catch (error) {
@@ -132,7 +152,6 @@ app.get("/api/altcoin-season-chart", async (req, res) => {
   }
 });
 
-// Pornește serverul
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
