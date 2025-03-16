@@ -81,31 +81,29 @@ const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
 //Cryptocompare function to get data
 
 const fetchCryptoData = async () => {
-  try {
-    const response = await axios.get(
-      "https://min-api.cryptocompare.com/data/top/mktcapfull",
-      {
-        params: {
-          limit: 20,
-          tsym: "USD",
-          api_key: CRYPTOCOMPARE_API_KEY, // Asigură-te că cheia API este corectă
-        },
-      }
-    );
+  const response = await axios.get(
+    "https://min-api.cryptocompare.com/data/top/mktcapfull",
+    {
+      params: {
+        limit: 20,
+        tsym: "USD",
+        api_key: CRYPTOCOMPARE_API_KEY,
+      },
+    }
+  );
 
-    // Afișează întregul răspuns pentru debugging
-    console.log("Răspuns de la CryptoCompare:", response.data);
+  // Adaugă un log pentru a inspecta răspunsul complet
+  console.log("CryptoCompare API Response:", response.data);
 
-    return response.data.Data.map((coin) => ({
+  return response.data.Data.map((coin) => {
+    console.log("Coin Data:", coin); // Vezi structura fiecărui coin
+    return {
       id: coin.CoinInfo.Id,
       name: coin.CoinInfo.FullName,
       symbol: coin.CoinInfo.Name,
-      market_cap: coin.RAW.USD.MKTCAP,
-    }));
-  } catch (error) {
-    console.error("Eroare la obținerea datelor de la CryptoCompare:", error);
-    throw error; // Aruncă eroarea pentru a o captura mai sus
-  }
+      market_cap: coin.RAW && coin.RAW.USD ? coin.RAW.USD.MKTCAP : 0, // Protejează-te de eroare
+    };
+  });
 };
 
 // Funcție pentru a obține știri crypto
