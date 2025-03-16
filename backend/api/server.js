@@ -12,7 +12,6 @@ const PORT = process.env.PORT || 5000;
 
 // API Keys
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
-const CRYPTOCOMPARE_API_KEY = process.env.CRYPTOCOMPARE_API_KEY;
 
 // Middleware pentru CORS
 app.use(cors());
@@ -78,24 +77,6 @@ const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
 };
 
 //  FETCH DATA FUNCTIONS FROM API ----------------------------------------------------------------------------------------------------
-//Cryptocompare function to get data
-
-const fetchCryptoDataPrice = async () => {
-  const response = await axios.get(
-    "https://min-api.cryptocompare.com/data/pricemulti",
-    {
-      params: {
-        fsyms: "BTC,ETH,LTC", // Poți înlocui cu simbolurile monedelor dorite
-        tsyms: "USD",
-        api_key: CRYPTOCOMPARE_API_KEY,
-      },
-    }
-  );
-
-  console.log("Crypto Prices:", response.data); // Vezi prețurile returnate
-
-  return response.data;
-};
 
 // Funcție pentru a obține știri crypto
 
