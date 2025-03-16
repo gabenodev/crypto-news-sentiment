@@ -80,7 +80,7 @@ const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
 //  FETCH DATA FUNCTIONS FROM API ----------------------------------------------------------------------------------------------------
 //Cryptocompare function to get data
 
-const fetchCryptoPrices = async () => {
+const fetchCryptoData = async () => {
   const response = await axios.get(
     "https://min-api.cryptocompare.com/data/pricemulti",
     {
