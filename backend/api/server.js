@@ -80,30 +80,21 @@ const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
 //  FETCH DATA FUNCTIONS FROM API ----------------------------------------------------------------------------------------------------
 //Cryptocompare function to get data
 
-const fetchCryptoData = async () => {
+const fetchCryptoPrices = async () => {
   const response = await axios.get(
-    "https://min-api.cryptocompare.com/data/top/mktcapfull",
+    "https://min-api.cryptocompare.com/data/pricemulti",
     {
       params: {
-        limit: 20,
-        tsym: "USD",
+        fsyms: "BTC,ETH,LTC", // Poți înlocui cu simbolurile monedelor dorite
+        tsyms: "USD",
         api_key: CRYPTOCOMPARE_API_KEY,
       },
     }
   );
 
-  // Adaugă un log pentru a inspecta răspunsul complet
-  console.log("CryptoCompare API Response:", response.data);
+  console.log("Crypto Prices:", response.data); // Vezi prețurile returnate
 
-  return response.data.Data.map((coin) => {
-    console.log("Coin Data:", coin); // Vezi structura fiecărui coin
-    return {
-      id: coin.CoinInfo.Id,
-      name: coin.CoinInfo.FullName,
-      symbol: coin.CoinInfo.Name,
-      market_cap: coin.RAW && coin.RAW.USD ? coin.RAW.USD.MKTCAP : 0, // Protejează-te de eroare
-    };
-  });
+  return response.data;
 };
 
 // Funcție pentru a obține știri crypto
