@@ -89,7 +89,7 @@ const fetchCryptoNews = async () => {
 
 // Funcție pentru a obține datele de la CoinGecko pentru /api/altcoin-season
 
-const fetchAltcoinSeasonData = async () => {
+const fetchAllCrpytosData = async () => {
   const response = await fetch(
     "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1"
   );
@@ -142,10 +142,10 @@ app.get("/api/cryptos", async (req, res) => {
   }
 });
 
-/* API ALTCOIN SEASON endpoint */
-app.get("/api/altcoin-season", async (req, res) => {
+/* API ALL CRYPTOS DATA endpoint */
+app.get("/api/all-cryptos", async (req, res) => {
   try {
-    const data = await getCachedData("altcoinSeason", fetchAltcoinSeasonData);
+    const data = await getCachedData("altcoinSeason", fetchAllCrpytosData);
     res.json(data);
   } catch (error) {
     console.error("Error fetching altcoin season data:", error);

@@ -10,7 +10,7 @@ function Homepage() {
       try {
         // URL-ul corect de pe Vercel
         const response = await fetch(
-          "https://sentimentx-backend.vercel.app/api/cryptos"
+          "https://sentimentx-backend.vercel.app/api/all-cryptos"
         );
 
         if (!response.ok) {
