@@ -48,7 +48,7 @@ function Homepage() {
       </h1>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
-          <thead className="bg-gray-300 dark:bg-gray-800">
+          <thead className="bg-gray-200 dark:bg-gray-800">
             <tr className="text-lg text-gray-700 dark:text-gray-300">
               {["#", "Name", "Price", "24h Change", "Market Cap", "Supply"].map(
                 (header) => (
@@ -62,15 +62,11 @@ function Homepage() {
               )}
             </tr>
           </thead>
-          <tbody>
-            {cryptoData.map((crypto, index) => (
+          <tbody className="bg-gray-100 dark:bg-gray-900">
+            {cryptoData.map((crypto) => (
               <tr
                 key={crypto.id}
-                className={`py-6 transition duration-200 ${
-                  index % 2 === 0
-                    ? "bg-gray-100 dark:bg-gray-700"
-                    : "bg-white dark:bg-gray-800"
-                }`}
+                className="border-b border-gray-300 dark:border-gray-700"
               >
                 <td className="py-4 px-6 text-gray-800 dark:text-gray-200 font-medium">
                   #{crypto.market_cap_rank}
