@@ -1,53 +1,53 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
-const Homepage = () => {
-  const [cryptos, setCryptos] = useState([]);
+function Homepage() {
+  const [cryptoData, setCryptoData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchCryptos = async () => {
+    // Funcție pentru a obține datele de la API-ul de pe Vercel
+    const fetchCryptoData = async () => {
       try {
-        const response = await fetch("/api/cryptos");
+        // Înlocuiește cu URL-ul corect de pe Vercel
+        const response = await fetch(
+          "https://sentimentx-backend.vercel.app/api/cryptos"
+        );
+
         if (!response.ok) {
-          throw new Error("Failed to fetch cryptos");
+          throw new Error("Network response was not ok");
         }
-        const data = await response.json();
-        setCryptos(data);
+
+        const data = await response.json(); // Parsem datele ca JSON
+        console.log("API Response:", data); // Verificăm datele
+
+        setCryptoData(data); // Setăm datele corecte în state
+        setLoading(false); // Oprim starea de încărcare
       } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
+        console.error("Error fetching data:", error);
+        setLoading(false); // Oprirea stării de încărcare și tratarea erorilor
       }
     };
 
-    fetchCryptos();
+    fetchCryptoData();
   }, []);
 
-  if (loading) return <p>Loading cryptocurrencies...</p>;
-  if (error) return <p>Error: {error}</p>;
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-4">Top Cryptocurrencies</h1>
-      <ul className="space-y-4">
-        {cryptos.map((crypto, index) => (
-          <li
-            key={crypto.id}
-            className="flex items-center justify-between p-4 bg-gray-800 rounded-lg"
-          >
-            <span className="text-lg font-semibold">
-              {index + 1}. {crypto.name} ({crypto.symbol.toUpperCase()})
-            </span>
-            <span className="text-green-400">
-              ${crypto.market_cap.toLocaleString()}{" "}
-              {/* afișez market cap-ul corect */}
-            </span>
+    <div>
+      <h1>Top Cryptocurrencies</h1>
+      <ul>
+        {cryptoData.map((crypto, index) => (
+          <li key={index}>
+            {crypto.name} - ${crypto.price}{" "}
+            {/* Adaptează aceste câmpuri în funcție de structura datelor */}
           </li>
         ))}
       </ul>
     </div>
   );
-};
+}
 
 export default Homepage;

@@ -1,3 +1,4 @@
+//IMPORTS
 const express = require("express");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
@@ -39,7 +40,7 @@ const cache = {
   },
 };
 
-// Funcție generică pentru gestionarea cache-ului
+// GENERIC FUNCTION TO GET CACHED DATA -> used in all endpoints -----------------
 const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
   const now = Date.now();
   let cacheEntry;
@@ -68,6 +69,7 @@ const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
   });
 };
 
+//  FETCH DATA FUNCTIONS FROM API ----------------------------------------------------------------------------------------------------
 //Cryptocompare function to get data
 
 const fetchCryptoData = async () => {
@@ -91,6 +93,7 @@ const fetchCryptoData = async () => {
 };
 
 // Funcție pentru a obține știri crypto
+
 const fetchCryptoNews = async () => {
   const response = await axios.get(
     `https://newsapi.org/v2/everything?q=crypto&apiKey=${NEWS_API_KEY}`
@@ -98,21 +101,8 @@ const fetchCryptoNews = async () => {
   return response.data.articles || [];
 };
 
-// Endpoint pentru știri crypto
-app.get("/api/news", async (req, res) => {
-  try {
-    const data = await getCachedData("news", fetchCryptoNews);
-    res.json(data);
-  } catch (error) {
-    console.error("Error fetching crypto news:", error);
-    res.status(500).json({
-      error: "Failed to fetch news",
-      details: error.message,
-    });
-  }
-});
-
 // Funcție pentru a obține datele de la CoinGecko pentru /api/altcoin-season
+
 const fetchAltcoinSeasonData = async () => {
   const response = await fetch(
     "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1"
@@ -124,6 +114,8 @@ const fetchAltcoinSeasonData = async () => {
 
   return response.json();
 };
+
+// Funcție pentru a obține datele de la CoinGecko pentru /api/altcoin-season-chart
 
 const fetchAltcoinSeasonChartData = async (coinId) => {
   const response = await fetch(
@@ -137,8 +129,23 @@ const fetchAltcoinSeasonChartData = async (coinId) => {
   return response.json();
 };
 
-//Endpoints
+//       ENDPOINTS ---------------------------------------------------------------------------------------------------- ENDPOINTS
 
+/* API NEWS endpoint */
+app.get("/api/news", async (req, res) => {
+  try {
+    const data = await getCachedData("news", fetchCryptoNews);
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching crypto news:", error);
+    res.status(500).json({
+      error: "Failed to fetch news",
+      details: error.message,
+    });
+  }
+});
+
+/* CRYPTO COMPARE HOMEPAGE endpoint */
 app.get("/api/cryptos", async (req, res) => {
   try {
     const data = await getCachedData("cryptos", fetchCryptoData);
@@ -149,10 +156,7 @@ app.get("/api/cryptos", async (req, res) => {
   }
 });
 
-app.get("/", (req, res) => {
-  res.send("Backend is running!");
-});
-
+/* API ALTCOIN SEASON endpoint */
 app.get("/api/altcoin-season", async (req, res) => {
   try {
     const data = await getCachedData("altcoinSeason", fetchAltcoinSeasonData);
@@ -166,6 +170,7 @@ app.get("/api/altcoin-season", async (req, res) => {
   }
 });
 
+/* API ALTCOIN SEASON CHART endpoint */
 app.get("/api/altcoin-season-chart", async (req, res) => {
   const { coinId } = req.query;
 
@@ -189,6 +194,12 @@ app.get("/api/altcoin-season-chart", async (req, res) => {
   }
 });
 
+/* Default endpoint in VERCEL to see if the backend is running! */
+app.get("/", (req, res) => {
+  res.send("Backend is running!");
+});
+
+/* Start server only for local test purposes*/
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
