@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaBitcoin, FaEthereum, FaChartLine, FaGlobe } from "react-icons/fa"; // Importă iconițele
 import NightToggle from "./NightToggle"; // Importă componenta NightToggle
+import { motion } from "framer-motion"; // Importă motion de la framer-motion
 
 function Header({ setActiveTab }) {
   const [cryptoData, setCryptoData] = useState({
@@ -45,16 +46,22 @@ function Header({ setActiveTab }) {
   }, []);
 
   return (
-    <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6 shadow-sm w-full">
+      {/* Elimină max-w-7xl și ajustează padding-ul */}
+      <div className="w-full px-6 sm:px-8 lg:px-12">
         {/* Titlul site-ului, navbar-ul și NightToggle pe aceeași linie */}
         <div className="flex items-center justify-between">
           {/* Partea din stânga: Titlul și navbar-ul */}
           <div className="flex items-center space-x-10">
-            {/* Titlul site-ului */}
-            <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-green-500">
+            {/* Titlul site-ului cu animație */}
+            <motion.h1
+              initial={{ opacity: 0, y: -20 }} // Starea inițială
+              animate={{ opacity: 1, y: 0 }} // Starea finală
+              transition={{ delay: 0.2, duration: 0.5 }} // Tranziția
+              className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-green-500"
+            >
               SentimentX
-            </h1>
+            </motion.h1>
 
             {/* Navbar */}
             <nav className="flex space-x-6 text-lg font-medium">
@@ -97,8 +104,13 @@ function Header({ setActiveTab }) {
         {/* Linie de separare cu gradient */}
         <div className="my-4 h-px bg-gradient-to-r from-teal-400 to-green-500"></div>
 
-        {/* Informații despre crypto */}
-        <div className="flex space-x-8 text-sm font-medium text-gray-300">
+        {/* Informații despre crypto cu animație */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} // Starea inițială
+          animate={{ opacity: 1, y: 0 }} // Starea finală
+          transition={{ delay: 0.4, duration: 0.5 }} // Tranziția
+          className="flex space-x-8 text-sm font-medium text-gray-300"
+        >
           {/* Bitcoin Dominance */}
           <div className="flex items-center space-x-2">
             <FaBitcoin className="text-yellow-400" /> {/* Iconița Bitcoin */}
@@ -136,7 +148,7 @@ function Header({ setActiveTab }) {
               {Math.abs(cryptoData.marketCapChange24h).toFixed(2)}%
             </span>
           </div>
-        </div>
+        </motion.div>
       </div>
     </header>
   );
