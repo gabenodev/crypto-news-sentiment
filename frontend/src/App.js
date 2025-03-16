@@ -5,9 +5,10 @@ import NewsCard from "./components/News/NewsCard";
 import AltcoinSeason from "./components/Altcoin_Season/AltcoinSeason";
 import WhaleTransactions from "./components/Whale_Transactions/WhaleTransactions"; // Importă componenta WhaleTransactions
 import Footer from "./components/Layout/Footer";
+import Homepage from "./components/HomePage/HomePage";
 
 function App() {
-  const [activeTab, setActiveTab] = useState("news");
+  const [activeTab, setActiveTab] = useState("homepage"); // Setezi valoarea initiala la homepage
 
   return (
     <div className="App bg-gray-100 min-h-screen flex flex-col">
@@ -18,8 +19,9 @@ function App() {
           {activeTab === "sentiment" && <SentimentChart />}
           {activeTab === "altcoin" && <AltcoinSeason />}
           {activeTab === "news" && <NewsCard />}
-          {activeTab === "whaleTransactions" && <WhaleTransactions />}{" "}
-          {/* Aici adăugăm tab-ul pentru WhaleTransactions */}
+          {activeTab === "whaleTransactions" && <WhaleTransactions />}
+          {activeTab === "homepage" && <Homepage />}{" "}
+          {/* Adăugăm tab-ul pentru Homepage */}
         </div>
       </main>
       <Footer />

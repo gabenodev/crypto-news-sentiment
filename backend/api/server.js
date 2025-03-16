@@ -8,7 +8,10 @@ require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// API Keys
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
+const CRYPTOCOMPARE_API_KEY = process.env.CRYPTOCOMPARE_API_KEY;
 
 // Middleware pentru CORS
 app.use(cors());
@@ -65,6 +68,28 @@ const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
   });
 };
 
+//Cryptocompare function to get data
+
+const fetchCryptoData = async () => {
+  const response = await axios.get(
+    "https://min-api.cryptocompare.com/data/top/mktcapfull",
+    {
+      params: {
+        limit: 20,
+        tsym: "USD",
+        api_key: CRYPTOCOMPARE_API_KEY,
+      },
+    }
+  );
+
+  return response.data.Data.map((coin) => ({
+    id: coin.CoinInfo.Id,
+    name: coin.CoinInfo.FullName,
+    symbol: coin.CoinInfo.Name,
+    market_cap: coin.RAW.USD.MKTCAP, // corectez accesul la market cap
+  }));
+};
+
 // Funcție pentru a obține știri crypto
 const fetchCryptoNews = async () => {
   const response = await axios.get(
@@ -111,6 +136,18 @@ const fetchAltcoinSeasonChartData = async (coinId) => {
 
   return response.json();
 };
+
+//Endpoints
+
+app.get("/api/cryptos", async (req, res) => {
+  try {
+    const data = await getCachedData("cryptos", fetchCryptoData);
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching crypto data:", error);
+    res.status(500).json({ error: "Failed to fetch data" });
+  }
+});
 
 app.get("/", (req, res) => {
   res.send("Backend is running!");
