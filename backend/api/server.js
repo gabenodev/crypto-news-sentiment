@@ -73,23 +73,29 @@ const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
 //Cryptocompare function to get data
 
 const fetchCryptoData = async () => {
-  const response = await axios.get(
-    "https://min-api.cryptocompare.com/data/top/mktcapfull",
-    {
-      params: {
-        limit: 20,
-        tsym: "USD",
-        api_key: CRYPTOCOMPARE_API_KEY,
-      },
-    }
-  );
+  try {
+    const response = await axios.get(
+      "https://min-api.cryptocompare.com/data/top/mktcapfull",
+      {
+        params: {
+          limit: 20,
+          tsym: "USD",
+          api_key: CRYPTOCOMPARE_API_KEY,
+        },
+      }
+    );
 
-  return response.data.Data.map((coin) => ({
-    id: coin.CoinInfo.Id,
-    name: coin.CoinInfo.FullName,
-    symbol: coin.CoinInfo.Name,
-    market_cap: coin.RAW.USD.MKTCAP, // corectez accesul la market cap
-  }));
+    console.log("Fetched data from CryptoCompare:", response.data); // Debugging
+    return response.data.Data.map((coin) => ({
+      id: coin.CoinInfo.Id,
+      name: coin.CoinInfo.FullName,
+      symbol: coin.CoinInfo.Name,
+      market_cap: coin.RAW.USD.MKTCAP,
+    }));
+  } catch (error) {
+    console.error("Error in fetchCryptoData:", error);
+    throw error; // aruncă eroarea pentru a o prinde în getCachedData
+  }
 };
 
 // Funcție pentru a obține știri crypto
