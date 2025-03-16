@@ -45,6 +45,12 @@ const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
   const now = Date.now();
   let cacheEntry;
 
+  // Asigură-te că cache[cacheKey] există
+  if (!cache[cacheKey]) {
+    cache[cacheKey] = {}; // Inițializează cache[cacheKey] dacă nu există
+  }
+
+  // Dacă există un cacheId, asigură-te că acesta este inițializat și corect
   if (cacheId) {
     if (!cache[cacheKey][cacheId]) {
       cache[cacheKey][cacheId] = { data: null, lastUpdated: null };
@@ -54,6 +60,7 @@ const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
     cacheEntry = cache[cacheKey];
   }
 
+  // Verifică dacă datele sunt valabile și nu au expirat
   if (
     cacheEntry.data &&
     cacheEntry.lastUpdated &&
@@ -62,6 +69,7 @@ const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
     return cacheEntry.data;
   }
 
+  // Dacă datele nu sunt disponibile sau au expirat, le aduci din nou
   return fetchFunction().then((data) => {
     cacheEntry.data = data;
     cacheEntry.lastUpdated = now;
@@ -80,12 +88,14 @@ const fetchCryptoData = async () => {
         params: {
           limit: 20,
           tsym: "USD",
-          api_key: CRYPTOCOMPARE_API_KEY,
+          api_key: CRYPTOCOMPARE_API_KEY, // Asigură-te că cheia API este corectă
         },
       }
     );
 
-    console.log("Fetched data from CryptoCompare:", response.data); // Debugging
+    // Afișează întregul răspuns pentru debugging
+    console.log("Răspuns de la CryptoCompare:", response.data);
+
     return response.data.Data.map((coin) => ({
       id: coin.CoinInfo.Id,
       name: coin.CoinInfo.FullName,
@@ -93,8 +103,8 @@ const fetchCryptoData = async () => {
       market_cap: coin.RAW.USD.MKTCAP,
     }));
   } catch (error) {
-    console.error("Error in fetchCryptoData:", error);
-    throw error; // aruncă eroarea pentru a o prinde în getCachedData
+    console.error("Eroare la obținerea datelor de la CryptoCompare:", error);
+    throw error; // Aruncă eroarea pentru a o captura mai sus
   }
 };
 
