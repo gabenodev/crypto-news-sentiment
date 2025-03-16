@@ -8,7 +8,7 @@ function Homepage() {
     // Funcție pentru a obține datele de la API-ul de pe Vercel
     const fetchCryptoData = async () => {
       try {
-        // Înlocuiește cu URL-ul corect de pe Vercel
+        // URL-ul corect de pe Vercel
         const response = await fetch(
           "https://sentimentx-backend.vercel.app/api/cryptos"
         );
@@ -39,12 +39,12 @@ function Homepage() {
     <div>
       <h1>Top Cryptocurrencies</h1>
       <ul>
-        {cryptoData.map((crypto, index) => (
-          <li key={index}>
-            {crypto.name} - ${crypto.price}{" "}
-            {/* Adaptează aceste câmpuri în funcție de structura datelor */}
-          </li>
-        ))}
+        {cryptoData &&
+          Object.keys(cryptoData).map((key) => (
+            <li key={key}>
+              {key}: ${cryptoData[key]?.USD} {/* Afișăm prețurile */}
+            </li>
+          ))}
       </ul>
     </div>
   );

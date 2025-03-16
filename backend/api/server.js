@@ -80,7 +80,7 @@ const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
 //  FETCH DATA FUNCTIONS FROM API ----------------------------------------------------------------------------------------------------
 //Cryptocompare function to get data
 
-const fetchCryptoData = async () => {
+const fetchCryptoDataPrice = async () => {
   const response = await axios.get(
     "https://min-api.cryptocompare.com/data/pricemulti",
     {
@@ -153,7 +153,7 @@ app.get("/api/news", async (req, res) => {
 /* CRYPTO COMPARE HOMEPAGE endpoint */
 app.get("/api/cryptos", async (req, res) => {
   try {
-    const data = await getCachedData("cryptos", fetchCryptoData);
+    const data = await getCachedData("cryptos", fetchCryptoDataPrice);
     res.json(data);
   } catch (error) {
     console.error("Error fetching crypto data:", error);
