@@ -71,45 +71,75 @@ function Homepage() {
           </thead>
           {/* Corpul tabelului cu linii de separare */}
           <tbody className="bg-gray-100 dark:bg-gray-900">
-            {cryptoData.map((crypto) => (
-              <tr
-                key={crypto.id}
-                className="border-b border-gray-300 dark:border-gray-700"
-              >
-                <td className="py-5 px-6 text-gray-800 dark:text-gray-200 font-medium">
-                  #{crypto.market_cap_rank}
-                </td>
-                <td className="py-5 px-6 flex items-center space-x-3">
-                  <img
-                    src={crypto.image}
-                    alt={crypto.name}
-                    className="h-8 w-8 rounded-full"
-                  />
-                  <span className="text-gray-900 dark:text-gray-200 font-medium">
-                    {crypto.name} ({crypto.symbol.toUpperCase()})
-                  </span>
-                </td>
-                <td className="py-5 px-6 text-gray-900 dark:text-gray-200 font-medium">
-                  ${crypto.current_price.toLocaleString()}
-                </td>
-                <td
-                  className={`py-5 px-6 font-medium text-right pr-8 ${
-                    crypto.price_change_percentage_24h >= 0
-                      ? "text-green-500"
-                      : "text-red-500"
-                  }`}
+            {cryptoData.map((crypto) => {
+              // Determinăm valoarea maximă pentru calculul progresului
+              const maxSupply = crypto.max_supply || crypto.total_supply;
+              // Calculăm progresul
+              const progress = (crypto.circulating_supply / maxSupply) * 100;
+
+              return (
+                <tr
+                  key={crypto.id}
+                  className="border-b border-gray-300 dark:border-gray-700"
                 >
-                  {crypto.price_change_percentage_24h.toFixed(2)}%
-                </td>
-                <td className="py-5 px-6 text-gray-900 dark:text-gray-200 font-medium text-right pr-12">
-                  ${crypto.market_cap.toLocaleString()}
-                </td>
-                <td className="py-5 px-6 text-gray-600 dark:text-gray-400 text-sm text-right pr-12">
-                  {crypto.circulating_supply.toLocaleString()} /{" "}
-                  {crypto.max_supply ? crypto.max_supply.toLocaleString() : "∞"}
-                </td>
-              </tr>
-            ))}
+                  <td className="py-5 px-6 text-gray-800 dark:text-gray-200 font-medium">
+                    #{crypto.market_cap_rank}
+                  </td>
+                  <td className="py-5 px-6 flex items-center space-x-3">
+                    <img
+                      src={crypto.image}
+                      alt={crypto.name}
+                      className="h-8 w-8 rounded-full"
+                    />
+                    <span className="text-gray-900 dark:text-gray-200 font-medium">
+                      {crypto.name} ({crypto.symbol.toUpperCase()})
+                    </span>
+                  </td>
+                  <td className="py-5 px-6 text-gray-900 dark:text-gray-200 font-medium">
+                    ${crypto.current_price.toLocaleString()}
+                  </td>
+                  <td
+                    className={`py-5 px-6 font-medium text-right pr-8 ${
+                      crypto.price_change_percentage_24h >= 0
+                        ? "text-green-500"
+                        : "text-red-500"
+                    }`}
+                  >
+                    {crypto.price_change_percentage_24h.toFixed(2)}%
+                  </td>
+                  <td className="py-5 px-6 text-gray-900 dark:text-gray-200 font-medium text-right pr-12">
+                    ${crypto.market_cap.toLocaleString()}
+                  </td>
+                  <td className="py-5 px-6 text-right pr-12">
+                    {progress >= 100 ? (
+                      // Afișează numărul direct dacă progresul este 100%
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {crypto.circulating_supply.toLocaleString()}
+                      </span>
+                    ) : (
+                      // Afișează progress bar și procentul dacă progresul este sub 100%
+                      <>
+                        <div className="w-full bg-gray-300 rounded-full h-2.5">
+                          <div
+                            className="h-2.5 rounded-full"
+                            style={{
+                              width: `${progress.toFixed(2)}%`,
+                              background:
+                                "linear-gradient(to right, #38b2ac, #48bb78)", // gradient from teal-400 to green-500
+                            }}
+                          ></div>
+                        </div>
+                        <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                          <span className="text-teal-500">
+                            {progress.toFixed(2)}%
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
