@@ -13,7 +13,11 @@ function App() {
   return (
     <div className="App bg-gray-100 min-h-screen flex flex-col">
       <Header setActiveTab={setActiveTab} />
-      <main className="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main
+        className={`flex-grow ${
+          activeTab === "homepage" ? "w-full" : "max-w-7xl mx-auto"
+        } px-4 sm:px-6 lg:px-8 py-12`}
+      >
         <div className="space-y-12">
           {/* Condiții pentru a afisa tab-urile corecte */}
           {activeTab === "sentiment" && <SentimentChart />}

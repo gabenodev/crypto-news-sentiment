@@ -48,13 +48,20 @@ function Homepage() {
       </h1>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
-          <thead className="bg-gray-200 dark:bg-gray-800">
+          {/* Header cu linie de delimitare */}
+          <thead className="bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-700">
             <tr className="text-lg text-gray-700 dark:text-gray-300">
               {["#", "Name", "Price", "24h Change", "Market Cap", "Supply"].map(
                 (header) => (
                   <th
                     key={header}
-                    className="py-4 px-6 text-left font-semibold"
+                    className={`py-4 px-6 font-semibold ${
+                      header === "24h Change"
+                        ? "text-right pr-8"
+                        : header === "Market Cap" || header === "Supply"
+                        ? "text-right pr-12"
+                        : "text-left"
+                    }`}
                   >
                     {header}
                   </th>
@@ -62,16 +69,17 @@ function Homepage() {
               )}
             </tr>
           </thead>
+          {/* Corpul tabelului cu linii de separare */}
           <tbody className="bg-gray-100 dark:bg-gray-900">
             {cryptoData.map((crypto) => (
               <tr
                 key={crypto.id}
                 className="border-b border-gray-300 dark:border-gray-700"
               >
-                <td className="py-4 px-6 text-gray-800 dark:text-gray-200 font-medium">
+                <td className="py-5 px-6 text-gray-800 dark:text-gray-200 font-medium">
                   #{crypto.market_cap_rank}
                 </td>
-                <td className="py-4 px-6 flex items-center space-x-3">
+                <td className="py-5 px-6 flex items-center space-x-3">
                   <img
                     src={crypto.image}
                     alt={crypto.name}
@@ -81,11 +89,11 @@ function Homepage() {
                     {crypto.name} ({crypto.symbol.toUpperCase()})
                   </span>
                 </td>
-                <td className="py-4 px-6 text-gray-900 dark:text-gray-200 font-medium">
+                <td className="py-5 px-6 text-gray-900 dark:text-gray-200 font-medium">
                   ${crypto.current_price.toLocaleString()}
                 </td>
                 <td
-                  className={`py-4 px-6 font-medium ${
+                  className={`py-5 px-6 font-medium text-right pr-8 ${
                     crypto.price_change_percentage_24h >= 0
                       ? "text-green-500"
                       : "text-red-500"
@@ -93,10 +101,10 @@ function Homepage() {
                 >
                   {crypto.price_change_percentage_24h.toFixed(2)}%
                 </td>
-                <td className="py-4 px-6 text-gray-900 dark:text-gray-200 font-medium">
+                <td className="py-5 px-6 text-gray-900 dark:text-gray-200 font-medium text-right pr-12">
                   ${crypto.market_cap.toLocaleString()}
                 </td>
-                <td className="py-4 px-6 text-gray-600 dark:text-gray-400 text-sm">
+                <td className="py-5 px-6 text-gray-600 dark:text-gray-400 text-sm text-right pr-12">
                   {crypto.circulating_supply.toLocaleString()} /{" "}
                   {crypto.max_supply ? crypto.max_supply.toLocaleString() : "∞"}
                 </td>

@@ -19,7 +19,7 @@ app.use(cors());
 // Configurare rate limiting
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minut
-  max: 10, // Limitează la 10 cereri pe minut
+  max: 20, // Limitează la 10 cereri pe minut
   message: "Too many requests, please try again later.",
 });
 
