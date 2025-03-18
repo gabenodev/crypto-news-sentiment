@@ -36,7 +36,7 @@ function Header() {
   }, []);
 
   return (
-    <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6 shadow-sm w-full">
+    <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white shadow-sm w-full pt-6">
       <div className="w-full px-6 sm:px-8 lg:px-12">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-10">
@@ -126,6 +126,9 @@ function Header() {
           </span>
         </div>
       </motion.div>
+
+      {/* Linia de jos fără margin-bottom */}
+      <div className="mt-4 h-px bg-gradient-to-r from-teal-400 to-green-500 w-full"></div>
     </header>
   );
 }
