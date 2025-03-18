@@ -44,13 +44,13 @@ function Homepage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 py-8 px-2">
+    <div className="min-h-screen bg-gray-100 dark:bg-gradient-to-r from-gray-900 to-gray-800 py-8 px-2">
       <h1 className="text-4xl font-bold text-center text-gray-800 dark:text-gray-200 mb-8">
         Cryptocurrency Market
       </h1>
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
-          <thead className="bg-gray-100 dark:bg-gray-900 border-b border-gray-300 dark:border-gray-700">
+          <thead className="bg-gray-100 dark:bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-300 dark:border-gray-700">
             <tr className="text-lg text-gray-700 dark:text-gray-300">
               {["#", "Name", "Price", "24h Change", "Market Cap", "Supply"].map(
                 (header) => (
@@ -70,7 +70,7 @@ function Homepage() {
               )}
             </tr>
           </thead>
-          <tbody className="bg-gray-100 dark:bg-gray-900">
+          <tbody className="bg-gray-100 dark:bg-gradient-to-r from-gray-900 to-gray-800">
             {cryptoData.map((crypto) => {
               const maxSupply = crypto.max_supply || crypto.total_supply;
               const progress = (crypto.circulating_supply / maxSupply) * 100;

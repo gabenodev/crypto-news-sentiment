@@ -11,7 +11,8 @@ import Homepage from "./components/HomePage/HomePage";
 function App() {
   return (
     <Router>
-      <div className="App bg-gray-100 min-h-screen flex flex-col">
+      {/* Background diferit pentru light și dark mode */}
+      <div className="App bg-gray-50 dark:bg-gradient-to-r from-gray-900 to-gray-800 min-h-screen flex flex-col">
         <Header />
         <main className="flex-grow w-full px-4 sm:px-6 lg:px-8 py-12">
           <Routes>

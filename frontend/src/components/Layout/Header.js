@@ -87,47 +87,45 @@ function Header() {
             <NightToggle />
           </div>
         </div>
-
-        <div className="my-4 h-px bg-gradient-to-r from-teal-400 to-green-500"></div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.5 }}
-          className="flex space-x-8 text-xs font-medium text-gray-300"
-        >
-          <div className="flex items-center space-x-2">
-            <FaBitcoin className="text-yellow-400" />
-            <span>
-              BTC Dominance: {cryptoData.bitcoinDominance.toFixed(2)}%
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <FaEthereum className="text-purple-400" />
-            <span>
-              ETH Dominance: {cryptoData.ethereumDominance.toFixed(2)}%
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <FaChartLine className="text-green-400" />
-            <span>Vol: ${cryptoData.totalVolume24h.toLocaleString()}</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <FaGlobe className="text-blue-400" />
-            <span>Cap: ${cryptoData.totalMarketCap.toLocaleString()}</span>
-            <span
-              className={
-                cryptoData.marketCapChange24h >= 0
-                  ? "text-green-400"
-                  : "text-red-400"
-              }
-            >
-              {cryptoData.marketCapChange24h >= 0 ? "▲" : "▼"}{" "}
-              {Math.abs(cryptoData.marketCapChange24h).toFixed(2)}%
-            </span>
-          </div>
-        </motion.div>
       </div>
+
+      {/* Linia orizontală care separă navbar-ul de restul secțiunii */}
+      <div className="my-4 h-px bg-gradient-to-r from-teal-400 to-green-500 w-full"></div>
+
+      {/* Adăugarea padding-ului pentru aliniere */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        className="w-full px-6 sm:px-8 lg:px-12 flex space-x-8 text-xs font-medium text-gray-300"
+      >
+        <div className="flex items-center space-x-2">
+          <FaBitcoin className="text-yellow-400" />
+          <span>BTC Dominance: {cryptoData.bitcoinDominance.toFixed(2)}%</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <FaEthereum className="text-purple-400" />
+          <span>ETH Dominance: {cryptoData.ethereumDominance.toFixed(2)}%</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <FaChartLine className="text-green-400" />
+          <span>Vol: ${cryptoData.totalVolume24h.toLocaleString()}</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <FaGlobe className="text-blue-400" />
+          <span>Cap: ${cryptoData.totalMarketCap.toLocaleString()}</span>
+          <span
+            className={
+              cryptoData.marketCapChange24h >= 0
+                ? "text-green-400"
+                : "text-red-400"
+            }
+          >
+            {cryptoData.marketCapChange24h >= 0 ? "▲" : "▼"}{" "}
+            {Math.abs(cryptoData.marketCapChange24h).toFixed(2)}%
+          </span>
+        </div>
+      </motion.div>
     </header>
   );
 }
