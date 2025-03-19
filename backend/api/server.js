@@ -1,4 +1,4 @@
-//IMPORTS
+// IMPORTS
 const express = require("express");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
@@ -13,26 +13,26 @@ const PORT = process.env.PORT || 5000;
 // API Keys
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
 
-// Middleware pentru CORS
+// Middleware for CORS
 app.use(cors());
 
-// Configurare rate limiting
+// Rate limiting configuration
 const limiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minut
-  max: 20, // Limitează la 10 cereri pe minut
+  windowMs: 60 * 1000, // 1 minute
+  max: 20, // Limit to 20 requests per minute
   message: "Too many requests, please try again later.",
 });
 
-// Aplică rate limiting la toate cererile
+// Apply rate limiting to all requests
 app.use(limiter);
 
-// Cache pentru datele de la CoinGecko
+// Cache for CoinGecko data and other APIs
 const cache = {
   altcoinSeason: {
     data: null,
     lastUpdated: null,
   },
-  altcoinSeasonChart: {}, // Cache separat pentru fiecare coinId
+  altcoinSeasonChart: {}, // Separate cache for each coinId and days combination
   news: {
     data: null,
     lastUpdated: null,
@@ -40,46 +40,52 @@ const cache = {
 };
 
 // GENERIC FUNCTION TO GET CACHED DATA -> used in all endpoints -----------------
+
 const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
   const now = Date.now();
   let cacheEntry;
 
-  // Asigură-te că cache[cacheKey] există
+  // Debugging: Show cache state before making the request
+  console.log("Cache before:", JSON.stringify(cache, null, 2));
+
+  // Make sure cache[cacheKey] exists
   if (!cache[cacheKey]) {
-    cache[cacheKey] = {}; // Inițializează cache[cacheKey] dacă nu există
+    cache[cacheKey] = {}; // Initialize cache[cacheKey] if it doesn't exist
   }
 
-  // Dacă există un cacheId, asigură-te că acesta este inițializat și corect
+  // If there's a cacheId, make sure it's initialized and correct
   if (cacheId) {
     if (!cache[cacheKey][cacheId]) {
-      cache[cacheKey][cacheId] = { data: null, lastUpdated: null };
+      cache[cacheKey][cacheId] = { data: null, lastUpdated: null }; // Initialize cache for cacheId
     }
-    cacheEntry = cache[cacheKey][cacheId];
+    cacheEntry = cache[cacheKey][cacheId]; // Use specific cache for cacheId
   } else {
-    cacheEntry = cache[cacheKey];
+    cacheEntry = cache[cacheKey]; // Use general cache for cacheKey
   }
 
-  // Verifică dacă datele sunt valabile și nu au expirat
+  // Check if the data is valid and hasn't expired
   if (
-    cacheEntry.data &&
-    cacheEntry.lastUpdated &&
-    now - cacheEntry.lastUpdated < 60000
+    cacheEntry.data && // Data exists in cache
+    cacheEntry.lastUpdated && // There's a timestamp for the last update
+    now - cacheEntry.lastUpdated < 60000 // Data hasn't expired (60 seconds)
   ) {
-    return cacheEntry.data;
+    console.log("Returning cached data for:", cacheKey, cacheId); // Debugging
+    return cacheEntry.data; // Return cached data
   }
 
-  // Dacă datele nu sunt disponibile sau au expirat, le aduci din nou
+  // If data is not available or has expired, fetch it again
+  console.log("Fetching new data for:", cacheKey, cacheId); // Debugging
   return fetchFunction().then((data) => {
-    cacheEntry.data = data;
-    cacheEntry.lastUpdated = now;
-    return data;
+    cacheEntry.data = data; // Store new data in cache
+    cacheEntry.lastUpdated = now; // Update the timestamp
+    console.log("Cache after:", JSON.stringify(cache, null, 2)); // Debugging
+    return data; // Return the new data
   });
 };
 
-//  FETCH DATA FUNCTIONS FROM API ----------------------------------------------------------------------------------------------------
+// FETCH DATA FUNCTIONS FROM API ----------------------------------------------------------------------------------------------------
 
-// Funcție pentru a obține știri crypto
-
+// Function to fetch crypto news
 const fetchCryptoNews = async () => {
   const response = await axios.get(
     `https://newsapi.org/v2/everything?q=crypto&apiKey=${NEWS_API_KEY}`
@@ -87,9 +93,8 @@ const fetchCryptoNews = async () => {
   return response.data.articles || [];
 };
 
-// Funcție pentru a obține datele de la CoinGecko pentru /api/altcoin-season
-
-const fetchAllCrpytosData = async () => {
+// Function to fetch data from CoinGecko for /api/altcoin-season
+const fetchAllCryptosData = async () => {
   const response = await fetch(
     "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1"
   );
@@ -101,8 +106,7 @@ const fetchAllCrpytosData = async () => {
   return response.json();
 };
 
-// Funcție pentru a obține datele de la CoinGecko pentru /api/altcoin-season-chart
-
+// Function to fetch data from CoinGecko for /api/altcoin-season-chart
 const fetchAltcoinSeasonChartData = async (coinId, days = 30) => {
   const response = await fetch(
     `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`
@@ -115,7 +119,7 @@ const fetchAltcoinSeasonChartData = async (coinId, days = 30) => {
   return response.json();
 };
 
-//       ENDPOINTS ---------------------------------------------------------------------------------------------------- ENDPOINTS
+// ENDPOINTS ---------------------------------------------------------------------------------------------------- ENDPOINTS
 
 /* API NEWS endpoint */
 app.get("/api/news", async (req, res) => {
@@ -145,7 +149,7 @@ app.get("/api/cryptos", async (req, res) => {
 /* API ALL CRYPTOS DATA endpoint */
 app.get("/api/all-cryptos", async (req, res) => {
   try {
-    const data = await getCachedData("altcoinSeason", fetchAllCrpytosData);
+    const data = await getCachedData("altcoinSeason", fetchAllCryptosData);
     res.json(data);
   } catch (error) {
     console.error("Error fetching altcoin season data:", error);
@@ -166,9 +170,9 @@ app.get("/api/altcoin-season-chart", async (req, res) => {
 
   try {
     const data = await getCachedData(
-      "altcoinSeasonChart",
-      () => fetchAltcoinSeasonChartData(coinId, days),
-      `${coinId}_${days}` // Adaugă days în cacheId pentru a stoca datele în funcție de interval
+      "altcoinSeasonChart", // Cache key
+      () => fetchAltcoinSeasonChartData(coinId, days), // Fetch function
+      `${coinId}_${days}` // Cache ID for each coinId and days combination
     );
     res.json(data);
   } catch (error) {
@@ -185,7 +189,7 @@ app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
 
-/* Start server only for local test purposes*/
+/* Start server only for local test purposes */
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
