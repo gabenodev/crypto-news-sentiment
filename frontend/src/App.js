@@ -7,11 +7,11 @@ import AltcoinSeason from "./components/Altcoin_Season/AltcoinSeason";
 import WhaleTransactions from "./components/Whale_Transactions/WhaleTransactions";
 import Footer from "./components/Layout/Footer";
 import Homepage from "./components/HomePage/HomePage";
+import CurrencyDetails from "./components/CurrencyDetails/CurrencyDetails"; // Import nou
 
 function App() {
   return (
     <Router>
-      {/* Background diferit pentru light și dark mode */}
       <div className="App bg-gray-50 dark:bg-gradient-to-r from-gray-900 to-gray-800 min-h-screen flex flex-col">
         <Header />
         <main className="flex-grow w-full px-4 sm:px-6 lg:px-8 py-12">
@@ -21,6 +21,11 @@ function App() {
             <Route path="/news" element={<NewsCard />} />
             <Route path="/altcoin-season-index" element={<AltcoinSeason />} />
             <Route path="/whale-transactions" element={<WhaleTransactions />} />
+            <Route
+              path="/currencies/:coinId"
+              element={<CurrencyDetails />}
+            />{" "}
+            {/* Ruta nouă */}
           </Routes>
         </main>
         <Footer />

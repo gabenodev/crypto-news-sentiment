@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { FaArrowUp, FaArrowDown } from "react-icons/fa";
+import { useNavigate } from "react-router-dom"; // 🔹 Importăm useNavigate
 
 function Homepage() {
   const [cryptoData, setCryptoData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate(); // 🔹 Inițializăm navigatorul
 
   useEffect(() => {
     const fetchCryptoData = async () => {
@@ -81,6 +83,7 @@ function Homepage() {
                   className="border-b border-gray-300 dark:border-gray-700"
                   whileHover={{ scale: 1.02 }}
                   transition={{ type: "spring", stiffness: 300 }}
+                  onClick={() => navigate(`/currencies/${crypto.id}`)} // 🔹 Navigare la pagina criptomonedei
                 >
                   <td className="py-5 px-6 text-gray-800 dark:text-gray-200 font-medium">
                     #{crypto.market_cap_rank}
