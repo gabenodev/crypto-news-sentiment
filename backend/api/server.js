@@ -103,9 +103,9 @@ const fetchAllCrpytosData = async () => {
 
 // Funcție pentru a obține datele de la CoinGecko pentru /api/altcoin-season-chart
 
-const fetchAltcoinSeasonChartData = async (coinId) => {
+const fetchAltcoinSeasonChartData = async (coinId, days = 30) => {
   const response = await fetch(
-    `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=30`
+    `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`
   );
 
   if (!response.ok) {
@@ -158,7 +158,7 @@ app.get("/api/all-cryptos", async (req, res) => {
 
 /* API ALTCOIN SEASON CHART endpoint */
 app.get("/api/altcoin-season-chart", async (req, res) => {
-  const { coinId } = req.query;
+  const { coinId, days } = req.query;
 
   if (!coinId) {
     return res.status(400).json({ error: "coinId is required" });
@@ -167,8 +167,8 @@ app.get("/api/altcoin-season-chart", async (req, res) => {
   try {
     const data = await getCachedData(
       "altcoinSeasonChart",
-      () => fetchAltcoinSeasonChartData(coinId),
-      coinId
+      () => fetchAltcoinSeasonChartData(coinId, days),
+      `${coinId}_${days}` // Adaugă days în cacheId pentru a stoca datele în funcție de interval
     );
     res.json(data);
   } catch (error) {
