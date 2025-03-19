@@ -31,7 +31,7 @@ function SentimentChart() {
     labels: [],
     datasets: [],
   });
-  const [timeframe, setTimeframe] = useState("7"); // Default la 7 zile
+  const [timeframe, setTimeframe] = useState("365"); // Default la 7 zile
 
   const fetchSentimentData = async (limit) => {
     try {
