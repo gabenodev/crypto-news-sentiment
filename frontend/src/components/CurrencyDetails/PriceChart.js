@@ -63,7 +63,7 @@ function PriceChart({ coinId }) {
 
   const movingAverage = (data, period, key) => {
     return data.map((item, index) => {
-      if (index < period - 1) return { ...item, [key]: null }; // Returnăm null pentru punctele fără suficientă istorie
+      if (index < period - 1) return { ...item, [key]: null };
       const sum = data
         .slice(index - period + 1, index + 1)
         .reduce((acc, val) => acc + val.price, 0);
@@ -99,7 +99,7 @@ function PriceChart({ coinId }) {
           style={{
             marginRight: "10px",
             padding: "5px 10px",
-            backgroundColor: movingAverages.ma5 ? "#23d996" : "#eee",
+            backgroundColor: movingAverages.ma5 ? "#1890ff" : "#eee",
             border: "none",
             borderRadius: "5px",
             cursor: "pointer",
@@ -114,7 +114,7 @@ function PriceChart({ coinId }) {
           style={{
             marginRight: "10px",
             padding: "5px 10px",
-            backgroundColor: movingAverages.ma10 ? "#23d996" : "#eee",
+            backgroundColor: movingAverages.ma10 ? "#722ed1" : "#eee",
             border: "none",
             borderRadius: "5px",
             cursor: "pointer",
@@ -129,7 +129,7 @@ function PriceChart({ coinId }) {
           style={{
             marginRight: "10px",
             padding: "5px 10px",
-            backgroundColor: movingAverages.ma13 ? "#23d996" : "#eee",
+            backgroundColor: movingAverages.ma13 ? "#13c2c2" : "#eee",
             border: "none",
             borderRadius: "5px",
             cursor: "pointer",
@@ -198,7 +198,7 @@ function PriceChart({ coinId }) {
             <Line
               type="monotone"
               dataKey="ma5"
-              stroke="#ff7300"
+              stroke="#1890ff" // Albastru
               strokeDasharray="5 5"
               strokeWidth={2}
               dot={false}
@@ -210,7 +210,7 @@ function PriceChart({ coinId }) {
             <Line
               type="monotone"
               dataKey="ma10"
-              stroke="#8884d8"
+              stroke="#722ed1" // Mov
               strokeDasharray="5 5"
               strokeWidth={2}
               dot={false}
@@ -222,7 +222,7 @@ function PriceChart({ coinId }) {
             <Line
               type="monotone"
               dataKey="ma13"
-              stroke="#ff4d4f"
+              stroke="#13c2c2" // Turcoaz
               strokeDasharray="5 5"
               strokeWidth={2}
               dot={false}
@@ -230,26 +230,41 @@ function PriceChart({ coinId }) {
               name="MA 13"
             />
           )}
+          {/* Linie pentru valoarea maximă */}
           <ReferenceLine
-            y={(maxPrice + minPrice) / 2}
-            stroke="#8884d8"
+            y={maxPrice}
+            stroke="#ff4d4f" // Roșu
             strokeDasharray="3 3"
             label={{
-              value: `$${((maxPrice + minPrice) / 2).toFixed(2)}`,
+              value: `Max: $${maxPrice.toFixed(2)}`,
               position: "insideTopRight",
-              fill: "#8884d8",
+              fill: "#ff4d4f",
               fontSize: 12,
               offset: 5,
             }}
           />
+          {/* Linie pentru valoarea minimă */}
           <ReferenceLine
-            y={maxPrice}
-            stroke="#ff4d4f"
+            y={minPrice}
+            stroke="#52c41a" // Verde
             strokeDasharray="3 3"
             label={{
-              value: `$${maxPrice.toFixed(2)}`,
+              value: `Min: $${minPrice.toFixed(2)}`,
+              position: "insideBottomRight",
+              fill: "#52c41a",
+              fontSize: 12,
+              offset: 5,
+            }}
+          />
+          {/* Linie pentru valoarea medie */}
+          <ReferenceLine
+            y={(maxPrice + minPrice) / 2}
+            stroke="#fa8c16" // Portocaliu
+            strokeDasharray="3 3"
+            label={{
+              value: `Avg: $${((maxPrice + minPrice) / 2).toFixed(2)}`,
               position: "insideTopRight",
-              fill: "#ff4d4f",
+              fill: "#fa8c16",
               fontSize: 12,
               offset: 5,
             }}
