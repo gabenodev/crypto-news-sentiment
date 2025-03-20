@@ -50,30 +50,26 @@ function PriceChart({ coinId }) {
     return <div>Loading...</div>;
   }
 
-  // Calcularea valorii minime și maxime pentru axa Y
   const minPrice = Math.min(...priceData.map((item) => item.price));
   const maxPrice = Math.max(...priceData.map((item) => item.price));
 
-  // Rotunjim valorile minime și maxime pentru a evita discrepante
-  const roundedMinPrice = Math.floor(minPrice * 0.99); // Rotunjim în jos cu 1% marjă
-  const roundedMaxPrice = Math.ceil(maxPrice * 1.01); // Rotunjim în sus cu 1% marjă
+  const roundedMinPrice = Math.floor(minPrice * 0.99);
+  const roundedMaxPrice = Math.ceil(maxPrice * 1.01);
 
-  // Calculăm media mobilă pentru tendință
   const movingAverage = (data, period) => {
     return data.map((item, index) => {
-      if (index < period - 1) return item; // Returnăm item-ul original dacă nu avem suficiente date
+      if (index < period - 1) return item;
       const sum = data
         .slice(index - period + 1, index + 1)
         .reduce((acc, val) => acc + val.price, 0);
-      return { ...item, movingAverage: sum / period }; // Adăugăm media mobilă la obiect
+      return { ...item, movingAverage: sum / period };
     });
   };
 
-  const dataWithMovingAverage = movingAverage(priceData, 5); // Media mobilă pe 5 puncte
+  const dataWithMovingAverage = movingAverage(priceData, 12); // Media mobilă pe 30 de puncte
 
   return (
-    <div>
-      {/* Dropdown pentru selectarea intervalului */}
+    <div style={{ width: "90%", margin: "0 auto" }}>
       <select
         value={days}
         onChange={(e) => setDays(Number(e.target.value))}
@@ -85,11 +81,10 @@ function PriceChart({ coinId }) {
         <option value={1}>1 Day</option>
       </select>
 
-      {/* Graficul */}
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height={350}>
         <LineChart
-          data={dataWithMovingAverage} // Folosim datele cu media mobilă
-          margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
+          data={dataWithMovingAverage}
+          margin={{ top: 20, right: 50, left: 20, bottom: 10 }}
         >
           <defs>
             <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
@@ -97,20 +92,17 @@ function PriceChart({ coinId }) {
               <stop offset="95%" stopColor="#23d996" stopOpacity={0} />
             </linearGradient>
           </defs>
-          {/* Axa X */}
           <XAxis
             dataKey="time"
             tick={{ fill: "#555", fontSize: 12 }}
             tickFormatter={(time) => new Date(time).toLocaleDateString()}
-            interval={Math.floor(priceData.length / 5)} // Afișează doar 5 etichete pe axa X
+            interval={Math.floor(priceData.length / 5)}
           />
-          {/* Axa Y */}
           <YAxis
             tick={{ fill: "#555", fontSize: 12 }}
             domain={[roundedMinPrice, roundedMaxPrice]}
             tickFormatter={(price) => `$${price.toFixed(2)}`}
           />
-          {/* Tooltip */}
           <Tooltip
             contentStyle={{
               backgroundColor: "#333",
@@ -123,7 +115,6 @@ function PriceChart({ coinId }) {
             }
             formatter={(price) => [`Price: $${price.toFixed(2)}`]}
           />
-          {/* Zona umbrită sub linie */}
           <Area
             type="monotone"
             dataKey="price"
@@ -134,7 +125,6 @@ function PriceChart({ coinId }) {
             activeDot={{ r: 8, fill: "#23d996" }}
             animationDuration={1000}
           />
-          {/* Linia graficului */}
           <Line
             type="monotone"
             dataKey="price"
@@ -144,7 +134,6 @@ function PriceChart({ coinId }) {
             activeDot={{ r: 8, fill: "#23d996" }}
             animationDuration={1000}
           />
-          {/* Linia de tendință (media mobilă) */}
           <Line
             type="monotone"
             dataKey="movingAverage"
@@ -154,30 +143,28 @@ function PriceChart({ coinId }) {
             dot={false}
             animationDuration={1000}
           />
-          {/* Linie de referință pentru prețul mediu */}
           <ReferenceLine
             y={(maxPrice + minPrice) / 2}
             stroke="#8884d8"
             strokeDasharray="3 3"
             label={{
-              value: `Avg: $${((maxPrice + minPrice) / 2).toFixed(2)}`,
-              position: "right", // Mutăm eticheta în dreapta graficului
+              value: `$${((maxPrice + minPrice) / 2).toFixed(2)}`,
+              position: "insideTopRight",
               fill: "#8884d8",
               fontSize: 12,
-              offset: 10, // Offset pentru a muta eticheta mai departe de linie
+              offset: 5,
             }}
           />
-          {/* Linie de top */}
           <ReferenceLine
             y={maxPrice}
             stroke="#ff4d4f"
             strokeDasharray="3 3"
             label={{
-              value: `Max: $${maxPrice.toFixed(2)}`,
-              position: "right", // Mutăm eticheta în dreapta graficului
+              value: `$${maxPrice.toFixed(2)}`,
+              position: "insideTopRight",
               fill: "#ff4d4f",
               fontSize: 12,
-              offset: 10, // Offset pentru a muta eticheta mai departe de linie
+              offset: 5,
             }}
           />
         </LineChart>
