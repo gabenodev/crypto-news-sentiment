@@ -18,7 +18,7 @@ function PriceChart({ coinId }) {
     ma5: false,
     ma10: false,
     ma13: false,
-  }); // Starea liniilor de MA
+  });
 
   useEffect(() => {
     const fetchPriceData = async () => {
@@ -61,20 +61,20 @@ function PriceChart({ coinId }) {
   const roundedMinPrice = Math.floor(minPrice * 0.99);
   const roundedMaxPrice = Math.ceil(maxPrice * 1.01);
 
-  const movingAverage = (data, period) => {
+  const movingAverage = (data, period, key) => {
     return data.map((item, index) => {
-      if (index < period - 1) return item;
+      if (index < period - 1) return { ...item, [key]: null }; // Returnăm null pentru punctele fără suficientă istorie
       const sum = data
         .slice(index - period + 1, index + 1)
         .reduce((acc, val) => acc + val.price, 0);
-      return { ...item, movingAverage: sum / period };
+      return { ...item, [key]: sum / period };
     });
   };
 
-  // Calculăm datele pentru fiecare MA
-  const dataWithMA5 = movingAverage(priceData, 5);
-  const dataWithMA10 = movingAverage(priceData, 10);
-  const dataWithMA13 = movingAverage(priceData, 13);
+  // Adăugăm MA-urile direct în setul de date principal
+  const dataWithMAs = movingAverage(priceData, 5, "ma5");
+  const dataWithMAs2 = movingAverage(dataWithMAs, 10, "ma10");
+  const dataWithMAs3 = movingAverage(dataWithMAs2, 13, "ma13");
 
   return (
     <div style={{ width: "90%", margin: "0 auto" }}>
@@ -140,10 +140,10 @@ function PriceChart({ coinId }) {
       </div>
 
       {/* Graficul */}
-      <ResponsiveContainer width="100%" height={350}>
+      <ResponsiveContainer width="100%" height={400}>
         <LineChart
-          data={priceData}
-          margin={{ top: 20, right: 50, left: 20, bottom: 10 }}
+          data={dataWithMAs3}
+          margin={{ top: 20, right: 50, left: 50, bottom: 10 }}
         >
           <defs>
             <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
@@ -197,8 +197,7 @@ function PriceChart({ coinId }) {
           {movingAverages.ma5 && (
             <Line
               type="monotone"
-              dataKey="movingAverage"
-              data={dataWithMA5}
+              dataKey="ma5"
               stroke="#ff7300"
               strokeDasharray="5 5"
               strokeWidth={2}
@@ -210,8 +209,7 @@ function PriceChart({ coinId }) {
           {movingAverages.ma10 && (
             <Line
               type="monotone"
-              dataKey="movingAverage"
-              data={dataWithMA10}
+              dataKey="ma10"
               stroke="#8884d8"
               strokeDasharray="5 5"
               strokeWidth={2}
@@ -223,8 +221,7 @@ function PriceChart({ coinId }) {
           {movingAverages.ma13 && (
             <Line
               type="monotone"
-              dataKey="movingAverage"
-              data={dataWithMA13}
+              dataKey="ma13"
               stroke="#ff4d4f"
               strokeDasharray="5 5"
               strokeWidth={2}
