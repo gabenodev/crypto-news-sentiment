@@ -96,6 +96,27 @@ function PriceChart({ coinId }) {
   const dataWithMAs5 = movingAverage(dataWithMAs4, 100, "ma100");
   const dataWithMAs6 = movingAverage(dataWithMAs5, 200, "ma200");
 
+  // Tooltip personalizat
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-gray-800 p-3 rounded-lg shadow-lg">
+          <p className="text-sm text-white">
+            {days < 7
+              ? `Time: ${new Date(label).toLocaleString()}`
+              : `Date: ${new Date(label).toLocaleDateString()}`}
+          </p>
+          {payload.map((entry, index) => (
+            <p key={index} style={{ color: entry.color }}>
+              {`${entry.name}: $${entry.value.toFixed(2)}`}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="w-[90%] mx-auto dark:bg-gray-900 p-4 rounded-lg">
       {/* Container pentru butoane și dropdown */}
@@ -175,7 +196,9 @@ function PriceChart({ coinId }) {
       </div>
 
       {/* Graficul */}
-      <ResponsiveContainer width="100%" height={400}>
+      <ResponsiveContainer width="100%" height={500}>
+        {" "}
+        {/* Înălțime mărită */}
         <LineChart
           data={dataWithMAs6}
           margin={{ top: 20, right: 50, left: 50, bottom: 10 }}
@@ -191,7 +214,12 @@ function PriceChart({ coinId }) {
           <XAxis
             dataKey="time"
             tick={{ fill: "#555", fontSize: 12 }}
-            tickFormatter={(time) => new Date(time).toLocaleDateString()}
+            tickFormatter={
+              (time) =>
+                days < 7
+                  ? new Date(time).toLocaleString() // Afișează data și ora pentru < 7 zile
+                  : new Date(time).toLocaleDateString() // Afișează doar data pentru ≥ 7 zile
+            }
             interval={Math.floor(priceData.length / 5)}
           />
           <YAxis
@@ -200,16 +228,13 @@ function PriceChart({ coinId }) {
             tickFormatter={(price) => `$${price.toFixed(2)}`}
           />
           <Tooltip
+            content={<CustomTooltip />} // Tooltip personalizat
             contentStyle={{
               backgroundColor: "#333",
               border: "none",
               borderRadius: "5px",
               color: "#fff",
             }}
-            labelFormatter={(time) =>
-              `Data: ${new Date(time).toLocaleString()}`
-            }
-            formatter={(price) => [`Price: $${price.toFixed(2)}`]}
           />
           <Area
             type="monotone"
