@@ -55,6 +55,10 @@ function PriceChart({ coinId }) {
   const minPrice = Math.min(...priceData.map((item) => item.price));
   const maxPrice = Math.max(...priceData.map((item) => item.price));
 
+  // Rotunjim valorile minime și maxime pentru a evita discrepante
+  const roundedMinPrice = Math.floor(minPrice * 0.99); // Rotunjim în jos cu 1% marjă
+  const roundedMaxPrice = Math.ceil(maxPrice * 1.01); // Rotunjim în sus cu 1% marjă
+
   return (
     <div>
       {/* Dropdown pentru selectarea intervalului */}
@@ -84,7 +88,7 @@ function PriceChart({ coinId }) {
           />
           <YAxis
             tick={{ fill: "#555", fontSize: 12 }}
-            domain={[minPrice * 0.95, maxPrice * 1.05]} // Axa Y se ajustează la datele reale
+            domain={[roundedMinPrice, roundedMaxPrice]} // Axa Y se ajustează la valorile rotunjite
             tickFormatter={(price) => `$${price.toFixed(2)}`}
           />
           <Tooltip
