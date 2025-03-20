@@ -9,6 +9,7 @@ import {
   Area,
   ReferenceLine,
   CartesianGrid,
+  Brush, // Adaugă Brush pentru zoom
 } from "recharts";
 import {
   movingAverage,
@@ -30,14 +31,14 @@ const maColors = {
 function PriceChart({ coinId }) {
   const [priceData, setPriceData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [days, setDays] = useState(7);
+  const [days, setDays] = useState(30);
   const [movingAverages, setMovingAverages] = useState({
     ma5: false,
     ma8: false,
     ma13: false,
     ma50: false,
-    ma100: false,
-    ma200: false,
+    ma100: true,
+    ma200: true,
   });
   const [referenceLines, setReferenceLines] = useState({
     min: false,
@@ -202,7 +203,6 @@ function PriceChart({ coinId }) {
             <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#23d996" stopOpacity={0.8} />
               <stop offset="95%" stopColor="#23d996" stopOpacity={0.2} />
-              Gradient mai vizibil
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
@@ -316,6 +316,14 @@ function PriceChart({ coinId }) {
               }}
             />
           )}
+          {/* Brush pentru zoom */}
+          <Brush
+            dataKey="time"
+            height={30} // Înălțimea zonei de zoom
+            stroke="#23d996" // Culoarea stroke-ului
+            fill="#333" // Culoarea de fundal
+            travellerWidth={10} // Lățimea selectorului
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>
