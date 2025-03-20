@@ -97,18 +97,20 @@ function PriceChart({ coinId }) {
               <stop offset="95%" stopColor="#23d996" stopOpacity={0} />
             </linearGradient>
           </defs>
-          {/* Eliminăm CartesianGrid */}
+          {/* Axa X */}
           <XAxis
             dataKey="time"
             tick={{ fill: "#555", fontSize: 12 }}
             tickFormatter={(time) => new Date(time).toLocaleDateString()}
             interval={Math.floor(priceData.length / 5)} // Afișează doar 5 etichete pe axa X
           />
+          {/* Axa Y */}
           <YAxis
             tick={{ fill: "#555", fontSize: 12 }}
             domain={[roundedMinPrice, roundedMaxPrice]}
             tickFormatter={(price) => `$${price.toFixed(2)}`}
           />
+          {/* Tooltip */}
           <Tooltip
             contentStyle={{
               backgroundColor: "#333",
@@ -161,6 +163,19 @@ function PriceChart({ coinId }) {
               value: `Avg: $${((maxPrice + minPrice) / 2).toFixed(2)}`,
               position: "right", // Mutăm eticheta în dreapta graficului
               fill: "#8884d8",
+              fontSize: 12,
+              offset: 10, // Offset pentru a muta eticheta mai departe de linie
+            }}
+          />
+          {/* Linie de top */}
+          <ReferenceLine
+            y={maxPrice}
+            stroke="#ff4d4f"
+            strokeDasharray="3 3"
+            label={{
+              value: `Max: $${maxPrice.toFixed(2)}`,
+              position: "right", // Mutăm eticheta în dreapta graficului
+              fill: "#ff4d4f",
               fontSize: 12,
               offset: 10, // Offset pentru a muta eticheta mai departe de linie
             }}
