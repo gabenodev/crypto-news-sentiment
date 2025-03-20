@@ -12,7 +12,7 @@ import {
 function PriceChart({ coinId }) {
   const [priceData, setPriceData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [days, setDays] = useState(30); // Starea pentru intervalul de timp
+  const [days, setDays] = useState(7); // Am schimbat pentru a fi pe 7 zile implicit
 
   useEffect(() => {
     const fetchPriceData = async () => {
@@ -45,22 +45,23 @@ function PriceChart({ coinId }) {
     };
 
     fetchPriceData();
-  }, [coinId, days]); // Re-fetch data când coinId sau days se schimbă
+  }, [coinId, days]);
 
   if (loading) {
     return <div>Loading...</div>;
   }
+
+  // Calcularea valorii minime și maxime pentru axa Y
+  const minPrice = Math.min(...priceData.map((item) => item.price));
+  const maxPrice = Math.max(...priceData.map((item) => item.price));
 
   return (
     <div>
       {/* Dropdown pentru selectarea intervalului */}
       <select
         value={days}
-        onChange={(e) => {
-          console.log("Selected days:", e.target.value); // Verifică dacă valoarea se schimbă
-          setDays(Number(e.target.value));
-        }}
-        style={{ marginBottom: "20px" }}
+        onChange={(e) => setDays(Number(e.target.value))}
+        style={{ marginBottom: "20px", padding: "5px", fontSize: "14px" }}
       >
         <option value={365}>1 Year</option>
         <option value={30}>30 Days</option>
@@ -71,18 +72,19 @@ function PriceChart({ coinId }) {
       {/* Graficul */}
       <ResponsiveContainer width="100%" height={400}>
         <LineChart
-          key={days} // Forțează re-renderizarea când `days` se schimbă
           data={priceData}
           margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#ddd" />
           <XAxis
             dataKey="time"
-            tick={{ fill: "#666", fontSize: 12 }}
+            tick={{ fill: "#555", fontSize: 12 }}
             tickFormatter={(time) => new Date(time).toLocaleDateString()}
+            interval={Math.floor(priceData.length / 5)} // Afișează doar 5 etichete pe axa X
           />
           <YAxis
-            tick={{ fill: "#666", fontSize: 12 }}
+            tick={{ fill: "#555", fontSize: 12 }}
+            domain={[minPrice * 0.95, maxPrice * 1.05]} // Axa Y se ajustează la datele reale
             tickFormatter={(price) => `$${price.toFixed(2)}`}
           />
           <Tooltip
@@ -95,15 +97,15 @@ function PriceChart({ coinId }) {
             labelFormatter={(time) =>
               `Data: ${new Date(time).toLocaleString()}`
             }
-            formatter={(price) => [`Preț: $${price.toFixed(2)}`, "Preț"]}
+            formatter={(price) => [`Price: $${price.toFixed(2)}`]}
           />
           <Line
             type="monotone"
             dataKey="price"
-            stroke="#8884d8"
+            stroke="#23d996" // Am schimbat culoarea liniei pentru a se potrivi cu tema
             strokeWidth={2}
             dot={false}
-            activeDot={{ r: 8 }}
+            activeDot={{ r: 8, fill: "#23d996" }}
             animationDuration={1000}
           />
         </LineChart>
