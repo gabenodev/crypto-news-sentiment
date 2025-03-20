@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
   Area,
   ReferenceLine,
+  CartesianGrid,
 } from "recharts";
 
 function PriceChart({ coinId }) {
@@ -82,115 +83,108 @@ function PriceChart({ coinId }) {
   const dataWithMAs3 = movingAverage(dataWithMAs2, 13, "ma13");
 
   return (
-    <div style={{ width: "90%", margin: "0 auto" }}>
-      {/* Dropdown pentru selectarea intervalului */}
-      <select
-        value={days}
-        onChange={(e) => setDays(Number(e.target.value))}
-        style={{ marginBottom: "20px", padding: "5px", fontSize: "14px" }}
-      >
-        <option value={365}>1 Year</option>
-        <option value={30}>30 Days</option>
-        <option value={7}>7 Days</option>
-        <option value={1}>1 Day</option>
-      </select>
+    <div className="w-[90%] mx-auto dark:bg-gray-900 p-4 rounded-lg">
+      {/* Container pentru butoane și dropdown */}
+      <div className="flex justify-between items-center mb-6">
+        {/* Butoane pentru MA */}
+        <div className="flex gap-2">
+          <button
+            onClick={() =>
+              setMovingAverages({ ...movingAverages, ma5: !movingAverages.ma5 })
+            }
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              movingAverages.ma5
+                ? "bg-blue-500 text-white"
+                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            }`}
+          >
+            MA 5
+          </button>
+          <button
+            onClick={() =>
+              setMovingAverages({
+                ...movingAverages,
+                ma10: !movingAverages.ma10,
+              })
+            }
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              movingAverages.ma10
+                ? "bg-purple-500 text-white"
+                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            }`}
+          >
+            MA 10
+          </button>
+          <button
+            onClick={() =>
+              setMovingAverages({
+                ...movingAverages,
+                ma13: !movingAverages.ma13,
+              })
+            }
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              movingAverages.ma13
+                ? "bg-teal-500 text-white"
+                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            }`}
+          >
+            MA 13
+          </button>
+        </div>
 
-      {/* Butoane pentru MA */}
-      <div style={{ marginBottom: "20px" }}>
-        <button
-          onClick={() =>
-            setMovingAverages({ ...movingAverages, ma5: !movingAverages.ma5 })
-          }
-          style={{
-            marginRight: "10px",
-            padding: "5px 10px",
-            backgroundColor: movingAverages.ma5 ? "#1890ff" : "#eee",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          MA 5
-        </button>
-        <button
-          onClick={() =>
-            setMovingAverages({ ...movingAverages, ma10: !movingAverages.ma10 })
-          }
-          style={{
-            marginRight: "10px",
-            padding: "5px 10px",
-            backgroundColor: movingAverages.ma10 ? "#722ed1" : "#eee",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          MA 10
-        </button>
-        <button
-          onClick={() =>
-            setMovingAverages({ ...movingAverages, ma13: !movingAverages.ma13 })
-          }
-          style={{
-            marginRight: "10px",
-            padding: "5px 10px",
-            backgroundColor: movingAverages.ma13 ? "#13c2c2" : "#eee",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          MA 13
-        </button>
-      </div>
+        {/* Butoane pentru Min, Max, Average */}
+        <div className="flex gap-2">
+          <button
+            onClick={() =>
+              setReferenceLines({ ...referenceLines, min: !referenceLines.min })
+            }
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              referenceLines.min
+                ? "bg-green-500 text-white"
+                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            }`}
+          >
+            Min
+          </button>
+          <button
+            onClick={() =>
+              setReferenceLines({ ...referenceLines, max: !referenceLines.max })
+            }
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              referenceLines.max
+                ? "bg-red-500 text-white"
+                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            }`}
+          >
+            Max
+          </button>
+          <button
+            onClick={() =>
+              setReferenceLines({ ...referenceLines, avg: !referenceLines.avg })
+            }
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              referenceLines.avg
+                ? "bg-orange-500 text-white"
+                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            }`}
+          >
+            Avg
+          </button>
+        </div>
 
-      {/* Butoane pentru Min, Max, Average */}
-      <div style={{ marginBottom: "20px" }}>
-        <button
-          onClick={() =>
-            setReferenceLines({ ...referenceLines, min: !referenceLines.min })
-          }
-          style={{
-            marginRight: "10px",
-            padding: "5px 10px",
-            backgroundColor: referenceLines.min ? "#52c41a" : "#eee", // Verde
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          Min
-        </button>
-        <button
-          onClick={() =>
-            setReferenceLines({ ...referenceLines, max: !referenceLines.max })
-          }
-          style={{
-            marginRight: "10px",
-            padding: "5px 10px",
-            backgroundColor: referenceLines.max ? "#ff4d4f" : "#eee", // Roșu
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          Max
-        </button>
-        <button
-          onClick={() =>
-            setReferenceLines({ ...referenceLines, avg: !referenceLines.avg })
-          }
-          style={{
-            marginRight: "10px",
-            padding: "5px 10px",
-            backgroundColor: referenceLines.avg ? "#fa8c16" : "#eee", // Portocaliu
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer",
-          }}
-        >
-          Avg
-        </button>
+        {/* Dropdown pentru selectarea intervalului */}
+        <div className="mt-6">
+          <select
+            value={days}
+            onChange={(e) => setDays(Number(e.target.value))}
+            className="bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-white px-4 py-2 rounded-md appearance-none"
+          >
+            <option value={1}>1 Day</option>
+            <option value={7}>7 Days</option>
+            <option value={30}>30 Days</option>
+            <option value={365}>1 Year</option>
+          </select>
+        </div>
       </div>
 
       {/* Graficul */}
@@ -205,6 +199,8 @@ function PriceChart({ coinId }) {
               <stop offset="95%" stopColor="#23d996" stopOpacity={0} />
             </linearGradient>
           </defs>
+          {/* Grid-ul orizontal și vertical */}
+          <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
           <XAxis
             dataKey="time"
             tick={{ fill: "#555", fontSize: 12 }}
