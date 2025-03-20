@@ -4,7 +4,6 @@ import {
   Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   Area,
@@ -98,8 +97,7 @@ function PriceChart({ coinId }) {
               <stop offset="95%" stopColor="#23d996" stopOpacity={0} />
             </linearGradient>
           </defs>
-          {/* Grid subtil */}
-          <CartesianGrid strokeDasharray="3 3" stroke="#f5f5f5" />
+          {/* Eliminăm CartesianGrid */}
           <XAxis
             dataKey="time"
             tick={{ fill: "#555", fontSize: 12 }}
