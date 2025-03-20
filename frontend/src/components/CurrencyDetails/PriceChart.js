@@ -17,6 +17,16 @@ import {
   calculateAveragePrice,
 } from "./MAindicators"; // Importă funcțiile din MAindicators
 
+// Culori pentru fiecare MA
+const maColors = {
+  ma5: "#1890ff", // Albastru
+  ma8: "#722ed1", // Mov
+  ma13: "#13c2c2", // Turcoaz
+  ma50: "#fa8c16", // Portocaliu
+  ma100: "#f5222d", // Roșu
+  ma200: "#52c41a", // Verde
+};
+
 function PriceChart({ coinId }) {
   const [priceData, setPriceData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -92,93 +102,21 @@ function PriceChart({ coinId }) {
       <div className="flex justify-between items-center mb-6">
         {/* Butoane pentru MA */}
         <div className="flex gap-2">
-          <button
-            onClick={() =>
-              setMovingAverages({ ...movingAverages, ma5: !movingAverages.ma5 })
-            }
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              movingAverages.ma5
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-            }`}
-          >
-            MA 5
-          </button>
-          <button
-            onClick={() =>
-              setMovingAverages({
-                ...movingAverages,
-                ma8: !movingAverages.ma8,
-              })
-            }
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              movingAverages.ma8
-                ? "bg-purple-500 text-white"
-                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-            }`}
-          >
-            MA 8
-          </button>
-          <button
-            onClick={() =>
-              setMovingAverages({
-                ...movingAverages,
-                ma13: !movingAverages.ma13,
-              })
-            }
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              movingAverages.ma13
-                ? "bg-teal-500 text-white"
-                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-            }`}
-          >
-            MA 13
-          </button>
-          <button
-            onClick={() =>
-              setMovingAverages({
-                ...movingAverages,
-                ma50: !movingAverages.ma50,
-              })
-            }
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              movingAverages.ma50
-                ? "bg-orange-500 text-white"
-                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-            }`}
-          >
-            MA 50
-          </button>
-          <button
-            onClick={() =>
-              setMovingAverages({
-                ...movingAverages,
-                ma100: !movingAverages.ma100,
-              })
-            }
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              movingAverages.ma100
-                ? "bg-pink-500 text-white"
-                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-            }`}
-          >
-            MA 100
-          </button>
-          <button
-            onClick={() =>
-              setMovingAverages({
-                ...movingAverages,
-                ma200: !movingAverages.ma200,
-              })
-            }
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              movingAverages.ma200
-                ? "bg-indigo-500 text-white"
-                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-            }`}
-          >
-            MA 200
-          </button>
+          {Object.entries(movingAverages).map(([key, value]) => (
+            <button
+              key={key}
+              onClick={() =>
+                setMovingAverages({ ...movingAverages, [key]: !value })
+              }
+              style={{
+                backgroundColor: value ? maColors[key] : "#374151", // Gri închis pentru starea inactivă
+                color: value ? "white" : "white", // Text alb pentru ambele stări
+              }}
+              className="px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              {key.toUpperCase()}
+            </button>
+          ))}
         </div>
 
         {/* Butoane pentru Min, Max, Average */}
@@ -293,77 +231,21 @@ function PriceChart({ coinId }) {
             animationDuration={1000}
           />
           {/* Linii de MA */}
-          {movingAverages.ma5 && (
-            <Line
-              type="monotone"
-              dataKey="ma5"
-              stroke="#1890ff" // Albastru
-              strokeDasharray="5 5"
-              strokeWidth={2}
-              dot={false}
-              animationDuration={1000}
-              name="MA 5"
-            />
-          )}
-          {movingAverages.ma8 && (
-            <Line
-              type="monotone"
-              dataKey="ma8"
-              stroke="#722ed1" // Mov
-              strokeDasharray="5 5"
-              strokeWidth={2}
-              dot={false}
-              animationDuration={1000}
-              name="MA 8"
-            />
-          )}
-          {movingAverages.ma13 && (
-            <Line
-              type="monotone"
-              dataKey="ma13"
-              stroke="#13c2c2" // Turcoaz
-              strokeDasharray="5 5"
-              strokeWidth={2}
-              dot={false}
-              animationDuration={1000}
-              name="MA 13"
-            />
-          )}
-          {movingAverages.ma50 && (
-            <Line
-              type="monotone"
-              dataKey="ma50"
-              stroke="#fa8c16" // Portocaliu
-              strokeDasharray="5 5"
-              strokeWidth={2}
-              dot={false}
-              animationDuration={1000}
-              name="MA 50"
-            />
-          )}
-          {movingAverages.ma100 && (
-            <Line
-              type="monotone"
-              dataKey="ma100"
-              stroke="#f5222d" // Roșu
-              strokeDasharray="5 5"
-              strokeWidth={2}
-              dot={false}
-              animationDuration={1000}
-              name="MA 100"
-            />
-          )}
-          {movingAverages.ma200 && (
-            <Line
-              type="monotone"
-              dataKey="ma200"
-              stroke="#52c41a" // Verde
-              strokeDasharray="5 5"
-              strokeWidth={2}
-              dot={false}
-              animationDuration={1000}
-              name="MA 200"
-            />
+          {Object.entries(movingAverages).map(
+            ([key, value]) =>
+              value && (
+                <Line
+                  key={key}
+                  type="monotone"
+                  dataKey={key}
+                  stroke={maColors[key]}
+                  strokeDasharray="5 5"
+                  strokeWidth={2}
+                  dot={false}
+                  animationDuration={1000}
+                  name={key.toUpperCase()}
+                />
+              )
           )}
           {/* Linii de referință */}
           {referenceLines.min && (
