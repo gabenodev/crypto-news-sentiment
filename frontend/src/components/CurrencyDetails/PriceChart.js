@@ -19,6 +19,11 @@ function PriceChart({ coinId }) {
     ma10: false,
     ma13: false,
   });
+  const [referenceLines, setReferenceLines] = useState({
+    min: false,
+    max: false,
+    avg: false,
+  });
 
   useEffect(() => {
     const fetchPriceData = async () => {
@@ -139,6 +144,55 @@ function PriceChart({ coinId }) {
         </button>
       </div>
 
+      {/* Butoane pentru Min, Max, Average */}
+      <div style={{ marginBottom: "20px" }}>
+        <button
+          onClick={() =>
+            setReferenceLines({ ...referenceLines, min: !referenceLines.min })
+          }
+          style={{
+            marginRight: "10px",
+            padding: "5px 10px",
+            backgroundColor: referenceLines.min ? "#52c41a" : "#eee", // Verde
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Min
+        </button>
+        <button
+          onClick={() =>
+            setReferenceLines({ ...referenceLines, max: !referenceLines.max })
+          }
+          style={{
+            marginRight: "10px",
+            padding: "5px 10px",
+            backgroundColor: referenceLines.max ? "#ff4d4f" : "#eee", // Roșu
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Max
+        </button>
+        <button
+          onClick={() =>
+            setReferenceLines({ ...referenceLines, avg: !referenceLines.avg })
+          }
+          style={{
+            marginRight: "10px",
+            padding: "5px 10px",
+            backgroundColor: referenceLines.avg ? "#fa8c16" : "#eee", // Portocaliu
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Avg
+        </button>
+      </div>
+
       {/* Graficul */}
       <ResponsiveContainer width="100%" height={400}>
         <LineChart
@@ -230,45 +284,49 @@ function PriceChart({ coinId }) {
               name="MA 13"
             />
           )}
-          {/* Linie pentru valoarea maximă */}
-          <ReferenceLine
-            y={maxPrice}
-            stroke="#ff4d4f" // Roșu
-            strokeDasharray="3 3"
-            label={{
-              value: `Max: $${maxPrice.toFixed(2)}`,
-              position: "insideTopRight",
-              fill: "#ff4d4f",
-              fontSize: 12,
-              offset: 5,
-            }}
-          />
-          {/* Linie pentru valoarea minimă */}
-          <ReferenceLine
-            y={minPrice}
-            stroke="#52c41a" // Verde
-            strokeDasharray="3 3"
-            label={{
-              value: `Min: $${minPrice.toFixed(2)}`,
-              position: "insideBottomRight",
-              fill: "#52c41a",
-              fontSize: 12,
-              offset: 5,
-            }}
-          />
-          {/* Linie pentru valoarea medie */}
-          <ReferenceLine
-            y={(maxPrice + minPrice) / 2}
-            stroke="#fa8c16" // Portocaliu
-            strokeDasharray="3 3"
-            label={{
-              value: `Avg: $${((maxPrice + minPrice) / 2).toFixed(2)}`,
-              position: "insideTopRight",
-              fill: "#fa8c16",
-              fontSize: 12,
-              offset: 5,
-            }}
-          />
+          {/* Linii de referință */}
+          {referenceLines.min && (
+            <ReferenceLine
+              y={minPrice}
+              stroke="#52c41a" // Verde
+              strokeDasharray="3 3"
+              label={{
+                value: `Min: $${minPrice.toFixed(2)}`,
+                position: "insideBottomRight",
+                fill: "#52c41a",
+                fontSize: 12,
+                offset: 5,
+              }}
+            />
+          )}
+          {referenceLines.max && (
+            <ReferenceLine
+              y={maxPrice}
+              stroke="#ff4d4f" // Roșu
+              strokeDasharray="3 3"
+              label={{
+                value: `Max: $${maxPrice.toFixed(2)}`,
+                position: "insideTopRight",
+                fill: "#ff4d4f",
+                fontSize: 12,
+                offset: 5,
+              }}
+            />
+          )}
+          {referenceLines.avg && (
+            <ReferenceLine
+              y={(maxPrice + minPrice) / 2}
+              stroke="#fa8c16" // Portocaliu
+              strokeDasharray="3 3"
+              label={{
+                value: `Avg: $${((maxPrice + minPrice) / 2).toFixed(2)}`,
+                position: "insideTopRight",
+                fill: "#fa8c16",
+                fontSize: 12,
+                offset: 5,
+              }}
+            />
+          )}
         </LineChart>
       </ResponsiveContainer>
     </div>
