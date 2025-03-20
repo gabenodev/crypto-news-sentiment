@@ -10,6 +10,12 @@ import {
   ReferenceLine,
   CartesianGrid,
 } from "recharts";
+import {
+  movingAverage,
+  calculateMinPrice,
+  calculateMaxPrice,
+  calculateAveragePrice,
+} from "./MAindicators"; // Importă funcțiile din MAindicators
 
 function PriceChart({ coinId }) {
   const [priceData, setPriceData] = useState([]);
@@ -64,27 +70,15 @@ function PriceChart({ coinId }) {
     return <div>Loading...</div>;
   }
 
-  const minPrice = Math.min(...priceData.map((item) => item.price));
-  const maxPrice = Math.max(...priceData.map((item) => item.price));
+  // Calculează prețurile minime, maxime și medii
+  const minPrice = calculateMinPrice(priceData);
+  const maxPrice = calculateMaxPrice(priceData);
+  const avgPrice = calculateAveragePrice(priceData);
 
   const roundedMinPrice = Math.floor(minPrice * 0.99);
   const roundedMaxPrice = Math.ceil(maxPrice * 1.01);
 
-  const movingAverage = (data, period, key) => {
-    if (data.length < period) {
-      console.error(`Cannot calculate ${key} on a timeframe this small.`);
-      return data.map((item) => ({ ...item, [key]: null }));
-    }
-    return data.map((item, index) => {
-      if (index < period - 1) return { ...item, [key]: null };
-      const sum = data
-        .slice(index - period + 1, index + 1)
-        .reduce((acc, val) => acc + val.price, 0);
-      return { ...item, [key]: sum / period };
-    });
-  };
-
-  // Adăugăm MA-urile direct în setul de date principal
+  // Adaugă MA-urile în setul de date
   const dataWithMAs = movingAverage(priceData, 5, "ma5");
   const dataWithMAs2 = movingAverage(dataWithMAs, 8, "ma8");
   const dataWithMAs3 = movingAverage(dataWithMAs2, 13, "ma13");
@@ -402,11 +396,11 @@ function PriceChart({ coinId }) {
           )}
           {referenceLines.avg && (
             <ReferenceLine
-              y={(maxPrice + minPrice) / 2}
+              y={avgPrice}
               stroke="#fa8c16" // Portocaliu
               strokeDasharray="3 3"
               label={{
-                value: `Avg: $${((maxPrice + minPrice) / 2).toFixed(2)}`,
+                value: `Avg: $${avgPrice.toFixed(2)}`,
                 position: "insideTopRight",
                 fill: "#fa8c16",
                 fontSize: 12,
