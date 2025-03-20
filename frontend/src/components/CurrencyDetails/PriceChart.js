@@ -14,6 +14,11 @@ function PriceChart({ coinId }) {
   const [priceData, setPriceData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(7);
+  const [movingAverages, setMovingAverages] = useState({
+    ma5: false,
+    ma10: false,
+    ma13: false,
+  }); // Starea liniilor de MA
 
   useEffect(() => {
     const fetchPriceData = async () => {
@@ -66,10 +71,14 @@ function PriceChart({ coinId }) {
     });
   };
 
-  const dataWithMovingAverage = movingAverage(priceData, 12); // Media mobilă pe 30 de puncte
+  // Calculăm datele pentru fiecare MA
+  const dataWithMA5 = movingAverage(priceData, 5);
+  const dataWithMA10 = movingAverage(priceData, 10);
+  const dataWithMA13 = movingAverage(priceData, 13);
 
   return (
     <div style={{ width: "90%", margin: "0 auto" }}>
+      {/* Dropdown pentru selectarea intervalului */}
       <select
         value={days}
         onChange={(e) => setDays(Number(e.target.value))}
@@ -81,9 +90,59 @@ function PriceChart({ coinId }) {
         <option value={1}>1 Day</option>
       </select>
 
+      {/* Butoane pentru MA */}
+      <div style={{ marginBottom: "20px" }}>
+        <button
+          onClick={() =>
+            setMovingAverages({ ...movingAverages, ma5: !movingAverages.ma5 })
+          }
+          style={{
+            marginRight: "10px",
+            padding: "5px 10px",
+            backgroundColor: movingAverages.ma5 ? "#23d996" : "#eee",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          MA 5
+        </button>
+        <button
+          onClick={() =>
+            setMovingAverages({ ...movingAverages, ma10: !movingAverages.ma10 })
+          }
+          style={{
+            marginRight: "10px",
+            padding: "5px 10px",
+            backgroundColor: movingAverages.ma10 ? "#23d996" : "#eee",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          MA 10
+        </button>
+        <button
+          onClick={() =>
+            setMovingAverages({ ...movingAverages, ma13: !movingAverages.ma13 })
+          }
+          style={{
+            marginRight: "10px",
+            padding: "5px 10px",
+            backgroundColor: movingAverages.ma13 ? "#23d996" : "#eee",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          MA 13
+        </button>
+      </div>
+
+      {/* Graficul */}
       <ResponsiveContainer width="100%" height={350}>
         <LineChart
-          data={dataWithMovingAverage}
+          data={priceData}
           margin={{ top: 20, right: 50, left: 20, bottom: 10 }}
         >
           <defs>
@@ -134,15 +193,46 @@ function PriceChart({ coinId }) {
             activeDot={{ r: 8, fill: "#23d996" }}
             animationDuration={1000}
           />
-          <Line
-            type="monotone"
-            dataKey="movingAverage"
-            stroke="#ff7300"
-            strokeDasharray="5 5"
-            strokeWidth={2}
-            dot={false}
-            animationDuration={1000}
-          />
+          {/* Linii de MA */}
+          {movingAverages.ma5 && (
+            <Line
+              type="monotone"
+              dataKey="movingAverage"
+              data={dataWithMA5}
+              stroke="#ff7300"
+              strokeDasharray="5 5"
+              strokeWidth={2}
+              dot={false}
+              animationDuration={1000}
+              name="MA 5"
+            />
+          )}
+          {movingAverages.ma10 && (
+            <Line
+              type="monotone"
+              dataKey="movingAverage"
+              data={dataWithMA10}
+              stroke="#8884d8"
+              strokeDasharray="5 5"
+              strokeWidth={2}
+              dot={false}
+              animationDuration={1000}
+              name="MA 10"
+            />
+          )}
+          {movingAverages.ma13 && (
+            <Line
+              type="monotone"
+              dataKey="movingAverage"
+              data={dataWithMA13}
+              stroke="#ff4d4f"
+              strokeDasharray="5 5"
+              strokeWidth={2}
+              dot={false}
+              animationDuration={1000}
+              name="MA 13"
+            />
+          )}
           <ReferenceLine
             y={(maxPrice + minPrice) / 2}
             stroke="#8884d8"
