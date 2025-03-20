@@ -85,9 +85,6 @@ function PriceChart({ coinId }) {
   const maxPrice = calculateMaxPrice(priceData);
   const avgPrice = calculateAveragePrice(priceData);
 
-  const roundedMinPrice = Math.floor(minPrice * 0.99);
-  const roundedMaxPrice = Math.ceil(maxPrice * 1.01);
-
   // Adaugă MA-urile în setul de date
   const dataWithMAs = movingAverage(priceData, 5, "ma5");
   const dataWithMAs2 = movingAverage(dataWithMAs, 8, "ma8");
@@ -196,44 +193,46 @@ function PriceChart({ coinId }) {
       </div>
 
       {/* Graficul */}
-      <ResponsiveContainer width="100%" height={500}>
-        {" "}
-        {/* Înălțime mărită */}
+      <ResponsiveContainer width="100%" height={650}>
         <LineChart
           data={dataWithMAs6}
-          margin={{ top: 20, right: 50, left: 50, bottom: 10 }}
+          margin={{ top: 20, right: 50, left: 50, bottom: 20 }} // Spațiere redusă
         >
           <defs>
             <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#23d996" stopOpacity={0.8} />
-              <stop offset="95%" stopColor="#23d996" stopOpacity={0} />
+              <stop offset="95%" stopColor="#23d996" stopOpacity={0.2} />
+              Gradient mai vizibil
             </linearGradient>
           </defs>
-          {/* Grid-ul orizontal și vertical */}
           <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
           <XAxis
             dataKey="time"
             tick={{ fill: "#555", fontSize: 12 }}
-            tickFormatter={
-              (time) =>
-                days < 7
-                  ? new Date(time).toLocaleString() // Afișează data și ora pentru < 7 zile
-                  : new Date(time).toLocaleDateString() // Afișează doar data pentru ≥ 7 zile
+            tickFormatter={(time) =>
+              days < 7
+                ? new Date(time).toLocaleString()
+                : new Date(time).toLocaleDateString()
             }
             interval={Math.floor(priceData.length / 5)}
           />
           <YAxis
             tick={{ fill: "#555", fontSize: 12 }}
-            domain={[roundedMinPrice, roundedMaxPrice]}
-            tickFormatter={(price) => `$${price.toFixed(2)}`}
+            domain={["auto", "auto"]} // Scalare automată
+            tickFormatter={(price) => {
+              if (price >= 1) return `$${price.toFixed(2)}`; // 2 zecimale pentru peste 1 dolar
+              return `$${price}`; // Scalare dinamică pentru sub 1 dolar
+            }}
+            tickCount={6} // Afișează 6 linii orizontale
           />
           <Tooltip
-            content={<CustomTooltip />} // Tooltip personalizat
+            content={<CustomTooltip />}
             contentStyle={{
               backgroundColor: "#333",
               border: "none",
               borderRadius: "5px",
               color: "#fff",
+              fontSize: 14, // Font mai mare pentru tooltip
             }}
           />
           <Area
@@ -245,6 +244,7 @@ function PriceChart({ coinId }) {
             dot={false}
             activeDot={{ r: 8, fill: "#23d996" }}
             animationDuration={1000}
+            isAnimationActive={true} // Activează animația
           />
           <Line
             type="monotone"
@@ -254,8 +254,9 @@ function PriceChart({ coinId }) {
             dot={false}
             activeDot={{ r: 8, fill: "#23d996" }}
             animationDuration={1000}
+            isAnimationActive={true} // Activează animația
           />
-          {/* Linii de MA */}
+          {/* Linii de MA și referință */}
           {Object.entries(movingAverages).map(
             ([key, value]) =>
               value && (
@@ -268,15 +269,15 @@ function PriceChart({ coinId }) {
                   strokeWidth={2}
                   dot={false}
                   animationDuration={1000}
+                  isAnimationActive={true} // Activează animația
                   name={key.toUpperCase()}
                 />
               )
           )}
-          {/* Linii de referință */}
           {referenceLines.min && (
             <ReferenceLine
               y={minPrice}
-              stroke="#52c41a" // Verde
+              stroke="#52c41a"
               strokeDasharray="3 3"
               label={{
                 value: `Min: $${minPrice.toFixed(2)}`,
@@ -290,7 +291,7 @@ function PriceChart({ coinId }) {
           {referenceLines.max && (
             <ReferenceLine
               y={maxPrice}
-              stroke="#ff4d4f" // Roșu
+              stroke="#ff4d4f"
               strokeDasharray="3 3"
               label={{
                 value: `Max: $${maxPrice.toFixed(2)}`,
@@ -304,7 +305,7 @@ function PriceChart({ coinId }) {
           {referenceLines.avg && (
             <ReferenceLine
               y={avgPrice}
-              stroke="#fa8c16" // Portocaliu
+              stroke="#fa8c16"
               strokeDasharray="3 3"
               label={{
                 value: `Avg: $${avgPrice.toFixed(2)}`,
