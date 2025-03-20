@@ -17,8 +17,11 @@ function PriceChart({ coinId }) {
   const [days, setDays] = useState(7);
   const [movingAverages, setMovingAverages] = useState({
     ma5: false,
-    ma10: false,
+    ma8: false,
     ma13: false,
+    ma50: false,
+    ma100: false,
+    ma200: false,
   });
   const [referenceLines, setReferenceLines] = useState({
     min: false,
@@ -68,6 +71,10 @@ function PriceChart({ coinId }) {
   const roundedMaxPrice = Math.ceil(maxPrice * 1.01);
 
   const movingAverage = (data, period, key) => {
+    if (data.length < period) {
+      console.error(`Cannot calculate ${key} on a timeframe this small.`);
+      return data.map((item) => ({ ...item, [key]: null }));
+    }
     return data.map((item, index) => {
       if (index < period - 1) return { ...item, [key]: null };
       const sum = data
@@ -79,8 +86,11 @@ function PriceChart({ coinId }) {
 
   // Adăugăm MA-urile direct în setul de date principal
   const dataWithMAs = movingAverage(priceData, 5, "ma5");
-  const dataWithMAs2 = movingAverage(dataWithMAs, 10, "ma10");
+  const dataWithMAs2 = movingAverage(dataWithMAs, 8, "ma8");
   const dataWithMAs3 = movingAverage(dataWithMAs2, 13, "ma13");
+  const dataWithMAs4 = movingAverage(dataWithMAs3, 50, "ma50");
+  const dataWithMAs5 = movingAverage(dataWithMAs4, 100, "ma100");
+  const dataWithMAs6 = movingAverage(dataWithMAs5, 200, "ma200");
 
   return (
     <div className="w-[90%] mx-auto dark:bg-gray-900 p-4 rounded-lg">
@@ -104,16 +114,16 @@ function PriceChart({ coinId }) {
             onClick={() =>
               setMovingAverages({
                 ...movingAverages,
-                ma10: !movingAverages.ma10,
+                ma8: !movingAverages.ma8,
               })
             }
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              movingAverages.ma10
+              movingAverages.ma8
                 ? "bg-purple-500 text-white"
                 : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
             }`}
           >
-            MA 10
+            MA 8
           </button>
           <button
             onClick={() =>
@@ -129,6 +139,51 @@ function PriceChart({ coinId }) {
             }`}
           >
             MA 13
+          </button>
+          <button
+            onClick={() =>
+              setMovingAverages({
+                ...movingAverages,
+                ma50: !movingAverages.ma50,
+              })
+            }
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              movingAverages.ma50
+                ? "bg-orange-500 text-white"
+                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            }`}
+          >
+            MA 50
+          </button>
+          <button
+            onClick={() =>
+              setMovingAverages({
+                ...movingAverages,
+                ma100: !movingAverages.ma100,
+              })
+            }
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              movingAverages.ma100
+                ? "bg-pink-500 text-white"
+                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            }`}
+          >
+            MA 100
+          </button>
+          <button
+            onClick={() =>
+              setMovingAverages({
+                ...movingAverages,
+                ma200: !movingAverages.ma200,
+              })
+            }
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              movingAverages.ma200
+                ? "bg-indigo-500 text-white"
+                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+            }`}
+          >
+            MA 200
           </button>
         </div>
 
@@ -190,7 +245,7 @@ function PriceChart({ coinId }) {
       {/* Graficul */}
       <ResponsiveContainer width="100%" height={400}>
         <LineChart
-          data={dataWithMAs3}
+          data={dataWithMAs6}
           margin={{ top: 20, right: 50, left: 50, bottom: 10 }}
         >
           <defs>
@@ -256,16 +311,16 @@ function PriceChart({ coinId }) {
               name="MA 5"
             />
           )}
-          {movingAverages.ma10 && (
+          {movingAverages.ma8 && (
             <Line
               type="monotone"
-              dataKey="ma10"
+              dataKey="ma8"
               stroke="#722ed1" // Mov
               strokeDasharray="5 5"
               strokeWidth={2}
               dot={false}
               animationDuration={1000}
-              name="MA 10"
+              name="MA 8"
             />
           )}
           {movingAverages.ma13 && (
@@ -278,6 +333,42 @@ function PriceChart({ coinId }) {
               dot={false}
               animationDuration={1000}
               name="MA 13"
+            />
+          )}
+          {movingAverages.ma50 && (
+            <Line
+              type="monotone"
+              dataKey="ma50"
+              stroke="#fa8c16" // Portocaliu
+              strokeDasharray="5 5"
+              strokeWidth={2}
+              dot={false}
+              animationDuration={1000}
+              name="MA 50"
+            />
+          )}
+          {movingAverages.ma100 && (
+            <Line
+              type="monotone"
+              dataKey="ma100"
+              stroke="#f5222d" // Roșu
+              strokeDasharray="5 5"
+              strokeWidth={2}
+              dot={false}
+              animationDuration={1000}
+              name="MA 100"
+            />
+          )}
+          {movingAverages.ma200 && (
+            <Line
+              type="monotone"
+              dataKey="ma200"
+              stroke="#52c41a" // Verde
+              strokeDasharray="5 5"
+              strokeWidth={2}
+              dot={false}
+              animationDuration={1000}
+              name="MA 200"
             />
           )}
           {/* Linii de referință */}
