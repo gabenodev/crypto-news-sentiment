@@ -119,6 +119,20 @@ const fetchAltcoinSeasonChartData = async (coinId, days = 30) => {
   return response.json();
 };
 
+// Function to get data from CoinGecko for a specific coinId
+
+const fetchCoinData = async (coinId) => {
+  const response = await fetch(
+    `https://api.coingecko.com/api/v3/coins/${coinId}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`CoinGecko API returned status: ${response.status}`);
+  }
+
+  return response.json();
+};
+
 // ENDPOINTS ---------------------------------------------------------------------------------------------------- ENDPOINTS
 
 /* API NEWS endpoint */
@@ -177,6 +191,31 @@ app.get("/api/altcoin-season-chart", async (req, res) => {
     res.json(data);
   } catch (error) {
     console.error("Error fetching altcoin season chart data:", error);
+    res.status(500).json({
+      error: "Failed to fetch data",
+      details: error.message,
+    });
+  }
+});
+
+/* API COIN GECKO for a defined coinId endpoint */
+
+app.get("/api/coin-data", async (req, res) => {
+  const { coinId } = req.query;
+
+  if (!coinId) {
+    return res.status(400).json({ error: "coinId is required" });
+  }
+
+  try {
+    const data = await getCachedData(
+      "coinData", // Cache key
+      () => fetchCoinData(coinId), // Fetch function
+      coinId // Cache ID pentru fiecare coinId
+    );
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching coin data:", error);
     res.status(500).json({
       error: "Failed to fetch data",
       details: error.message,
