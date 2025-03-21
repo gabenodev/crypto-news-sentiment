@@ -1,5 +1,4 @@
 import React from "react";
-import { motion } from "framer-motion";
 import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
@@ -7,7 +6,7 @@ function CryptoTable({ cryptoData }) {
   const navigate = useNavigate();
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-hidden">
       <table className="w-full border-collapse select-none">
         <thead className="bg-gray-100 dark:bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-300 dark:border-gray-700">
           <tr className="text-lg text-gray-700 dark:text-gray-300">
@@ -35,11 +34,9 @@ function CryptoTable({ cryptoData }) {
             const progress = (crypto.circulating_supply / maxSupply) * 100;
 
             return (
-              <motion.tr
+              <tr
                 key={crypto.id}
-                className="border-b border-gray-300 dark:border-gray-700"
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 300 }}
+                className="border-b border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer transition-colors"
                 onClick={() => navigate(`/currencies/${crypto.id}`)}
               >
                 <td className="py-5 px-6 text-gray-800 dark:text-gray-200 font-medium">
@@ -83,17 +80,14 @@ function CryptoTable({ cryptoData }) {
                   ) : (
                     <>
                       <div className="w-full bg-gray-300 rounded-full h-2.5">
-                        <motion.div
+                        <div
                           className="h-2.5 rounded-full"
                           style={{
                             width: `${progress.toFixed(2)}%`,
                             background:
                               "linear-gradient(to right, #38b2ac, #48bb78)",
                           }}
-                          initial={{ width: 0 }}
-                          animate={{ width: `${progress.toFixed(2)}%` }}
-                          transition={{ duration: 1 }}
-                        ></motion.div>
+                        ></div>
                       </div>
                       <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                         <span className="text-teal-500">
@@ -103,7 +97,7 @@ function CryptoTable({ cryptoData }) {
                     </>
                   )}
                 </td>
-              </motion.tr>
+              </tr>
             );
           })}
         </tbody>
