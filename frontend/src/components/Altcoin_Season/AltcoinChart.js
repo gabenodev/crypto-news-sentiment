@@ -55,7 +55,7 @@ const AltcoinChart = ({ coin, onClose }) => {
   const fetchMarketData = async (coinId) => {
     try {
       const response = await fetch(
-        `https://sentimentx-backend.vercel.app/api/altcoin-season`
+        `https://sentimentx-backend.vercel.app/api/all-cryptos`
       );
       if (!response.ok) {
         throw new Error(`Server returned status: ${response.status}`);

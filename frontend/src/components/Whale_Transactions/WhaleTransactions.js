@@ -27,11 +27,12 @@ const WhaleTransactions = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 dark:bg-gray-900 dark:text-white">
+    <div className="container mx-auto p-6 dark:bg-gray-900 dark:text-white rounded-lg">
       <h2
         className="text-3xl font-bold text-center mb-8 
-        text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 
-        dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-teal-300 dark:to-green-400"
+  text-transparent bg-clip-text 
+  bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
+  dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-teal-300 dark:to-green-400"
       >
         Whale Transactions
       </h2>
@@ -43,7 +44,7 @@ const WhaleTransactions = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="text-center text-xl text-gray-600 dark:text-gray-400"
+          className="text-center text-xl text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md mx-auto shadow-lg"
         >
           {/* Animație de puncte îmbunătățită */}
           <div className="flex justify-center items-center space-x-2 mb-4">

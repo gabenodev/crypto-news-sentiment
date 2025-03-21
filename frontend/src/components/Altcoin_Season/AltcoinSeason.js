@@ -12,11 +12,11 @@ const AltcoinSeason = () => {
   const [selectedCoin, setSelectedCoin] = useState(null);
 
   useEffect(() => {
-    const fetchAltcoinSeasonData = async () => {
+    const fetchAllCrpytosData = async () => {
       try {
         setLoading(true);
         const response = await fetch(
-          "https://sentimentx-backend.vercel.app/api/altcoin-season"
+          `https://sentimentx-backend.vercel.app/api/all-cryptos`
         );
         const data = await response.json();
 
@@ -96,7 +96,7 @@ const AltcoinSeason = () => {
         setLoading(false);
       }
     };
-    fetchAltcoinSeasonData();
+    fetchAllCrpytosData();
   }, []);
 
   if (loading)

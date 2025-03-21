@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { FaBitcoin, FaEthereum, FaChartLine, FaGlobe } from "react-icons/fa"; // Importă iconițele
-import NightToggle from "./NightToggle"; // Importă componenta NightToggle
+import { Link } from "react-router-dom";
+import { FaBitcoin, FaEthereum, FaChartLine, FaGlobe } from "react-icons/fa";
+import NightToggle from "./NightToggle";
+import { motion } from "framer-motion";
 
-function Header({ setActiveTab }) {
+function Header() {
   const [cryptoData, setCryptoData] = useState({
     bitcoinDominance: 0,
     ethereumDominance: 0,
@@ -12,32 +14,21 @@ function Header({ setActiveTab }) {
   });
 
   useEffect(() => {
-    // Funcție pentru a obține datele de la CoinGecko
     const fetchCoinGeckoData = async () => {
       try {
         const response = await fetch("https://api.coingecko.com/api/v3/global");
         const data = await response.json();
-        console.log("API Response:", data); // Debugging: Afișează răspunsul API
-
-        // Extrage datele necesare
         const globalMetrics = data.data;
-        const bitcoinDominance = globalMetrics.market_cap_percentage.btc;
-        const ethereumDominance = globalMetrics.market_cap_percentage.eth;
-        const totalVolume24h = globalMetrics.total_volume.usd;
-        const totalMarketCap = globalMetrics.total_market_cap.usd;
-        const marketCapChange24h =
-          globalMetrics.market_cap_change_percentage_24h_usd;
-
-        // Actualizează state-ul cu noile date
         setCryptoData({
-          bitcoinDominance,
-          ethereumDominance,
-          totalVolume24h,
-          totalMarketCap,
-          marketCapChange24h,
+          bitcoinDominance: globalMetrics.market_cap_percentage.btc,
+          ethereumDominance: globalMetrics.market_cap_percentage.eth,
+          totalVolume24h: globalMetrics.total_volume.usd,
+          totalMarketCap: globalMetrics.total_market_cap.usd,
+          marketCapChange24h:
+            globalMetrics.market_cap_change_percentage_24h_usd,
         });
       } catch (error) {
-        console.error("Error fetching CoinGecko data:", error); // Debugging: Afișează erorile
+        console.error("Error fetching CoinGecko data:", error);
       }
     };
 
@@ -45,99 +36,99 @@ function Header({ setActiveTab }) {
   }, []);
 
   return (
-    <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-6 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Titlul site-ului, navbar-ul și NightToggle pe aceeași linie */}
+    <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white shadow-sm w-full pt-6">
+      <div className="w-full px-6 sm:px-8 lg:px-12">
         <div className="flex items-center justify-between">
-          {/* Partea din stânga: Titlul și navbar-ul */}
           <div className="flex items-center space-x-10">
-            {/* Titlul site-ului */}
-            <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-green-500">
-              SentimentX
-            </h1>
+            <motion.h1
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5 }}
+              className="text-3xl font-bold tracking-tight"
+            >
+              <Link
+                to="/"
+                className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-green-500 hover:opacity-80 transition-opacity duration-200"
+              >
+                SentimentX
+              </Link>
+            </motion.h1>
 
-            {/* Navbar */}
+            {/* Navbar cu Link în loc de butoane */}
             <nav className="flex space-x-6 text-lg font-medium">
-              <button
+              <Link
+                to="/news"
                 className="text-gray-300 hover:text-teal-400 transition duration-300"
-                onClick={() => setActiveTab("news")}
               >
                 News
-              </button>
-
-              <button
+              </Link>
+              <Link
+                to="/altcoin-season-index"
                 className="text-gray-300 hover:text-teal-400 transition duration-300"
-                onClick={() => setActiveTab("altcoin")}
               >
                 Altcoin Season Index
-              </button>
-
-              <button
+              </Link>
+              <Link
+                to="/sentiment-trend"
                 className="text-gray-300 hover:text-teal-400 transition duration-300"
-                onClick={() => setActiveTab("sentiment")}
               >
                 Sentiment Trend
-              </button>
-
-              <button
+              </Link>
+              <Link
+                to="/whale-transactions"
                 className="text-gray-300 hover:text-teal-400 transition duration-300"
-                onClick={() => setActiveTab("whaleTransactions")}
               >
                 Whale Transactions
-              </button>
+              </Link>
             </nav>
           </div>
 
-          {/* Partea din dreapta: NightToggle */}
           <div className="flex items-center">
             <NightToggle />
           </div>
         </div>
-
-        {/* Linie de separare cu gradient */}
-        <div className="my-4 h-px bg-gradient-to-r from-teal-400 to-green-500"></div>
-
-        {/* Informații despre crypto */}
-        <div className="flex space-x-8 text-sm font-medium text-gray-300">
-          {/* Bitcoin Dominance */}
-          <div className="flex items-center space-x-2">
-            <FaBitcoin className="text-yellow-400" /> {/* Iconița Bitcoin */}
-            <span>
-              BTC Dominance: {cryptoData.bitcoinDominance.toFixed(2)}%
-            </span>
-          </div>
-
-          {/* Ethereum Dominance */}
-          <div className="flex items-center space-x-2">
-            <FaEthereum className="text-purple-400" /> {/* Iconița Ethereum */}
-            <span>
-              ETH Dominance: {cryptoData.ethereumDominance.toFixed(2)}%
-            </span>
-          </div>
-
-          {/* 24h Volume */}
-          <div className="flex items-center space-x-2">
-            <FaChartLine className="text-green-400" /> {/* Iconița Volume */}
-            <span>Vol: ${cryptoData.totalVolume24h.toLocaleString()}</span>
-          </div>
-
-          {/* Market Cap */}
-          <div className="flex items-center space-x-2">
-            <FaGlobe className="text-blue-400" /> {/* Iconița Market Cap */}
-            <span>Cap: ${cryptoData.totalMarketCap.toLocaleString()}</span>
-            <span
-              className={
-                cryptoData.marketCapChange24h >= 0
-                  ? "text-green-400"
-                  : "text-red-400"
-              }
-            >
-              {cryptoData.marketCapChange24h >= 0 ? "▲" : "▼"}{" "}
-              {Math.abs(cryptoData.marketCapChange24h).toFixed(2)}%
-            </span>
-          </div>
-        </div>
       </div>
+
+      {/* Linia orizontală care separă navbar-ul de restul secțiunii */}
+      <div className="my-4 h-px bg-gradient-to-r from-teal-400 to-green-500 w-full"></div>
+
+      {/* Adăugarea padding-ului pentru aliniere */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.5 }}
+        className="w-full px-6 sm:px-8 lg:px-12 flex space-x-8 text-xs font-medium text-gray-300"
+      >
+        <div className="flex items-center space-x-2">
+          <FaBitcoin className="text-yellow-400" />
+          <span>BTC Dominance: {cryptoData.bitcoinDominance.toFixed(2)}%</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <FaEthereum className="text-purple-400" />
+          <span>ETH Dominance: {cryptoData.ethereumDominance.toFixed(2)}%</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <FaChartLine className="text-green-400" />
+          <span>Vol: ${cryptoData.totalVolume24h.toLocaleString()}</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <FaGlobe className="text-blue-400" />
+          <span>Cap: ${cryptoData.totalMarketCap.toLocaleString()}</span>
+          <span
+            className={
+              cryptoData.marketCapChange24h >= 0
+                ? "text-green-400"
+                : "text-red-400"
+            }
+          >
+            {cryptoData.marketCapChange24h >= 0 ? "▲" : "▼"}{" "}
+            {Math.abs(cryptoData.marketCapChange24h).toFixed(2)}%
+          </span>
+        </div>
+      </motion.div>
+
+      {/* Linia de jos fără margin-bottom */}
+      <div className="mt-4 h-px bg-gradient-to-r from-teal-400 to-green-500 w-full"></div>
     </header>
   );
 }
