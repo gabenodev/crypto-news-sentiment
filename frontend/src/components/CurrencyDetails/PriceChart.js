@@ -9,7 +9,6 @@ import {
   Area,
   ReferenceLine,
   CartesianGrid,
-  Brush,
 } from "recharts";
 import {
   movingAverage,
@@ -40,8 +39,8 @@ function PriceChart({ coinId }) {
     ma8: false,
     ma13: false,
     ma50: false,
-    ma100: true,
-    ma200: true,
+    ma100: false,
+    ma200: false,
   });
   const [referenceLines, setReferenceLines] = useState({
     min: false,
@@ -127,7 +126,7 @@ function PriceChart({ coinId }) {
   };
 
   return (
-    <div className="w-[90%] mx-auto dark:bg-gray-900 p-4 rounded-lg">
+    <div className="w-[100%] mx-auto dark:bg-gray-900 p-4 rounded-lg">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <div className="flex gap-2 justify-center">
           {Object.entries(movingAverages).map(([key, value]) => (
@@ -307,58 +306,46 @@ function PriceChart({ coinId }) {
               }}
             />
           )}
-          <Brush
-            dataKey="time"
-            height={10}
-            stroke="#23d996"
-            fill="#333"
-            travellerWidth={10}
-          />
         </LineChart>
       </ResponsiveContainer>
       {/* Graficul RSI */}
-      <div className="bg-gray-800 p-4 rounded-lg shadow-lg mb-6">
-        <h3 className="text-xl text-white mb-4">RSI Chart</h3>
-        <ResponsiveContainer width="100%" height={150}>
-          <LineChart data={rsiData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2D3748" />
-            <XAxis
-              dataKey="time"
-              tick={false} // Nu mai afişează niciun tick pe axa X
-            />
-            <YAxis
-              domain={[0, 100]}
-              tick={{ fill: "#ddd", fontSize: 12 }}
-              ticks={[0, 30, 70, 100]} // Afișează doar 4 valori pe axa Y
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "#333",
-                border: "none",
-                borderRadius: "5px",
-                color: "#fff",
-                fontSize: 14,
-              }}
-            />
-            <Line
-              type="monotone"
-              dataKey="rsi"
-              stroke="#9b59b6" // Culoare constantă mov
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 6, fill: "#9b59b6" }}
-              animationDuration={1000}
-              isAnimationActive={true}
-            />
-            <ReferenceLine y={30} stroke="yellow" strokeDasharray="3 3" />
-            <ReferenceLine y={70} stroke="yellow" strokeDasharray="3 3" />
-          </LineChart>
-        </ResponsiveContainer>
-        <div className="flex justify-between mt-4">
-          <span className="text-sm text-gray-400">Oversold (30)</span>
-          <span className="text-sm text-gray-400">Overbought (70)</span>
-        </div>
-      </div>
+
+      <h3 className="text-xl text-black dark:text-white mb-4">RSI Chart</h3>
+      <ResponsiveContainer width="100%" height={150}>
+        <LineChart data={rsiData}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#2D3748" />
+          <XAxis
+            dataKey="time"
+            tick={false} // Nu mai afişează niciun tick pe axa X
+          />
+          <YAxis
+            domain={[0, 100]}
+            tick={{ fill: "#ddd", fontSize: 12 }}
+            ticks={[0, 30, 70, 100]} // Afișează doar 4 valori pe axa Y
+          />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "#333",
+              border: "none",
+              borderRadius: "5px",
+              color: "#fff",
+              fontSize: 14,
+            }}
+          />
+          <Line
+            type="monotone"
+            dataKey="rsi"
+            stroke="#9b59b6" // Culoare constantă mov
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 6, fill: "#9b59b6" }}
+            animationDuration={1000}
+            isAnimationActive={true}
+          />
+          <ReferenceLine y={30} stroke="yellow" strokeDasharray="3 3" />
+          <ReferenceLine y={70} stroke="yellow" strokeDasharray="3 3" />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 }
