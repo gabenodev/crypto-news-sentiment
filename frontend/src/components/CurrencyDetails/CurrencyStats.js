@@ -89,7 +89,7 @@ function CurrencyStats() {
         </div>
       </div>
 
-      {/* Card Progress Bar */}
+      {/* Card Price Position */}
       <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 hover:scale-105">
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4">
           Price Position
@@ -120,59 +120,56 @@ function CurrencyStats() {
             <span>Current: ${currentPrice.toLocaleString()}</span>
             <span>ATH: ${athPrice.toLocaleString()}</span>
           </div>
-        </div>
-      </div>
 
-      {/* Card ATH și ATL */}
-      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 hover:scale-105">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4">
-          All-Time High & Low
-        </h2>
-        <div className="space-y-2">
-          {/* ATH */}
-          <div>
-            <p className="text-gray-600 dark:text-gray-400">
-              All-Time High:{" "}
-              <span className="font-semibold text-orange-500">
-                ${athPrice.toLocaleString()}
-              </span>
-            </p>
-            <p className="text-gray-600 dark:text-gray-400">
-              ATH Change:{" "}
-              <span
-                className={`font-semibold ${
-                  athChangePercentage >= 0 ? "text-green-500" : "text-red-500"
-                }`}
-              >
-                {athChangePercentage.toFixed(2)}%
-              </span>
-            </p>
-            <p className="text-gray-600 dark:text-gray-400">
-              ATH Date: <span className="font-semibold">{athDate}</span>
-            </p>
-          </div>
+          {/* Textul pentru ATH și ATL */}
+          <div className="space-y-2 mt-4">
+            {/* ATH */}
+            <div>
+              <p className="text-gray-600 dark:text-gray-400">
+                All Time High:{" "}
+                <span className="font-semibold text-orange-500">
+                  ${athPrice.toLocaleString()}
+                </span>
+              </p>
+              <p className="text-gray-600 dark:text-gray-400">
+                All time high change:{" "}
+                <span
+                  className={`font-semibold ${
+                    athChangePercentage >= 0 ? "text-green-500" : "text-red-500"
+                  }`}
+                >
+                  {athChangePercentage.toFixed(2)}%
+                </span>
+              </p>
+              <p className="text-gray-600 dark:text-gray-400">
+                All time high date:{" "}
+                <span className="font-semibold">{athDate}</span>
+              </p>
+            </div>
 
-          {/* ATL */}
-          <div>
-            <p className="text-gray-600 dark:text-gray-400">
-              All-Time Low:{" "}
-              <span className="font-semibold text-blue-500">
-                ${atlPrice.toLocaleString()}
-              </span>
-            </p>
-            <p className="text-gray-600 dark:text-gray-400">
-              ATL Change:{" "}
-              <span
-                className={`font-semibold ${
-                  atlChangePercentage >= 0 ? "text-green-500" : "text-red-500"
-                }`}
-              >
-                {atlChangePercentage.toFixed(2)}%
-              </span>
-            </p>
-            <p className="text-gray-600 dark:text-gray-400">
-              ATL Date: <span className="font-semibold">{atlDate}</span>
-            </p>
+            {/* ATL */}
+            <div>
+              <p className="text-gray-600 dark:text-gray-400">
+                All Time Low:{" "}
+                <span className="font-semibold text-blue-500">
+                  ${atlPrice.toLocaleString()}
+                </span>
+              </p>
+              <p className="text-gray-600 dark:text-gray-400">
+                All time low change:{" "}
+                <span
+                  className={`font-semibold ${
+                    atlChangePercentage >= 0 ? "text-green-500" : "text-red-500"
+                  }`}
+                >
+                  {atlChangePercentage.toFixed(2)}%
+                </span>
+              </p>
+              <p className="text-gray-600 dark:text-gray-400">
+                All time low date:{" "}
+                <span className="font-semibold">{atlDate}</span>
+              </p>
+            </div>
           </div>
         </div>
       </div>
