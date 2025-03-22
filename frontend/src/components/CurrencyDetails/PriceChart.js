@@ -17,6 +17,7 @@ import {
   calculateMaxPrice,
   calculateAveragePrice,
 } from "./MAindicators";
+import { calculateRSI } from "./RSIindicator"; // Import the RSI function
 
 const maColors = {
   ma5: "#1890ff",
@@ -27,8 +28,11 @@ const maColors = {
   ma200: "#52c41a",
 };
 
+// Rest of the code...
+
 function PriceChart({ coinId }) {
   const [priceData, setPriceData] = useState([]);
+  const [rsiData, setRsiData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [days, setDays] = useState(30);
   const [movingAverages, setMovingAverages] = useState({
@@ -60,6 +64,17 @@ function PriceChart({ coinId }) {
             price: item[1],
           }));
           setPriceData(priceChartData);
+
+          // Calculăm RSI folosind funcția din RSIindicator.js
+          const prices = data.prices.map((item) => item[1]);
+          const rsiValues = calculateRSI(prices);
+          const rsiChartData = priceChartData
+            .slice(14) // Ignorăm primele 14 puncte (perioada RSI)
+            .map((item, index) => ({
+              ...item,
+              rsi: rsiValues[index],
+            }));
+          setRsiData(rsiChartData);
         } else {
           throw new Error("Data is not in expected format");
         }
@@ -170,7 +185,7 @@ function PriceChart({ coinId }) {
           </select>
         </div>
       </div>
-
+      {/* Graficul principal */}
       <ResponsiveContainer width="100%" height={650}>
         <LineChart
           data={dataWithMAs6}
@@ -294,13 +309,56 @@ function PriceChart({ coinId }) {
           )}
           <Brush
             dataKey="time"
-            height={30}
+            height={10}
             stroke="#23d996"
             fill="#333"
             travellerWidth={10}
           />
         </LineChart>
       </ResponsiveContainer>
+      {/* Graficul RSI */}
+      <div className="bg-gray-800 p-4 rounded-lg shadow-lg mb-6">
+        <h3 className="text-xl text-white mb-4">RSI Chart</h3>
+        <ResponsiveContainer width="100%" height={150}>
+          <LineChart data={rsiData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#2D3748" />
+            <XAxis
+              dataKey="time"
+              tick={false} // Nu mai afişează niciun tick pe axa X
+            />
+            <YAxis
+              domain={[0, 100]}
+              tick={{ fill: "#ddd", fontSize: 12 }}
+              ticks={[0, 30, 70, 100]} // Afișează doar 4 valori pe axa Y
+            />
+            <Tooltip
+              contentStyle={{
+                backgroundColor: "#333",
+                border: "none",
+                borderRadius: "5px",
+                color: "#fff",
+                fontSize: 14,
+              }}
+            />
+            <Line
+              type="monotone"
+              dataKey="rsi"
+              stroke="#9b59b6" // Culoare constantă mov
+              strokeWidth={2}
+              dot={false}
+              activeDot={{ r: 6, fill: "#9b59b6" }}
+              animationDuration={1000}
+              isAnimationActive={true}
+            />
+            <ReferenceLine y={30} stroke="yellow" strokeDasharray="3 3" />
+            <ReferenceLine y={70} stroke="yellow" strokeDasharray="3 3" />
+          </LineChart>
+        </ResponsiveContainer>
+        <div className="flex justify-between mt-4">
+          <span className="text-sm text-gray-400">Oversold (30)</span>
+          <span className="text-sm text-gray-400">Overbought (70)</span>
+        </div>
+      </div>
     </div>
   );
 }
