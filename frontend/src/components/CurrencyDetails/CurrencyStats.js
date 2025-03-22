@@ -61,26 +61,23 @@ function CurrencyStats() {
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-200">
               {coinData.name} ({coinData.symbol.toUpperCase()})
             </h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              Current Price:{" "}
-              <span className="font-semibold">
-                ${currentPrice.toLocaleString()}
-              </span>
+            <p className="text-gray-600 dark:text-gray-400 text-3xl font-semibold">
+              ${currentPrice.toLocaleString()}
             </p>
           </div>
         </div>
-        <div className="mt-4">
+        <div className="mt-6">
           <p className="text-gray-600 dark:text-gray-400">
             Market Cap Rank:{" "}
             <span className="font-semibold">#{coinData.market_cap_rank}</span>
           </p>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400 mt-4">
             Market Cap:{" "}
             <span className="font-semibold">
               ${coinData.market_data.market_cap.usd.toLocaleString()}
             </span>
           </p>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400 mt-4">
             24h Volume:{" "}
             <span className="font-semibold">
               ${coinData.market_data.total_volume.usd.toLocaleString()}
@@ -117,7 +114,7 @@ function CurrencyStats() {
             <span>ATH: ${athPrice.toLocaleString()}</span>
           </div>
 
-          <div className="space-y-2 mt-4">
+          <div className="space-y-2 mt-6">
             {/* ATH */}
             <div>
               <p className="text-gray-600 dark:text-gray-400">
