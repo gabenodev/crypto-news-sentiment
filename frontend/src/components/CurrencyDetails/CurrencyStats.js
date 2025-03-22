@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { FaHome, FaLink, FaReddit, FaComments } from "react-icons/fa"; // Importăm iconițe
+import { FaLink, FaReddit, FaComments } from "react-icons/fa"; // Importăm iconițe
+import { CgWebsite } from "react-icons/cg";
 
 function CurrencyStats() {
   const { coinId } = useParams();
@@ -113,9 +114,13 @@ function CurrencyStats() {
           </div>
 
           <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-            <span>ATL: ${atlPrice.toLocaleString()}</span>
+            <span className="font-semibold text-blue-500">
+              ATL: ${atlPrice.toLocaleString()}
+            </span>
             <span>Current: ${currentPrice.toLocaleString()}</span>
-            <span>ATH: ${athPrice.toLocaleString()}</span>
+            <span className="font-semibold text-orange-500">
+              ATH: ${athPrice.toLocaleString()}
+            </span>
           </div>
 
           <div className="space-y-2 mt-6">
@@ -123,7 +128,7 @@ function CurrencyStats() {
             <div>
               <p className="text-gray-600 dark:text-gray-400">
                 All Time High:{" "}
-                <span className="font-semibold text-orange-500">
+                <span className="font-semibold text-gray-400">
                   ${athPrice.toLocaleString()}
                 </span>
               </p>
@@ -147,7 +152,7 @@ function CurrencyStats() {
             <div>
               <p className="text-gray-600 dark:text-gray-400">
                 All Time Low:{" "}
-                <span className="font-semibold text-blue-500">
+                <span className="text-gray-400 font-semibold">
                   ${atlPrice.toLocaleString()}
                 </span>
               </p>
@@ -220,7 +225,7 @@ function CurrencyStats() {
 
       {/* Card Useful Links */}
       <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 hover:scale-105">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4 ">
           Explorer & Links
         </h2>
         <div className="space-y-3">
@@ -228,16 +233,16 @@ function CurrencyStats() {
             href={coinData.links.homepage[0]}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center text-blue-500 hover:text-blue-700"
+            className="flex items-center text-blue-500 hover:text-blue-700  p-2 rounded-md"
           >
-            <FaHome className="mr-2" />
+            <CgWebsite className="mr-2" />
             Official Website
           </a>
           <a
             href={coinData.links.blockchain_site[0]}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center text-gray-500 hover:text-gray-700"
+            className="flex items-center text-gray-500 hover:text-gray-400  p-2 rounded-md"
           >
             <FaLink className="mr-2" />
             Blockchain Explorer
@@ -246,7 +251,7 @@ function CurrencyStats() {
             href={coinData.links.whitepaper}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center text-white hover:text-gray-200"
+            className="flex items-center text-gray-500 hover:text-gray-300 p-2 rounded-md"
           >
             <FaComments className="mr-2" />
             Whitepaper
@@ -255,7 +260,7 @@ function CurrencyStats() {
             href={coinData.links.subreddit_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center text-orange-500 hover:text-orange-700"
+            className="flex items-center text-orange-500 hover:text-orange-400 p-2 rounded-md"
           >
             <FaReddit className="mr-2" />
             Subreddit
