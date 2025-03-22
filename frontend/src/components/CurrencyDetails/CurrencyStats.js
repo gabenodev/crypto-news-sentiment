@@ -51,7 +51,7 @@ function CurrencyStats() {
   return (
     <div className="flex flex-wrap justify-center gap-6 p-6">
       {/* Card Stânga */}
-      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 hover:scale-105">
+      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20">
         <div className="flex items-center space-x-4">
           <img
             src={coinData.image.large}
@@ -92,7 +92,7 @@ function CurrencyStats() {
       </div>
 
       {/* Card Price Position */}
-      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 hover:scale-105">
+      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20">
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4">
           Price Position
         </h2>
@@ -176,7 +176,7 @@ function CurrencyStats() {
       </div>
 
       {/* Card 24h Statistics */}
-      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 hover:scale-105">
+      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20">
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4">
           24h Statistics
         </h2>
@@ -224,7 +224,7 @@ function CurrencyStats() {
       </div>
 
       {/* Card Useful Links */}
-      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 hover:scale-105">
+      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20">
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4 ">
           Explorer & Links
         </h2>
@@ -251,7 +251,7 @@ function CurrencyStats() {
             href={coinData.links.whitepaper}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center text-gray-500 hover:text-gray-300 p-2 rounded-md"
+            className="flex items-center text-white hover:text-gray-300 p-2 rounded-md"
           >
             <FaComments className="mr-2" />
             Whitepaper
