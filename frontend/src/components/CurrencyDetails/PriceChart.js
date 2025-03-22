@@ -9,23 +9,22 @@ import {
   Area,
   ReferenceLine,
   CartesianGrid,
-  Brush, // Adaugă Brush pentru zoom
+  Brush,
 } from "recharts";
 import {
   movingAverage,
   calculateMinPrice,
   calculateMaxPrice,
   calculateAveragePrice,
-} from "./MAindicators"; // Importă funcțiile din MAindicators
+} from "./MAindicators";
 
-// Culori pentru fiecare MA
 const maColors = {
-  ma5: "#1890ff", // Albastru
-  ma8: "#722ed1", // Mov
-  ma13: "#13c2c2", // Turcoaz
-  ma50: "#fa8c16", // Portocaliu
-  ma100: "#f5222d", // Roșu
-  ma200: "#52c41a", // Verde
+  ma5: "#1890ff",
+  ma8: "#722ed1",
+  ma13: "#13c2c2",
+  ma50: "#fa8c16",
+  ma100: "#f5222d",
+  ma200: "#52c41a",
 };
 
 function PriceChart({ coinId }) {
@@ -52,9 +51,7 @@ function PriceChart({ coinId }) {
         const response = await fetch(
           `https://sentimentx-backend.vercel.app/api/altcoin-season-chart?coinId=${coinId}&days=${days}`
         );
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
-        }
+        if (!response.ok) throw new Error("Failed to fetch data");
         const data = await response.json();
 
         if (data && Array.isArray(data.prices)) {
@@ -77,16 +74,12 @@ function PriceChart({ coinId }) {
     fetchPriceData();
   }, [coinId, days]);
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  if (loading) return <div>Loading...</div>;
 
-  // Calculează prețurile minime, maxime și medii
   const minPrice = calculateMinPrice(priceData);
   const maxPrice = calculateMaxPrice(priceData);
   const avgPrice = calculateAveragePrice(priceData);
 
-  // Adaugă MA-urile în setul de date
   const dataWithMAs = movingAverage(priceData, 5, "ma5");
   const dataWithMAs2 = movingAverage(dataWithMAs, 8, "ma8");
   const dataWithMAs3 = movingAverage(dataWithMAs2, 13, "ma13");
@@ -94,7 +87,6 @@ function PriceChart({ coinId }) {
   const dataWithMAs5 = movingAverage(dataWithMAs4, 100, "ma100");
   const dataWithMAs6 = movingAverage(dataWithMAs5, 200, "ma200");
 
-  // Tooltip personalizat
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -117,10 +109,8 @@ function PriceChart({ coinId }) {
 
   return (
     <div className="w-[90%] mx-auto dark:bg-gray-900 p-4 rounded-lg">
-      {/* Container pentru butoane și dropdown */}
-      <div className="flex justify-between items-center mb-6">
-        {/* Butoane pentru MA */}
-        <div className="flex gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+        <div className="flex gap-2 justify-center">
           {Object.entries(movingAverages).map(([key, value]) => (
             <button
               key={key}
@@ -128,8 +118,8 @@ function PriceChart({ coinId }) {
                 setMovingAverages({ ...movingAverages, [key]: !value })
               }
               style={{
-                backgroundColor: value ? maColors[key] : "#374151", // Gri închis pentru starea inactivă
-                color: value ? "white" : "white", // Text alb pentru ambele stări
+                backgroundColor: value ? maColors[key] : "#374151",
+                color: "white",
               }}
               className="px-4 py-2 rounded-md text-sm font-medium transition-colors"
             >
@@ -138,52 +128,36 @@ function PriceChart({ coinId }) {
           ))}
         </div>
 
-        {/* Butoane pentru Min, Max, Average */}
-        <div className="flex gap-2">
-          <button
-            onClick={() =>
-              setReferenceLines({ ...referenceLines, min: !referenceLines.min })
-            }
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              referenceLines.min
-                ? "bg-green-500 text-white"
-                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-            }`}
-          >
-            Min
-          </button>
-          <button
-            onClick={() =>
-              setReferenceLines({ ...referenceLines, max: !referenceLines.max })
-            }
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              referenceLines.max
-                ? "bg-red-500 text-white"
-                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-            }`}
-          >
-            Max
-          </button>
-          <button
-            onClick={() =>
-              setReferenceLines({ ...referenceLines, avg: !referenceLines.avg })
-            }
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              referenceLines.avg
-                ? "bg-orange-500 text-white"
-                : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
-            }`}
-          >
-            Avg
-          </button>
+        <div className="flex gap-2 justify-center">
+          {["min", "max", "avg"].map((item) => (
+            <button
+              key={item}
+              onClick={() =>
+                setReferenceLines({
+                  ...referenceLines,
+                  [item]: !referenceLines[item],
+                })
+              }
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                referenceLines[item]
+                  ? item === "min"
+                    ? "bg-green-500 text-white"
+                    : item === "max"
+                    ? "bg-red-500 text-white"
+                    : "bg-orange-500 text-white"
+                  : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200"
+              }`}
+            >
+              {item.toUpperCase()}
+            </button>
+          ))}
         </div>
 
-        {/* Dropdown pentru selectarea intervalului */}
-        <div className="mt-6">
+        <div className="flex justify-center items-center">
           <select
             value={days}
             onChange={(e) => setDays(Number(e.target.value))}
-            className="bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-white px-4 py-2 rounded-md appearance-none"
+            className="bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-white px-4 py-2 rounded-md"
           >
             <option value={1}>1 Day</option>
             <option value={7}>7 Days</option>
@@ -193,11 +167,10 @@ function PriceChart({ coinId }) {
         </div>
       </div>
 
-      {/* Graficul */}
       <ResponsiveContainer width="100%" height={650}>
         <LineChart
           data={dataWithMAs6}
-          margin={{ top: 20, right: 50, left: 50, bottom: 20 }} // Spațiere redusă
+          margin={{ top: 20, right: 50, left: 50, bottom: 20 }}
         >
           <defs>
             <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
@@ -218,12 +191,12 @@ function PriceChart({ coinId }) {
           />
           <YAxis
             tick={{ fill: "#555", fontSize: 12 }}
-            domain={["auto", "auto"]} // Scalare automată
+            domain={["auto", "auto"]}
             tickFormatter={(price) => {
-              if (price >= 1) return `$${price.toFixed(2)}`; // 2 zecimale pentru peste 1 dolar
-              return `$${price}`; // Scalare dinamică pentru sub 1 dolar
+              if (price >= 1) return `$${price.toFixed(2)}`;
+              return `$${price}`;
             }}
-            tickCount={6} // Afișează 6 linii orizontale
+            tickCount={6}
           />
           <Tooltip
             content={<CustomTooltip />}
@@ -232,7 +205,7 @@ function PriceChart({ coinId }) {
               border: "none",
               borderRadius: "5px",
               color: "#fff",
-              fontSize: 14, // Font mai mare pentru tooltip
+              fontSize: 14,
             }}
           />
           <Area
@@ -244,7 +217,7 @@ function PriceChart({ coinId }) {
             dot={false}
             activeDot={{ r: 8, fill: "#23d996" }}
             animationDuration={1000}
-            isAnimationActive={true} // Activează animația
+            isAnimationActive={true}
           />
           <Line
             type="monotone"
@@ -254,9 +227,8 @@ function PriceChart({ coinId }) {
             dot={false}
             activeDot={{ r: 8, fill: "#23d996" }}
             animationDuration={1000}
-            isAnimationActive={true} // Activează animația
+            isAnimationActive={true}
           />
-          {/* Linii de MA și referință */}
           {Object.entries(movingAverages).map(
             ([key, value]) =>
               value && (
@@ -269,7 +241,7 @@ function PriceChart({ coinId }) {
                   strokeWidth={2}
                   dot={false}
                   animationDuration={1000}
-                  isAnimationActive={true} // Activează animația
+                  isAnimationActive={true}
                   name={key.toUpperCase()}
                 />
               )
@@ -316,13 +288,12 @@ function PriceChart({ coinId }) {
               }}
             />
           )}
-          {/* Brush pentru zoom */}
           <Brush
             dataKey="time"
-            height={30} // Înălțimea zonei de zoom
-            stroke="#23d996" // Culoarea stroke-ului
-            fill="#333" // Culoarea de fundal
-            travellerWidth={10} // Lățimea selectorului
+            height={30}
+            stroke="#23d996"
+            fill="#333"
+            travellerWidth={10}
           />
         </LineChart>
       </ResponsiveContainer>
