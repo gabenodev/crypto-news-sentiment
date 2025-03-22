@@ -10,7 +10,7 @@ function CurrencyStats() {
     async function fetchData() {
       try {
         const response = await fetch(
-          `https://api.coingecko.com/api/v3/coins/${coinId}`
+          `https://sentimentx-backend.vercel.app/api/coin-data?coinId=${coinId}`
         );
         const data = await response.json();
         setCoinData(data);
@@ -61,28 +61,32 @@ function CurrencyStats() {
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-200">
               {coinData.name} ({coinData.symbol.toUpperCase()})
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-3xl font-semibold">
-              ${currentPrice.toLocaleString()}
-            </p>
           </div>
         </div>
-        <div className="mt-6">
-          <p className="text-gray-600 dark:text-gray-400">
-            Market Cap Rank:{" "}
-            <span className="font-semibold">#{coinData.market_cap_rank}</span>
+        <div className="mt-4">
+          {/* Prețul */}
+          <p className="text-3xl font-semibold text-gray-900 dark:text-gray-200 text-left">
+            ${currentPrice.toLocaleString()}
           </p>
-          <p className="text-gray-600 dark:text-gray-400 mt-4">
-            Market Cap:{" "}
-            <span className="font-semibold">
-              ${coinData.market_data.market_cap.usd.toLocaleString()}
-            </span>
-          </p>
-          <p className="text-gray-600 dark:text-gray-400 mt-4">
-            24h Volume:{" "}
-            <span className="font-semibold">
-              ${coinData.market_data.total_volume.usd.toLocaleString()}
-            </span>
-          </p>
+          {/* Detaliile suplimentare */}
+          <div className="mt-4 space-y-2 text-left">
+            <p className="text-gray-600 dark:text-gray-400">
+              Market Cap Rank:{" "}
+              <span className="font-semibold">#{coinData.market_cap_rank}</span>
+            </p>
+            <p className="text-gray-600 dark:text-gray-400">
+              Market Cap:{" "}
+              <span className="font-semibold">
+                ${coinData.market_data.market_cap.usd.toLocaleString()}
+              </span>
+            </p>
+            <p className="text-gray-600 dark:text-gray-400">
+              24h Volume:{" "}
+              <span className="font-semibold">
+                ${coinData.market_data.total_volume.usd.toLocaleString()}
+              </span>
+            </p>
+          </div>
         </div>
       </div>
 
