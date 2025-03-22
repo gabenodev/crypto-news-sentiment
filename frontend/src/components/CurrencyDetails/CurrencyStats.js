@@ -2,30 +2,56 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { FaLink, FaReddit, FaComments } from "react-icons/fa"; // Importăm iconițe
 import { CgWebsite } from "react-icons/cg";
+import { ClipLoader } from "react-spinners"; // Importăm un loader pentru animație
 
 function CurrencyStats() {
   const { coinId } = useParams();
   const [coinData, setCoinData] = useState(null);
+  const [loading, setLoading] = useState(true); // Setăm loading la true la început
+  const [error, setError] = useState(null); // Variabilă pentru erori
 
   useEffect(() => {
     async function fetchData() {
       try {
+        setLoading(true); // Setăm loading pe true înainte de fetch
         const response = await fetch(
           `https://sentimentx-backend.vercel.app/api/coin-data?coinId=${coinId}`
         );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch data");
+        }
+
         const data = await response.json();
         setCoinData(data);
+        setLoading(false); // Oprire loading după ce datele sunt încărcate
       } catch (error) {
         console.error("Error fetching coin data:", error);
+        setError(
+          "There was an error fetching the coin data. Please try again."
+        );
+        setLoading(false); // Oprire loading în caz de eroare
       }
     }
+
     fetchData();
   }, [coinId]);
 
-  if (!coinData) {
+  if (loading) {
     return (
-      <div className="text-center text-gray-700 dark:text-gray-300">
-        Loading...
+      <div className="flex justify-center items-center min-h-screen">
+        <ClipLoader size={50} color="#23d996" />
+        <p className="text-center text-gray-700 dark:text-gray-300 ml-4">
+          Loading...
+        </p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center text-red-500 dark:text-red-300">
+        <p>{error}</p>
       </div>
     );
   }
@@ -51,7 +77,7 @@ function CurrencyStats() {
   return (
     <div className="flex flex-wrap justify-center gap-6 p-6">
       {/* Card Stânga */}
-      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20">
+      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn">
         <div className="flex items-center space-x-4">
           <img
             src={coinData.image.large}
@@ -92,7 +118,7 @@ function CurrencyStats() {
       </div>
 
       {/* Card Price Position */}
-      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20">
+      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn">
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4">
           Price Position
         </h2>
@@ -176,7 +202,7 @@ function CurrencyStats() {
       </div>
 
       {/* Card 24h Statistics */}
-      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20">
+      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn">
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4">
           24h Statistics
         </h2>
@@ -224,7 +250,7 @@ function CurrencyStats() {
       </div>
 
       {/* Card Useful Links */}
-      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20">
+      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn">
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4 ">
           Explorer & Links
         </h2>
