@@ -97,31 +97,26 @@ function CurrencyStats() {
         <div className="space-y-4">
           {/* Progress Bar */}
           <div className="relative w-full h-2 bg-gray-200 rounded-full dark:bg-gray-700">
-            {/* Linia albastră pentru ATL */}
             <div
               className="absolute h-2 bg-blue-500 rounded-full"
               style={{ width: `${progress}%` }}
             ></div>
-            {/* Linia portocalie pentru ATH */}
             <div
               className="absolute h-2 bg-orange-500 rounded-full"
               style={{ width: `${100 - progress}%`, left: `${progress}%` }}
             ></div>
-            {/* Indicator pentru prețul curent */}
             <div
               className="absolute w-4 h-4 bg-white border-2 border-gray-500 rounded-full -translate-x-1/2 -translate-y-1/2"
               style={{ left: `${progress}%`, top: "50%" }}
             ></div>
           </div>
 
-          {/* Etichete pentru ATL, Current Price și ATH */}
           <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
             <span>ATL: ${atlPrice.toLocaleString()}</span>
             <span>Current: ${currentPrice.toLocaleString()}</span>
             <span>ATH: ${athPrice.toLocaleString()}</span>
           </div>
 
-          {/* Textul pentru ATH și ATL */}
           <div className="space-y-2 mt-4">
             {/* ATH */}
             <div>
@@ -225,7 +220,7 @@ function CurrencyStats() {
       {/* Card Useful Links */}
       <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 hover:scale-105">
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4">
-          Useful Links
+          Explorer & Links
         </h2>
         <div className="space-y-3">
           <a
@@ -241,25 +236,25 @@ function CurrencyStats() {
             href={coinData.links.blockchain_site[0]}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center text-blue-500 hover:text-blue-700"
+            className="flex items-center text-gray-500 hover:text-gray-700"
           >
             <FaLink className="mr-2" />
             Blockchain Explorer
           </a>
           <a
-            href={coinData.links.official_forum_url[0]}
+            href={coinData.links.whitepaper}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center text-blue-500 hover:text-blue-700"
+            className="flex items-center text-white hover:text-gray-200"
           >
             <FaComments className="mr-2" />
-            Official Forum
+            Whitepaper
           </a>
           <a
             href={coinData.links.subreddit_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center text-blue-500 hover:text-blue-700"
+            className="flex items-center text-orange-500 hover:text-orange-700"
           >
             <FaReddit className="mr-2" />
             Subreddit
