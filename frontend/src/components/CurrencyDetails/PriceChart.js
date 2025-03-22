@@ -98,7 +98,11 @@ function PriceChart({ coinId }) {
           </p>
           {payload.map((entry, index) => (
             <p key={index} style={{ color: entry.color }}>
-              {`${entry.name}: $${entry.value.toFixed(2)}`}
+              {`${entry.name}: ${
+                entry.value >= 1
+                  ? entry.value.toFixed(2) // 2 zecimale pentru valori >= 1
+                  : entry.value.toFixed(8) // 8 zecimale pentru valori < 1
+              }`}
             </p>
           ))}
         </div>
@@ -193,8 +197,8 @@ function PriceChart({ coinId }) {
             tick={{ fill: "#555", fontSize: 12 }}
             domain={["auto", "auto"]}
             tickFormatter={(price) => {
-              if (price >= 1) return `$${price.toFixed(2)}`;
-              return `$${price}`;
+              if (price >= 1) return `$${price.toFixed(2)}`; // 2 zecimale pentru valori >= 1
+              return `$${price.toFixed(8)}`; // 8 zecimale pentru valori < 1
             }}
             tickCount={6}
           />
@@ -252,7 +256,7 @@ function PriceChart({ coinId }) {
               stroke="#52c41a"
               strokeDasharray="3 3"
               label={{
-                value: `Min: $${minPrice.toFixed(2)}`,
+                value: `Min: $${minPrice.toFixed(8)}`, // 8 zecimale pentru minim
                 position: "insideBottomRight",
                 fill: "#52c41a",
                 fontSize: 12,
@@ -266,7 +270,7 @@ function PriceChart({ coinId }) {
               stroke="#ff4d4f"
               strokeDasharray="3 3"
               label={{
-                value: `Max: $${maxPrice.toFixed(2)}`,
+                value: `Max: $${maxPrice.toFixed(8)}`, // 8 zecimale pentru maxim
                 position: "insideTopRight",
                 fill: "#ff4d4f",
                 fontSize: 12,
@@ -280,7 +284,7 @@ function PriceChart({ coinId }) {
               stroke="#fa8c16"
               strokeDasharray="3 3"
               label={{
-                value: `Avg: $${avgPrice.toFixed(2)}`,
+                value: `Avg: $${avgPrice.toFixed(8)}`, // 8 zecimale pentru medie
                 position: "insideTopRight",
                 fill: "#fa8c16",
                 fontSize: 12,
