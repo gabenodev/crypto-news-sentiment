@@ -66,7 +66,7 @@ function CurrencyStats() {
         </div>
         <div className="mt-4">
           {/* Prețul */}
-          <p className="text-3xl font-semibold text-gray-900 dark:text-gray-200 text-left">
+          <p className="text-4xl font-semibold text-gray-900 dark:text-gray-200 text-left">
             ${currentPrice.toLocaleString()}
           </p>
           {/* Detaliile suplimentare */}
