@@ -56,6 +56,13 @@ function CurrencyStats() {
     );
   }
 
+  const formatPrice = (price) => {
+    if (price < 0.0001) {
+      return price.toFixed(8); // Afișăm 8 zecimale pentru prețurile mici
+    }
+    return price.toLocaleString(); // Pentru prețurile mari, folosim toLocaleString
+  };
+
   // Extragem datele relevante
   const currentPrice = coinData.market_data.current_price.usd;
   const athPrice = coinData.market_data.ath.usd;
@@ -93,7 +100,7 @@ function CurrencyStats() {
         <div className="mt-4">
           {/* Prețul */}
           <p className="text-4xl font-semibold text-gray-900 dark:text-gray-200 text-left">
-            ${currentPrice.toLocaleString()}
+            ${formatPrice(currentPrice)}
           </p>
           {/* Detaliile suplimentare */}
           <div className="mt-4 space-y-2 text-left">
@@ -141,11 +148,11 @@ function CurrencyStats() {
 
           <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
             <span className="font-semibold text-blue-500">
-              ATL: ${atlPrice.toLocaleString()}
+              ATL: ${formatPrice(atlPrice)}
             </span>
-            <span>Current: ${currentPrice.toLocaleString()}</span>
+            <span>Current: ${formatPrice(currentPrice)}</span>
             <span className="font-semibold text-orange-500">
-              ATH: ${athPrice.toLocaleString()}
+              ATH: ${formatPrice(athPrice)}
             </span>
           </div>
 
@@ -155,7 +162,7 @@ function CurrencyStats() {
               <p className="text-gray-600 dark:text-gray-400">
                 All Time High:{" "}
                 <span className="font-semibold text-gray-400">
-                  ${athPrice.toLocaleString()}
+                  ${formatPrice(athPrice)}
                 </span>
               </p>
               <p className="text-gray-600 dark:text-gray-400">
@@ -179,7 +186,7 @@ function CurrencyStats() {
               <p className="text-gray-600 dark:text-gray-400">
                 All Time Low:{" "}
                 <span className="text-gray-400 font-semibold">
-                  ${atlPrice.toLocaleString()}
+                  ${formatPrice(atlPrice)}
                 </span>
               </p>
               <p className="text-gray-600 dark:text-gray-400">
@@ -209,16 +216,16 @@ function CurrencyStats() {
         <div className="space-y-2">
           <p className="text-gray-600 dark:text-gray-400">
             High 24h:{" "}
-            <span className="font-semibold">${high24h.toLocaleString()}</span>
+            <span className="font-semibold">${formatPrice(high24h)}</span>
           </p>
           <p className="text-gray-600 dark:text-gray-400">
             Low 24h:{" "}
-            <span className="font-semibold">${low24h.toLocaleString()}</span>
+            <span className="font-semibold">${formatPrice(low24h)}</span>
           </p>
           <p className="text-gray-600 dark:text-gray-400">
             Price Change 24h:{" "}
             <span className="font-semibold">
-              ${coinData.market_data.price_change_24h.toFixed(2)}
+              ${formatPrice(coinData.market_data.price_change_24h)}
             </span>
           </p>
           <p className="text-gray-600 dark:text-gray-400">
