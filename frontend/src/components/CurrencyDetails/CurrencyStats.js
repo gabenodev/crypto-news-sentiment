@@ -82,9 +82,9 @@ function CurrencyStats() {
   const progress = ((currentPrice - atlPrice) / (athPrice - atlPrice)) * 100;
 
   return (
-    <div className="flex flex-wrap justify-center gap-6 p-6">
+    <div className="flex flex-col md:flex-row gap-10 p-6">
       {/* Card Stânga */}
-      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn">
+      <div className="flex-1 bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn">
         <div className="flex items-center space-x-6">
           <img
             src={coinData.image.large}
