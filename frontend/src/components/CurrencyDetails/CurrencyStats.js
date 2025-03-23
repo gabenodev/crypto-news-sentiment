@@ -85,7 +85,7 @@ function CurrencyStats() {
     <div className="flex flex-wrap justify-center gap-6 p-6">
       {/* Card Stânga */}
       <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn">
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-6">
           <img
             src={coinData.image.large}
             alt={coinData.name}
@@ -103,20 +103,22 @@ function CurrencyStats() {
             ${formatPrice(currentPrice)}
           </p>
           {/* Detaliile suplimentare */}
-          <div className="mt-4 space-y-2 text-left">
+          <div className="mt-4 space-y-6 text-left">
             <p className="text-gray-600 dark:text-gray-400">
               Market Cap Rank:{" "}
-              <span className="font-semibold">#{coinData.market_cap_rank}</span>
+              <span className="font-semibold text-black dark:text-white">
+                #{coinData.market_cap_rank}
+              </span>
             </p>
             <p className="text-gray-600 dark:text-gray-400">
               Market Cap:{" "}
-              <span className="font-semibold">
+              <span className="font-semibold text-black dark:text-white">
                 ${coinData.market_data.market_cap.usd.toLocaleString()}
               </span>
             </p>
             <p className="text-gray-600 dark:text-gray-400">
               24h Volume:{" "}
-              <span className="font-semibold">
+              <span className="font-semibold text-black dark:text-white">
                 ${coinData.market_data.total_volume.usd.toLocaleString()}
               </span>
             </p>
@@ -150,21 +152,17 @@ function CurrencyStats() {
             <span className="font-semibold text-blue-500">
               ATL: ${formatPrice(atlPrice)}
             </span>
-            <span>Current: ${formatPrice(currentPrice)}</span>
+            <span className="font-semibold text-black dark:text-white">
+              Current: ${formatPrice(currentPrice)}
+            </span>
             <span className="font-semibold text-orange-500">
               ATH: ${formatPrice(athPrice)}
             </span>
           </div>
 
-          <div className="space-y-2 mt-6">
+          <div className="space-y-4 mt-6">
             {/* ATH */}
             <div>
-              <p className="text-gray-600 dark:text-gray-400">
-                All Time High:{" "}
-                <span className="font-semibold text-gray-400">
-                  ${formatPrice(athPrice)}
-                </span>
-              </p>
               <p className="text-gray-600 dark:text-gray-400">
                 All time high change:{" "}
                 <span
@@ -183,12 +181,6 @@ function CurrencyStats() {
 
             {/* ATL */}
             <div>
-              <p className="text-gray-600 dark:text-gray-400">
-                All Time Low:{" "}
-                <span className="text-gray-400 font-semibold">
-                  ${formatPrice(atlPrice)}
-                </span>
-              </p>
               <p className="text-gray-600 dark:text-gray-400">
                 All time low change:{" "}
                 <span
