@@ -333,6 +333,7 @@ function PriceChart({ coinId }) {
                 color: "#fff",
                 fontSize: 14,
               }}
+              formatter={(value) => Math.round(value)} // Elimină zecimalele
             />
             <Line
               type="monotone"
