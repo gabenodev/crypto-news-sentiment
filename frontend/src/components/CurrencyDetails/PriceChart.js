@@ -15,8 +15,8 @@ import {
   calculateMinPrice,
   calculateMaxPrice,
   calculateAveragePrice,
-} from "./MAindicators";
-import { calculateRSI } from "./RSIindicator"; // Import the RSI function
+} from "../Indicators/MAindicators";
+import { calculateRSI } from "../Indicators/RSIindicator"; // Import the RSI function
 
 const maColors = {
   ma5: "#1890ff",
