@@ -126,7 +126,7 @@ function PriceChart({ coinId }) {
   };
 
   return (
-    <div className="w-[100%] mx-auto dark:bg-gray-900 p-4 rounded-lg">
+    <div className="w-[100%] mx-auto bg-gray-100 dark:bg-gradient-to-r from-gray-900 to-gray-800 p-4 rounded-lg">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <div className="flex gap-2 justify-center">
           {Object.entries(movingAverages).map(([key, value]) => (
