@@ -224,7 +224,13 @@ function CurrencyStats() {
           </p>
           <p className="text-gray-600 dark:text-gray-400">
             Price Change 24h:{" "}
-            <span className="font-semibold">
+            <span
+              className={`font-semibold ${
+                coinData.market_data.price_change_24h > 0
+                  ? "text-green-500"
+                  : "text-red-500"
+              }`}
+            >
               ${formatPrice(coinData.market_data.price_change_24h)}
             </span>
           </p>
