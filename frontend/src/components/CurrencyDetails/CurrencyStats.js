@@ -163,7 +163,9 @@ function CurrencyStats() {
           <div className="space-y-4 mt-6">
             {/* ATH */}
             <div>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                {" "}
+                {/* Adaugă spațiu mai mare dedesubt */}
                 All time high change:{" "}
                 <span
                   className={`font-semibold ${
@@ -181,7 +183,9 @@ function CurrencyStats() {
 
             {/* ATL */}
             <div>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                {" "}
+                {/* Adaugă spațiu mai mare dedesubt */}
                 All time low change:{" "}
                 <span
                   className={`font-semibold ${
@@ -208,11 +212,15 @@ function CurrencyStats() {
         <div className="space-y-2">
           <p className="text-gray-600 dark:text-gray-400">
             High 24h:{" "}
-            <span className="font-semibold">${formatPrice(high24h)}</span>
+            <span className="font-semibold text-black dark:text-white">
+              ${formatPrice(high24h)}
+            </span>
           </p>
           <p className="text-gray-600 dark:text-gray-400">
             Low 24h:{" "}
-            <span className="font-semibold">${formatPrice(low24h)}</span>
+            <span className="font-semibold text-black dark:text-white">
+              ${formatPrice(low24h)}
+            </span>
           </p>
           <p className="text-gray-600 dark:text-gray-400">
             Price Change 24h:{" "}
