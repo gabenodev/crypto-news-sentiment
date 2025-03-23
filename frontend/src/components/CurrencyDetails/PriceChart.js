@@ -92,6 +92,9 @@ function PriceChart({ coinId }) {
   const maxPrice = calculateMaxPrice(priceData);
   const avgPrice = calculateAveragePrice(priceData);
 
+  const buffer = (maxPrice - minPrice) * 0.05;
+  const yDomain = [minPrice - buffer, maxPrice + buffer];
+
   const dataWithMAs = movingAverage(priceData, 5, "ma5");
   const dataWithMAs2 = movingAverage(dataWithMAs, 8, "ma8");
   const dataWithMAs3 = movingAverage(dataWithMAs2, 13, "ma13");
@@ -209,7 +212,7 @@ function PriceChart({ coinId }) {
             />
             <YAxis
               tick={{ fill: "#555", fontSize: 12 }}
-              domain={["auto", "auto"]}
+              domain={yDomain}
               tickFormatter={(price) => {
                 if (price >= 1) return `$${price.toFixed(2)}`;
                 return `$${price.toFixed(8)}`;
