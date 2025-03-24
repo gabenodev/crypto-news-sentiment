@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { FaLink, FaReddit, FaComments } from "react-icons/fa"; // Importăm iconițe
 import { CgWebsite } from "react-icons/cg";
 import { ClipLoader } from "react-spinners"; // Importăm un loader pentru animație
+import { motion } from "framer-motion";
 
 function CurrencyStats() {
   const { coinId } = useParams();
@@ -84,7 +85,12 @@ function CurrencyStats() {
   return (
     <div className="flex flex-col md:flex-row gap-10 p-6">
       {/* Card Stânga */}
-      <div className="flex-1 bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn">
+      <motion.div
+        className="flex-1 bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <div className="flex items-center space-x-6">
           <img
             src={coinData.image.large}
@@ -124,10 +130,15 @@ function CurrencyStats() {
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Card Price Position */}
-      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn">
+      <motion.div
+        className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4">
           Price Position
         </h2>
@@ -202,10 +213,15 @@ function CurrencyStats() {
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Card 24h Statistics */}
-      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn">
+      <motion.div
+        className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4">
           24h Statistics
         </h2>
@@ -260,10 +276,15 @@ function CurrencyStats() {
             </span>
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Card Useful Links */}
-      <div className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn">
+      <motion.div
+        className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4 ">
           Explorer & Links
         </h2>
@@ -305,7 +326,7 @@ function CurrencyStats() {
             Subreddit
           </a>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
