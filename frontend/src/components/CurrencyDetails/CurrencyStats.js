@@ -225,7 +225,7 @@ function CurrencyStats() {
         <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4">
           24h Statistics
         </h2>
-        <div className="space-y-2">
+        <div className="space-y-5">
           <p className="text-gray-600 dark:text-gray-400">
             High 24h:{" "}
             <span className="font-semibold text-black dark:text-white">
