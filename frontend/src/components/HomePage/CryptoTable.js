@@ -1,35 +1,81 @@
-import React from "react";
+import React, { useState } from "react";
 import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 function CryptoTable({ cryptoData }) {
   const navigate = useNavigate();
+  const [sortedData, setSortedData] = useState([...cryptoData]);
+  const [sortConfig, setSortConfig] = useState({
+    key: null,
+    direction: "desc",
+  });
+
+  const handleSort = (key) => {
+    let direction = "desc";
+    if (sortConfig.key === key && sortConfig.direction === "desc") {
+      direction = "asc";
+    }
+
+    const sorted = [...sortedData].sort((a, b) => {
+      if (direction === "asc") {
+        return a[key] - b[key];
+      } else {
+        return b[key] - a[key];
+      }
+    });
+
+    setSortedData(sorted);
+    setSortConfig({ key, direction });
+  };
 
   return (
     <div className="overflow-hidden">
       <table className="w-full border-collapse select-none">
         <thead className="bg-gray-100 dark:bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-300 dark:border-gray-700">
           <tr className="text-lg text-gray-700 dark:text-gray-300">
-            {["#", "Name", "Price", "24h Change", "Market Cap", "Supply"].map(
-              (header) => (
-                <th
-                  key={header}
-                  className={`py-4 px-6 font-semibold ${
-                    header === "24h Change"
-                      ? "text-right pr-8"
-                      : header === "Market Cap" || header === "Supply"
-                      ? "text-right pr-12"
-                      : "text-left"
-                  }`}
-                >
-                  {header}
-                </th>
-              )
-            )}
+            <th className="py-4 px-6 font-semibold text-left">#</th>
+            <th className="py-4 px-6 font-semibold text-left">Name</th>
+            <th
+              className="py-4 px-6 font-semibold text-left cursor-pointer"
+              onClick={() => handleSort("current_price")}
+            >
+              Price{" "}
+              {sortConfig.key === "current_price" &&
+                (sortConfig.direction === "asc" ? (
+                  <FaArrowUp className="inline ml-1" />
+                ) : (
+                  <FaArrowDown className="inline ml-1" />
+                ))}
+            </th>
+            <th
+              className="py-4 px-6 font-semibold text-right pr-8 cursor-pointer"
+              onClick={() => handleSort("price_change_percentage_24h")}
+            >
+              24h Change{" "}
+              {sortConfig.key === "price_change_percentage_24h" &&
+                (sortConfig.direction === "asc" ? (
+                  <FaArrowUp className="inline ml-1" />
+                ) : (
+                  <FaArrowDown className="inline ml-1" />
+                ))}
+            </th>
+            <th
+              className="py-4 px-6 font-semibold text-right pr-12 cursor-pointer"
+              onClick={() => handleSort("market_cap")}
+            >
+              Market Cap{" "}
+              {sortConfig.key === "market_cap" &&
+                (sortConfig.direction === "asc" ? (
+                  <FaArrowUp className="inline ml-1" />
+                ) : (
+                  <FaArrowDown className="inline ml-1" />
+                ))}
+            </th>
+            <th className="py-4 px-6 font-semibold text-right pr-12">Supply</th>
           </tr>
         </thead>
         <tbody className="bg-gray-100 dark:bg-gradient-to-r from-gray-900 to-gray-800">
-          {cryptoData.map((crypto) => {
+          {sortedData.map((crypto) => {
             const maxSupply = crypto.max_supply || crypto.total_supply;
             const progress = (crypto.circulating_supply / maxSupply) * 100;
 
@@ -53,7 +99,10 @@ function CryptoTable({ cryptoData }) {
                   </span>
                 </td>
                 <td className="py-5 px-6 text-gray-900 dark:text-gray-200 font-medium">
-                  ${crypto.current_price.toLocaleString()}
+                  $
+                  {crypto.current_price < 0.01
+                    ? crypto.current_price.toFixed(8).replace(/\.?0+$/, "")
+                    : crypto.current_price.toLocaleString()}
                 </td>
                 <td
                   className={`py-5 px-6 font-medium text-right pr-8 flex items-center justify-end ${
