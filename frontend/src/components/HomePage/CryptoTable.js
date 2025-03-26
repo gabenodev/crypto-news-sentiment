@@ -29,128 +29,170 @@ function CryptoTable({ cryptoData }) {
   };
 
   return (
-    <div className="overflow-hidden">
-      <table className="w-full border-collapse select-none">
-        <thead className="bg-gray-100 dark:bg-gradient-to-r from-gray-900 to-gray-800 border-b border-gray-300 dark:border-gray-700">
-          <tr className="text-lg text-gray-700 dark:text-gray-300">
-            <th className="py-4 px-6 font-semibold text-left">#</th>
-            <th className="py-4 px-6 font-semibold text-left">Name</th>
-            <th
-              className="py-4 px-6 font-semibold text-left cursor-pointer"
-              onClick={() => handleSort("current_price")}
-            >
-              Price{" "}
-              {sortConfig.key === "current_price" &&
-                (sortConfig.direction === "asc" ? (
-                  <FaArrowUp className="inline ml-1" />
-                ) : (
-                  <FaArrowDown className="inline ml-1" />
-                ))}
-            </th>
-            <th
-              className="py-4 px-6 font-semibold text-right pr-8 cursor-pointer"
-              onClick={() => handleSort("price_change_percentage_24h")}
-            >
-              24h Change{" "}
-              {sortConfig.key === "price_change_percentage_24h" &&
-                (sortConfig.direction === "asc" ? (
-                  <FaArrowUp className="inline ml-1" />
-                ) : (
-                  <FaArrowDown className="inline ml-1" />
-                ))}
-            </th>
-            <th
-              className="py-4 px-6 font-semibold text-right pr-12 cursor-pointer"
-              onClick={() => handleSort("market_cap")}
-            >
-              Market Cap{" "}
-              {sortConfig.key === "market_cap" &&
-                (sortConfig.direction === "asc" ? (
-                  <FaArrowUp className="inline ml-1" />
-                ) : (
-                  <FaArrowDown className="inline ml-1" />
-                ))}
-            </th>
-            <th className="py-4 px-6 font-semibold text-right pr-12">Supply</th>
-          </tr>
-        </thead>
-        <tbody className="bg-gray-100 dark:bg-gradient-to-r from-gray-900 to-gray-800">
-          {sortedData.map((crypto) => {
-            const maxSupply = crypto.max_supply || crypto.total_supply;
-            const progress = (crypto.circulating_supply / maxSupply) * 100;
+    <div className="flex justify-center px-4 py-6">
+      <div className="relative w-full max-w-[1800px]">
+        {/* Very subtle glow effect */}
+        <div className="absolute -inset-2 -z-10 bg-gradient-to-r from-teal-400/5 to-green-500/5 rounded-xl blur-md opacity-30 dark:opacity-20 animate-pulse-slow"></div>
 
-            return (
-              <tr
-                key={crypto.id}
-                className="border-b border-gray-300 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 cursor-pointer transition-colors"
-                onClick={() => navigate(`/currencies/${crypto.id}`)}
-              >
-                <td className="py-5 px-6 text-gray-800 dark:text-gray-200 font-medium">
-                  #{crypto.market_cap_rank}
-                </td>
-                <td className="py-5 px-6 flex items-center space-x-3">
-                  <img
-                    src={crypto.image}
-                    alt={crypto.name}
-                    className="h-8 w-8 rounded-full"
-                  />
-                  <span className="text-gray-900 dark:text-gray-200 font-medium">
-                    {crypto.name} ({crypto.symbol.toUpperCase()})
-                  </span>
-                </td>
-                <td className="py-5 px-6 text-gray-900 dark:text-gray-200 font-medium">
-                  $
-                  {crypto.current_price < 0.01
-                    ? crypto.current_price.toFixed(8).replace(/\.?0+$/, "")
-                    : crypto.current_price.toLocaleString()}
-                </td>
-                <td
-                  className={`py-5 px-6 font-medium text-right pr-8 flex items-center justify-end ${
-                    crypto.price_change_percentage_24h >= 0
-                      ? "text-green-500"
-                      : "text-red-500"
-                  }`}
+        {/* Table container with requested background */}
+        <div className="relative w-full rounded-xl bg-gray-50 dark:bg-gradient-to-r dark:from-gray-900 dark:to-gray-800">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="text-gray-500 dark:text-gray-400 text-sm border-b border-gray-200 dark:border-gray-700">
+                <th className="py-4 px-6 font-medium text-left">#</th>
+                <th className="py-4 px-6 font-medium text-left">Coin</th>
+                <th
+                  className="py-4 px-6 font-medium text-left cursor-pointer hover:text-teal-500 transition-colors"
+                  onClick={() => handleSort("current_price")}
                 >
-                  {crypto.price_change_percentage_24h >= 0 ? (
-                    <FaArrowUp className="mr-2" />
-                  ) : (
-                    <FaArrowDown className="mr-2" />
-                  )}
-                  {crypto.price_change_percentage_24h.toFixed(2)}%
-                </td>
-                <td className="py-5 px-6 text-gray-900 dark:text-gray-200 font-medium text-right pr-12">
-                  ${crypto.market_cap.toLocaleString()}
-                </td>
-                <td className="py-5 px-6 text-right pr-12">
-                  {progress >= 100 ? (
-                    <span className="text-gray-600 dark:text-gray-400">
-                      {crypto.circulating_supply.toLocaleString()}
-                    </span>
-                  ) : (
-                    <>
-                      <div className="w-full bg-gray-300 rounded-full h-2.5">
-                        <div
-                          className="h-2.5 rounded-full"
-                          style={{
-                            width: `${progress.toFixed(2)}%`,
-                            background:
-                              "linear-gradient(to right, #38b2ac, #48bb78)",
-                          }}
-                        ></div>
-                      </div>
-                      <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                        <span className="text-teal-500">
-                          {progress.toFixed(2)}%
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </td>
+                  <div className="flex items-center">
+                    Price
+                    {sortConfig.key === "current_price" && (
+                      <span className="ml-1">
+                        {sortConfig.direction === "asc" ? (
+                          <FaArrowUp size={10} />
+                        ) : (
+                          <FaArrowDown size={10} />
+                        )}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th
+                  className="py-4 px-6 font-medium text-right cursor-pointer hover:text-teal-500 transition-colors"
+                  onClick={() => handleSort("price_change_percentage_24h")}
+                >
+                  <div className="flex items-center justify-end">
+                    24h
+                    {sortConfig.key === "price_change_percentage_24h" && (
+                      <span className="ml-1">
+                        {sortConfig.direction === "asc" ? (
+                          <FaArrowUp size={10} />
+                        ) : (
+                          <FaArrowDown size={10} />
+                        )}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th
+                  className="py-4 px-6 font-medium text-right cursor-pointer hover:text-teal-500 transition-colors"
+                  onClick={() => handleSort("market_cap")}
+                >
+                  <div className="flex items-center justify-end">
+                    Market Cap
+                    {sortConfig.key === "market_cap" && (
+                      <span className="ml-1">
+                        {sortConfig.direction === "asc" ? (
+                          <FaArrowUp size={10} />
+                        ) : (
+                          <FaArrowDown size={10} />
+                        )}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th className="py-4 px-6 font-medium text-right">Supply</th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            </thead>
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              {sortedData.map((crypto) => {
+                const maxSupply = crypto.max_supply || crypto.total_supply;
+                const progress = maxSupply
+                  ? (crypto.circulating_supply / maxSupply) * 100
+                  : 0;
+
+                return (
+                  <tr
+                    key={crypto.id}
+                    onClick={() => navigate(`/currencies/${crypto.id}`)}
+                    className="group hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+                  >
+                    <td className="py-4 px-6 text-gray-500 dark:text-gray-400 font-medium">
+                      {crypto.market_cap_rank}
+                    </td>
+                    <td className="py-4 px-6">
+                      <div className="flex items-center space-x-3">
+                        <div className="relative flex-shrink-0">
+                          <img
+                            src={crypto.image}
+                            alt={crypto.name}
+                            className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-600 shadow-sm group-hover:border-teal-300 transition-colors"
+                          />
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-800 dark:text-gray-100">
+                            {crypto.name}
+                          </div>
+                          <div className="text-xs text-teal-500 dark:text-teal-400">
+                            {crypto.symbol.toUpperCase()}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 font-medium text-gray-800 dark:text-gray-100">
+                      $
+                      {crypto.current_price < 0.01
+                        ? crypto.current_price.toFixed(8).replace(/\.?0+$/, "")
+                        : crypto.current_price.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 8,
+                          })}
+                    </td>
+                    <td
+                      className={`py-4 px-6 text-right font-medium ${
+                        crypto.price_change_percentage_24h >= 0
+                          ? "text-green-500 dark:text-green-400"
+                          : "text-red-500 dark:text-red-400"
+                      }`}
+                    >
+                      <div className="flex items-center justify-end">
+                        {crypto.price_change_percentage_24h >= 0 ? (
+                          <FaArrowUp className="mr-1" size={10} />
+                        ) : (
+                          <FaArrowDown className="mr-1" size={10} />
+                        )}
+                        {Math.abs(crypto.price_change_percentage_24h).toFixed(
+                          2
+                        )}
+                        %
+                      </div>
+                    </td>
+                    <td className="py-4 px-6 text-right font-medium text-gray-800 dark:text-gray-100">
+                      ${crypto.market_cap.toLocaleString()}
+                    </td>
+                    <td className="py-4 px-6 text-right">
+                      {progress >= 100 ? (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {crypto.circulating_supply.toLocaleString()}
+                        </span>
+                      ) : (
+                        <div className="flex flex-col items-end space-y-1">
+                          <div className="w-full max-w-[120px] bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                            <div
+                              className="h-1.5 rounded-full"
+                              style={{
+                                width: `${progress.toFixed(2)}%`,
+                                background:
+                                  "linear-gradient(to right, #2dd4bf, #4ade80)",
+                              }}
+                            />
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <span className="text-teal-500 dark:text-teal-400">
+                              {progress.toFixed(2)}%
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

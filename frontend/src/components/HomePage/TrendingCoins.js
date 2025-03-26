@@ -39,8 +39,9 @@ function TrendingCoins() {
         {/* Main card */}
         <div className="w-full bg-white/90 dark:bg-gray-800/90 p-5 rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 relative backdrop-blur-sm">
           <h3 className="text-xl font-bold text-center mb-5 pb-3 border-b border-gray-200/50 dark:border-gray-700/50">
+            <span className="mr-1">🔥</span>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-green-500">
-              🔥 Trending Coins (24h)
+              Trending Coins (24h)
             </span>
           </h3>
 

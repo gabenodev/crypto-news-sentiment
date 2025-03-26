@@ -38,20 +38,6 @@ function Homepage() {
 
   return (
     <>
-      {/* Hero Section */}
-      <div className="text-center my-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-4">
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-green-600">
-              Crypto Market Pulse
-            </span>
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
-            Real-time tracking of the cryptocurrency market
-          </p>
-        </div>
-      </div>
-
       {/* Trending Coins */}
       <div className="max-w-7xl mx-auto px-4">
         <TrendingCoins />
