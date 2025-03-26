@@ -37,34 +37,30 @@ function Homepage() {
   }
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-50 dark:bg-gray-900 px-4 sm:px-6 py-8 w-full">
+    <>
       {/* Titlu */}
-      <div className="text-center mb-10">
+      <div className="text-center my-10">
         <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-4">
           <span className="bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-green-600">
             Crypto Market Pulse
           </span>
         </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+        <p className="text-lg text-gray-600 dark:text-gray-300">
           Real-time tracking of the cryptocurrency market
         </p>
       </div>
 
       {/* Trending Coins */}
-      <div className="w-full max-w-6xl mb-10">
-        <TrendingCoins />
-      </div>
+      <TrendingCoins />
 
       {/* Crypto Table - Pe toată lățimea ecranului */}
-      <div className="w-full">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-          All Cryptocurrencies
+      <div className="mt-10">
+        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-200">
+          Complete Market List
         </h2>
-        <div className="w-full overflow-x-auto">
-          <CryptoTable cryptoData={cryptoData} />
-        </div>
+        <CryptoTable cryptoData={cryptoData} />
       </div>
-    </div>
+    </>
   );
 }
 
