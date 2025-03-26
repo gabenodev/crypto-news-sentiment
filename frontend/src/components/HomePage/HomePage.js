@@ -38,27 +38,49 @@ function Homepage() {
 
   return (
     <>
-      {/* Titlu */}
-      <div className="text-center my-10">
-        <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-4">
-          <span className="bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-green-600">
-            Crypto Market Pulse
-          </span>
-        </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-300">
-          Real-time tracking of the cryptocurrency market
-        </p>
+      {/* Hero Section */}
+      <div className="text-center my-12 px-4">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-4">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-green-600">
+              Crypto Market Pulse
+            </span>
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-300">
+            Real-time tracking of the cryptocurrency market
+          </p>
+        </div>
       </div>
 
       {/* Trending Coins */}
-      <TrendingCoins />
+      <div className="max-w-7xl mx-auto px-4">
+        <TrendingCoins />
+      </div>
 
-      {/* Crypto Table - Pe toată lățimea ecranului */}
-      <div className="mt-10">
-        <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-200">
-          Complete Market List
-        </h2>
-        <CryptoTable cryptoData={cryptoData} />
+      {/* Crypto Table Section - Full width */}
+      <div className="mt-16">
+        <div className="max-w-7xl mx-auto px-4 mb-6 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white mb-3">
+            Complete Cryptocurrency Market
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 max-w-4xl mx-auto">
+            Explore our comprehensive list of 1000+ cryptocurrencies with
+            real-time price data, market capitalization, and 24h trading volume.
+            Analyze trends, compare performance, and discover new investment
+            opportunities across the entire crypto market.
+          </p>
+          <div className="w-24 h-0.5 bg-gradient-to-r from-teal-400 to-green-500 mx-auto mt-4"></div>
+        </div>
+
+        {/* Tabel full-width */}
+        <div className="overflow-x-auto">
+          <CryptoTable cryptoData={cryptoData} />
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 mt-4 text-sm text-gray-500 dark:text-gray-400 text-center">
+          Data refreshes every minute. Includes all actively traded
+          cryptocurrencies.
+        </div>
       </div>
     </>
   );
