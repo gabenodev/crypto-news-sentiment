@@ -30,15 +30,18 @@ function CryptoTable({ cryptoData }) {
 
   return (
     <div className="flex justify-center px-4 py-6">
-      <div className="relative w-full max-w-[1800px]">
-        {/* Very subtle glow effect */}
-        <div className="absolute -inset-2 -z-10 bg-gradient-to-r from-teal-400/5 to-green-500/5 rounded-xl blur-md opacity-30 dark:opacity-20 animate-pulse-slow"></div>
+      <div className="relative w-full max-w-full">
+        {/* Enhanced glow effect */}
+        {/* Glow effect - acum mai vizibil pe margini */}
+        <div className="absolute -inset-3 -z-10 overflow-hidden rounded-xl">
+          <div className="absolute inset-0 bg-gradient-to-r from-teal-400/40 to-green-500/40 rounded-xl blur-xl opacity-50 dark:opacity-40 animate-pulse-slow"></div>
+        </div>
 
-        {/* Table container with requested background */}
-        <div className="relative w-full rounded-xl bg-gray-50 dark:bg-gradient-to-r dark:from-gray-900 dark:to-gray-800">
+        {/* Table container with requested background and subtle glass effect */}
+        <div className="relative w-full rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 shadow-lg overflow-hidden">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="text-gray-500 dark:text-gray-400 text-sm border-b border-gray-200 dark:border-gray-700">
+              <tr className="text-gray-500 dark:text-gray-400 text-sm border-b border-gray-200/50 dark:border-gray-700/50">
                 <th className="py-4 px-6 font-medium text-left">#</th>
                 <th className="py-4 px-6 font-medium text-left">Coin</th>
                 <th
@@ -95,7 +98,7 @@ function CryptoTable({ cryptoData }) {
                 <th className="py-4 px-6 font-medium text-right">Supply</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+            <tbody className="divide-y divide-gray-200/50 dark:divide-gray-700/50">
               {sortedData.map((crypto) => {
                 const maxSupply = crypto.max_supply || crypto.total_supply;
                 const progress = maxSupply
@@ -106,7 +109,7 @@ function CryptoTable({ cryptoData }) {
                   <tr
                     key={crypto.id}
                     onClick={() => navigate(`/currencies/${crypto.id}`)}
-                    className="group hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
+                    className="group hover:bg-teal-50/50 dark:hover:bg-teal-900/20 transition-colors cursor-pointer"
                   >
                     <td className="py-4 px-6 text-gray-500 dark:text-gray-400 font-medium">
                       {crypto.market_cap_rank}
@@ -121,16 +124,16 @@ function CryptoTable({ cryptoData }) {
                           />
                         </div>
                         <div>
-                          <div className="font-medium text-gray-800 dark:text-gray-100">
+                          <div className="font-medium text-gray-800 dark:text-gray-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                             {crypto.name}
                           </div>
-                          <div className="text-xs text-teal-500 dark:text-teal-400">
+                          <div className="text-xs text-teal-500 dark:text-teal-400 font-medium">
                             {crypto.symbol.toUpperCase()}
                           </div>
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-6 font-medium text-gray-800 dark:text-gray-100">
+                    <td className="py-4 px-6 font-medium text-gray-800 dark:text-gray-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                       $
                       {crypto.current_price < 0.01
                         ? crypto.current_price.toFixed(8).replace(/\.?0+$/, "")
@@ -158,7 +161,7 @@ function CryptoTable({ cryptoData }) {
                         %
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-right font-medium text-gray-800 dark:text-gray-100">
+                    <td className="py-4 px-6 text-right font-medium text-gray-800 dark:text-gray-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                       ${crypto.market_cap.toLocaleString()}
                     </td>
                     <td className="py-4 px-6 text-right">
@@ -179,7 +182,7 @@ function CryptoTable({ cryptoData }) {
                             />
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
-                            <span className="text-teal-500 dark:text-teal-400">
+                            <span className="text-teal-500 dark:text-teal-400 font-medium">
                               {progress.toFixed(2)}%
                             </span>
                           </div>
