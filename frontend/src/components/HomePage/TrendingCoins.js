@@ -1,24 +1,8 @@
-import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import useTrendingCoins from "../hooks/useTrendingCoins";
 
 function TrendingCoins() {
-  const [trendingCoins, setTrendingCoins] = useState([]);
-
-  useEffect(() => {
-    const fetchTrendingCoins = async () => {
-      try {
-        const response = await fetch(
-          "https://sentimentx-backend.vercel.app/api/trending"
-        );
-        const data = await response.json();
-        setTrendingCoins(data.coins.slice(0, 5));
-      } catch (error) {
-        console.error("Error fetching trending coins:", error);
-      }
-    };
-
-    fetchTrendingCoins();
-  }, []);
+  const { trendingCoins, loading } = useTrendingCoins();
 
   const formatPrice = (price) => {
     if (!price) return "Loading...";
@@ -29,6 +13,8 @@ function TrendingCoins() {
       maximumFractionDigits: price < 1 ? 8 : 2,
     }).format(price);
   };
+
+  if (loading) return <p>Loading trending coins...</p>;
 
   return (
     <div className="flex justify-center px-4">
