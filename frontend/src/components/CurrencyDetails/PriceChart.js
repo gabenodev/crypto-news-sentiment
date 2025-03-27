@@ -152,9 +152,10 @@ function PriceChart({ coinId }) {
                     }
                     className={`px-3 py-2 rounded-md text-xs font-medium transition-all duration-200 ${
                       value
-                        ? `text-white ${maColors[key]} shadow-md`
+                        ? `text-white shadow-md`
                         : "bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
                     } hover:shadow-md hover:scale-[1.03] focus:outline-none`}
+                    style={value ? { backgroundColor: maColors[key] } : {}}
                   >
                     {key.toUpperCase()}
                   </button>
