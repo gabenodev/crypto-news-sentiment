@@ -13,9 +13,12 @@ function useCryptoData() {
         if (!response.ok) throw new Error("Network response was not ok");
 
         const data = await response.json();
-        setCryptoData(
-          data.sort((a, b) => a.market_cap_rank - b.market_cap_rank)
+
+        // Sortează după market_cap_rank (datele primite deja sunt filtrate în backend)
+        const sortedData = data.sort(
+          (a, b) => a.market_cap_rank - b.market_cap_rank
         );
+        setCryptoData(sortedData);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
