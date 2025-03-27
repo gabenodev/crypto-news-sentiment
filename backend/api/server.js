@@ -133,6 +133,16 @@ const fetchCoinData = async (coinId) => {
   return response.json();
 };
 
+const fetchTrendingCoins = async () => {
+  const response = await fetch(
+    "https://api.coingecko.com/api/v3/search/trending"
+  );
+  if (!response.ok) {
+    throw new Error(`CoinGecko API returned status: ${response.status}`);
+  }
+  return response.json();
+};
+
 // ENDPOINTS ---------------------------------------------------------------------------------------------------- ENDPOINTS
 
 /* API NEWS endpoint */
@@ -218,6 +228,19 @@ app.get("/api/coin-data", async (req, res) => {
     console.error("Error fetching coin data:", error);
     res.status(500).json({
       error: "Failed to fetch data",
+      details: error.message,
+    });
+  }
+});
+
+app.get("/api/trending", async (req, res) => {
+  try {
+    const data = await getCachedData("trendingCoins", fetchTrendingCoins);
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching trending coins:", error);
+    res.status(500).json({
+      error: "Failed to fetch trending coins",
       details: error.message,
     });
   }

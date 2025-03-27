@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 
 function CryptoTable({ cryptoData }) {
   const navigate = useNavigate();
-  const [sortedData, setSortedData] = useState([...cryptoData]);
   const [sortConfig, setSortConfig] = useState({
     key: null,
     direction: "desc",
@@ -16,18 +15,16 @@ function CryptoTable({ cryptoData }) {
       direction = "asc";
     }
 
-    const sorted = [...sortedData].sort((a, b) => {
-      if (direction === "asc") {
-        return a[key] - b[key];
-      } else {
-        return b[key] - a[key];
-      }
+    const sorted = [...cryptoData].sort((a, b) => {
+      if (direction === "asc") return a[key] - b[key];
+      return b[key] - a[key];
     });
 
-    setSortedData(sorted);
     setSortConfig({ key, direction });
+    return sorted;
   };
 
+  const sortedData = sortConfig.key ? handleSort(sortConfig.key) : cryptoData;
   return (
     <div className="flex justify-center px-4 py-6">
       <div className="relative w-full max-w-full">
