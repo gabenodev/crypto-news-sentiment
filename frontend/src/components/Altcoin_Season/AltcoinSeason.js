@@ -20,6 +20,9 @@ const AltcoinSeason = () => {
         );
         const data = await response.json();
 
+        // Filtrăm doar primele 100 de monede
+        const top100Cryptos = data.slice(0, 100);
+
         const excludedCoins = [
           "tether",
           "usd-coin",
@@ -53,10 +56,13 @@ const AltcoinSeason = () => {
           "rocket-pool-eth",
         ];
 
-        const filteredData = Array.isArray(data)
-          ? data.filter((coin) => !excludedCoins.includes(coin.id))
+        // Filtrăm monedele excluse
+        const filteredData = Array.isArray(top100Cryptos)
+          ? top100Cryptos.filter((coin) => !excludedCoins.includes(coin.id))
           : [];
-        console.log("Datele filtrate:", filteredData);
+
+        console.log("Primele 100 monede filtrate:", filteredData);
+
         let outperformingCountTemp = 0;
         const totalAltcoinsTemp = filteredData.length;
         const outperformingCoinsTemp = [];

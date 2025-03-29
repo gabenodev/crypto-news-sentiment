@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 
-function useCryptoData() {
+function useCryptoData(page = 1) {
+  // ← Adăugăm "page" ca parametru
   const [cryptoData, setCryptoData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Lista monedelor de exclus
   const excludedCoins = [
     "tether",
     "usd-coin",
@@ -42,17 +42,17 @@ function useCryptoData() {
     const fetchCryptoData = async () => {
       try {
         const response = await fetch(
-          "https://sentimentx-backend.vercel.app/api/all-cryptos"
+          `https://sentimentx-backend.vercel.app/api/all-cryptos?per_page=${
+            page * 100
+          }`
         );
         if (!response.ok) throw new Error("Network response was not ok");
 
         const data = await response.json();
 
-        // Filtrare și sortare
         const filteredData = data
-          .filter((coin) => !excludedCoins.includes(coin.id)) // Exclude monedele specificate
-          .sort((a, b) => a.market_cap_rank - b.market_cap_rank) // Sortează după market_cap_rank
-          .slice(0, 100); // Selectează primele 100 după filtrare
+          .filter((coin) => !excludedCoins.includes(coin.id)) // Excludem monedele
+          .sort((a, b) => a.market_cap_rank - b.market_cap_rank); // Sortăm
 
         setCryptoData(filteredData);
       } catch (error) {
@@ -65,7 +65,7 @@ function useCryptoData() {
     fetchCryptoData();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [page]); // ← Adăugăm "page" ca dependency
 
   return { cryptoData, loading };
 }

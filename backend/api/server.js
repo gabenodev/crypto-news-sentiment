@@ -95,15 +95,26 @@ const fetchCryptoNews = async () => {
 
 // Function to fetch data from CoinGecko for /api/altcoin-season
 const fetchAllCryptosData = async () => {
-  const response = await fetch(
-    "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=150&page=1"
-  );
+  const totalMonede = 1000;
+  const itemsPerPage = 250; // CoinGecko permite maxim 250 pe pagină
+  const totalPages = Math.ceil(totalMonede / itemsPerPage);
 
-  if (!response.ok) {
-    throw new Error(`CoinGecko API returned status: ${response.status}`);
+  let allCryptos = [];
+
+  for (let page = 1; page <= totalPages; page++) {
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${itemsPerPage}&page=${page}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`CoinGecko API returned status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    allCryptos = [...allCryptos, ...data]; // Adaugă datele la lista principală
   }
 
-  return response.json();
+  return allCryptos;
 };
 
 // Function to fetch data from CoinGecko for /api/altcoin-season-chart

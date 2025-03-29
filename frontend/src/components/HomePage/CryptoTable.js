@@ -8,6 +8,8 @@ function CryptoTable({ cryptoData }) {
     key: "market_cap_rank",
     direction: "asc",
   });
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const sortedData = useMemo(() => {
     if (!cryptoData) return [];
@@ -16,16 +18,13 @@ function CryptoTable({ cryptoData }) {
     const { key, direction } = sortConfig;
 
     return sortableItems.sort((a, b) => {
-      // Tratăm cazurile cu valori lipsă
       if (a[key] == null) return direction === "asc" ? 1 : -1;
       if (b[key] == null) return direction === "asc" ? -1 : 1;
 
-      // Sortare numerică
       if (typeof a[key] === "number" && typeof b[key] === "number") {
         return direction === "asc" ? a[key] - b[key] : b[key] - a[key];
       }
 
-      // Sortare text
       if (typeof a[key] === "string" && typeof b[key] === "string") {
         return direction === "asc"
           ? a[key].localeCompare(b[key])
@@ -62,6 +61,21 @@ function CryptoTable({ cryptoData }) {
     });
   };
 
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
+  const currentData = sortedData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleItemsPerPageChange = (event) => {
+    setItemsPerPage(Number(event.target.value));
+    setCurrentPage(1);
+  };
+
   return (
     <div className="flex justify-center px-4 py-6">
       <div className="relative w-full max-w-full">
@@ -80,7 +94,7 @@ function CryptoTable({ cryptoData }) {
                   onClick={() => requestSort("market_cap_rank")}
                 >
                   <div className="flex items-center">
-                    #{getSortIcon("market_cap_rank")}
+                    # {getSortIcon("market_cap_rank")}
                   </div>
                 </th>
                 <th className="py-4 px-6 font-medium text-left">Coin</th>
@@ -89,8 +103,7 @@ function CryptoTable({ cryptoData }) {
                   onClick={() => requestSort("current_price")}
                 >
                   <div className="flex items-center">
-                    Price
-                    {getSortIcon("current_price")}
+                    Price {getSortIcon("current_price")}
                   </div>
                 </th>
                 <th
@@ -98,8 +111,7 @@ function CryptoTable({ cryptoData }) {
                   onClick={() => requestSort("price_change_percentage_24h")}
                 >
                   <div className="flex items-center justify-end">
-                    24h
-                    {getSortIcon("price_change_percentage_24h")}
+                    24h {getSortIcon("price_change_percentage_24h")}
                   </div>
                 </th>
                 <th
@@ -107,16 +119,14 @@ function CryptoTable({ cryptoData }) {
                   onClick={() => requestSort("market_cap")}
                 >
                   <div className="flex items-center justify-end">
-                    Market Cap
-                    {getSortIcon("market_cap")}
+                    Market Cap {getSortIcon("market_cap")}
                   </div>
                 </th>
                 <th className="py-4 px-6 font-medium text-right">Supply</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200/50 dark:divide-gray-700/50">
-              {sortedData.map((crypto, index) => {
-                // Adaugă index ca parametru
+              {currentData.map((crypto, index) => {
                 const maxSupply = crypto.max_supply || crypto.total_supply;
                 const progress = maxSupply
                   ? (crypto.circulating_supply / maxSupply) * 100
@@ -129,7 +139,7 @@ function CryptoTable({ cryptoData }) {
                     className="group hover:bg-teal-50/50 dark:hover:bg-teal-900/20 transition-colors cursor-pointer"
                   >
                     <td className="py-4 px-6 text-gray-500 dark:text-gray-400 font-medium">
-                      {index + 1}
+                      {index + 1 + (currentPage - 1) * itemsPerPage}
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center space-x-3">
@@ -205,6 +215,45 @@ function CryptoTable({ cryptoData }) {
               })}
             </tbody>
           </table>
+
+          {/* Paginare */}
+          <div className="flex justify-between items-center py-4 px-6 bg-teal-50 dark:bg-teal-900/10 rounded-b-xl">
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Items per page:
+              </span>
+              <select
+                value={itemsPerPage}
+                onChange={handleItemsPerPageChange}
+                className="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-teal-500 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-4 py-2 bg-teal-500 text-white rounded-md shadow-sm hover:bg-teal-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                Page {currentPage} of {totalPages}
+              </span>
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 bg-teal-500 text-white rounded-md shadow-sm hover:bg-teal-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
