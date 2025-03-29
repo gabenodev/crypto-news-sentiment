@@ -6,6 +6,7 @@ function useCryptoData() {
 
   // Lista monedelor de exclus
   const excludedCoins = [
+    "tether",
     "usd-coin",
     "wrapped-bitcoin",
     "staked-ether",
@@ -49,8 +50,9 @@ function useCryptoData() {
 
         // Filtrare și sortare
         const filteredData = data
-          .filter((coin) => !excludedCoins.includes(coin.id))
-          .sort((a, b) => a.market_cap_rank - b.market_cap_rank);
+          .filter((coin) => !excludedCoins.includes(coin.id)) // Exclude monedele specificate
+          .sort((a, b) => a.market_cap_rank - b.market_cap_rank) // Sortează după market_cap_rank
+          .slice(0, 100); // Selectează primele 100 după filtrare
 
         setCryptoData(filteredData);
       } catch (error) {
