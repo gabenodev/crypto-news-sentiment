@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AltcoinChart from "./AltcoinChart";
+import { excludedCoins } from "../../utils/excludedCoins";
 
 const AltcoinSeason = () => {
   const [isAltcoinSeason, setIsAltcoinSeason] = useState(null);
@@ -20,52 +21,33 @@ const AltcoinSeason = () => {
         );
         const data = await response.json();
 
-        // Filtrăm doar primele 100 de monede
-        const top100Cryptos = data.slice(0, 100);
+        // Pas 1: Selectăm primele 100 de monede
+        let filteredData = data
+          .slice(0, 100)
+          .filter((coin) => !excludedCoins.has(coin.id));
 
-        const excludedCoins = [
-          "tether",
-          "usd-coin",
-          "wrapped-bitcoin",
-          "staked-ether",
-          "binance-usd",
-          "dai",
-          "trueusd",
-          "wrapped-steth",
-          "weth",
-          "ethereum-classic",
-          "coinbase-wrapped-btc",
-          "wrapped-ethereum",
-          "usds",
-          "wrapped-eeth",
-          "bitcoin-cash",
-          "wrapped-ust",
-          "susds",
-          "ethena-usde",
-          "first-digital-usd",
-          "paypal-usd",
-          "usual-usd",
-          "binance-staked-sol",
-          "solv-protocol-solvbtc-bbn",
-          "lombard-staked-btc",
-          "wrapped-avax",
-          "solv-btc",
-          "binance-peg-weth",
-          "kelp-dao-restaked-eth",
-          "mantle-staked-ether",
-          "rocket-pool-eth",
-        ];
+        // Pas 2: Dacă avem mai puțin de 100, adăugăm altele din listă
+        let index = 100;
+        while (filteredData.length < 100 && index < data.length) {
+          let coin = data[index];
+          if (
+            !excludedCoins.has(coin.id) &&
+            !filteredData.some((c) => c.id === coin.id)
+          ) {
+            filteredData.push(coin);
+          }
+          index++;
+        }
 
-        // Filtrăm monedele excluse
-        const filteredData = Array.isArray(top100Cryptos)
-          ? top100Cryptos.filter((coin) => !excludedCoins.includes(coin.id))
-          : [];
-
-        console.log("Primele 100 monede filtrate:", filteredData);
+        console.log("Primele 100 de monede filtrate:", filteredData);
+        console.log(
+          "✅ Final filtered list (after adding extras):",
+          filteredData.length,
+          "coins"
+        );
 
         let outperformingCountTemp = 0;
-        const totalAltcoinsTemp = filteredData.length;
-        const outperformingCoinsTemp = [];
+        let outperformingCoinsTemp = [];
 
         const bitcoin = data.find((coin) => coin.id === "bitcoin");
         if (!bitcoin) {
@@ -89,11 +71,11 @@ const AltcoinSeason = () => {
         }
 
         setOutperformingCount(outperformingCountTemp);
-        setTotalAltcoins(totalAltcoinsTemp);
+        setTotalAltcoins(filteredData.length);
         setOutperformingCoins(outperformingCoinsTemp);
-        setPercentage((outperformingCountTemp / totalAltcoinsTemp) * 100);
+        setPercentage((outperformingCountTemp / filteredData.length) * 100);
         setIsAltcoinSeason(
-          (outperformingCountTemp / totalAltcoinsTemp) * 100 >= 75
+          (outperformingCountTemp / filteredData.length) * 100 >= 75
         );
       } catch (error) {
         console.error("Error fetching altcoin season data:", error);

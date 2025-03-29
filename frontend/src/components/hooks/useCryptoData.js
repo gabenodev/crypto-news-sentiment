@@ -1,42 +1,10 @@
 import { useEffect, useState } from "react";
+import { excludedCoins } from "../../utils/excludedCoins";
 
 function useCryptoData(page = 1) {
   // ← Adăugăm "page" ca parametru
   const [cryptoData, setCryptoData] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const excludedCoins = [
-    "tether",
-    "usd-coin",
-    "wrapped-bitcoin",
-    "staked-ether",
-    "binance-usd",
-    "dai",
-    "trueusd",
-    "wrapped-steth",
-    "weth",
-    "ethereum-classic",
-    "coinbase-wrapped-btc",
-    "wrapped-ethereum",
-    "usds",
-    "wrapped-eeth",
-    "bitcoin-cash",
-    "wrapped-ust",
-    "susds",
-    "ethena-usde",
-    "first-digital-usd",
-    "paypal-usd",
-    "usual-usd",
-    "binance-staked-sol",
-    "solv-protocol-solvbtc-bbn",
-    "lombard-staked-btc",
-    "wrapped-avax",
-    "solv-btc",
-    "binance-peg-weth",
-    "kelp-dao-restaked-eth",
-    "mantle-staked-ether",
-    "rocket-pool-eth",
-  ];
 
   useEffect(() => {
     const fetchCryptoData = async () => {
@@ -51,7 +19,7 @@ function useCryptoData(page = 1) {
         const data = await response.json();
 
         const filteredData = data
-          .filter((coin) => !excludedCoins.includes(coin.id)) // Excludem monedele
+          .filter((coin) => !excludedCoins.has(coin.id)) // Excludem monedele
           .sort((a, b) => a.market_cap_rank - b.market_cap_rank); // Sortăm
 
         setCryptoData(filteredData);
