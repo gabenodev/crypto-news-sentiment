@@ -85,52 +85,141 @@ const getCachedData = async (cacheKey, fetchFunction, expireTime = 60) => {
   }
 };
 
-// FETCH DATA FUNCTIONS FROM API - păstrate la fel dar cu retry logic
+// === FETCH DATA FROM API WITH INTELLIGENT CACHING === //
+
+const DEFAULT_API_OPTIONS = {
+  retries: 3, // Număr de încercări
+  timeout: 5000, // Timeout în ms
+  cacheTtl: 3600, // Cache duration in secunde
+  fallbackEnabled: true, // Dacă permite fallback la date mai vechi
+};
+
+async function fetchApiWithStrategy({
+  url,
+  cacheKey,
+  processData = (data) => data,
+  options = {},
+}) {
+  const { retries, timeout, cacheTtl, fallbackEnabled } = {
+    ...DEFAULT_API_OPTIONS,
+    ...options,
+  };
+
+  // 1. Verificare cache
+  try {
+    const cachedData = await redis.get(cacheKey);
+    if (cachedData) {
+      console.log(`[CACHE HIT] ${cacheKey}`);
+      return cachedData;
+    }
+  } catch (cacheError) {
+    console.error(`[CACHE ERROR] ${cacheKey}:`, cacheError.message);
+  }
+
+  // 2. Fetch cu retry și timeout
+  try {
+    console.log(`[API FETCH] Începem: ${url}`);
+
+    const response = await Promise.race([
+      fetchWithRetry(url, { retries }),
+      new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`Timeout after ${timeout}ms`)),
+          timeout
+        )
+      ),
+    ]);
+
+    const data = await response.json();
+    const processedData = processData(data);
+
+    // 3. Salvăm în cache
+    try {
+      await redis.setex(cacheKey, cacheTtl, processedData);
+      console.log(`[CACHE SET] ${cacheKey} pentru ${cacheTtl} secunde`);
+    } catch (saveError) {
+      console.error(`[CACHE SAVE ERROR] ${cacheKey}:`, saveError.message);
+    }
+
+    return processedData;
+  } catch (error) {
+    console.error(`[API ERROR] ${url}:`, error.message);
+
+    // 4. Fallback la ultimele date din cache dacă este permis
+    if (fallbackEnabled) {
+      try {
+        const lastGoodData = await redis.get(cacheKey);
+        if (lastGoodData) {
+          console.log(
+            `[FALLBACK] Returnăm ultimele date valide pentru ${cacheKey}`
+          );
+          return lastGoodData;
+        }
+      } catch (fallbackError) {
+        console.error("[FALLBACK ERROR]", fallbackError.message);
+      }
+    }
+
+    throw error;
+  }
+}
+
+// === FETCH DATA FROM ALL APIS === //
+
 const fetchCryptoNews = async () => {
-  const response = await axios.get(
-    `https://newsapi.org/v2/everything?q=crypto&apiKey=${NEWS_API_KEY}`,
-    { timeout: 5000 } // timeout adăugat
-  );
-  return response.data.articles || [];
+  return fetchApiWithStrategy({
+    url: `https://newsapi.org/v2/everything?q=crypto&apiKey=${NEWS_API_KEY}`,
+    cacheKey: "cryptoNews",
+    options: {
+      cacheTtl: 1800, // 30 minute pentru știri
+    },
+  });
 };
 
 const fetchAllCryptosData = async () => {
-  const totalMonede = 1000;
-  const itemsPerPage = 250;
-  const totalPages = Math.ceil(totalMonede / itemsPerPage);
-  let allCryptos = [];
+  const pages = [1, 2, 3, 4]; // 4 pagini x 250 = 1000 monede
 
-  for (let page = 1; page <= totalPages; page++) {
-    const response = await fetchWithRetry(
-      `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${itemsPerPage}&page=${page}`
-    );
+  const fetchPage = (page) =>
+    fetchApiWithStrategy({
+      url: `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${page}&sparkline=false`,
+      cacheKey: `coinsPage${page}`,
+      options: {
+        cacheTtl: 7200, // 2 ore pentru date despre monede
+      },
+    });
 
-    const data = await response.json();
-    allCryptos = [...allCryptos, ...data];
-  }
-
-  return allCryptos;
+  const allPages = await Promise.all(pages.map(fetchPage));
+  return allPages.flat();
 };
 
 const fetchAltcoinSeasonChartData = async (coinId, days = 30) => {
-  const response = await fetchWithRetry(
-    `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`
-  );
-  return response.json();
+  return fetchApiWithStrategy({
+    url: `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`,
+    cacheKey: `chart_${coinId}_${days}`,
+    options: {
+      cacheTtl: 900, // 15 minute pentru grafice
+    },
+  });
 };
 
 const fetchCoinData = async (coinId) => {
-  const response = await fetchWithRetry(
-    `https://api.coingecko.com/api/v3/coins/${coinId}`
-  );
-  return response.json();
+  return fetchApiWithStrategy({
+    url: `https://api.coingecko.com/api/v3/coins/${coinId}`,
+    cacheKey: `coin_${coinId}`,
+    options: {
+      cacheTtl: 3600, // 1 oră pentru date individuale
+    },
+  });
 };
 
 const fetchTrendingCoins = async () => {
-  const response = await fetchWithRetry(
-    "https://api.coingecko.com/api/v3/search/trending"
-  );
-  return response.json();
+  return fetchApiWithStrategy({
+    url: "https://api.coingecko.com/api/v3/search/trending",
+    cacheKey: "trendingCoins",
+    options: {
+      cacheTtl: 1800, // 30 minute pentru trending
+    },
+  });
 };
 
 // ENDPOINTS - structură păstrată dar cu error handling îmbunătățit
