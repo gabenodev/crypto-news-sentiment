@@ -28,3 +28,4 @@ yarn-debug.log*
 yarn-error.log*
 sentimentX-frontend/node_modules/.cache/babel-loader/0005b2f3d72c0ec67cbacc6f40ffc323e1be455ae6c2ce552deebb0da6b758b1.json
 .vercel
+backend/api/.env
