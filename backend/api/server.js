@@ -13,245 +13,299 @@ const PORT = process.env.PORT || 5000;
 // API Keys
 const NEWS_API_KEY = process.env.NEWS_API_KEY;
 
+// Upstash Redis setup
+const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL;
+const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+
 // Middleware for CORS
 app.use(cors());
 
-// Rate limiting configuration
+// Rate limiting configuration - optimizat cu mesaj mai friendly
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 20, // Limit to 20 requests per minute
-  message: "Too many requests, please try again later.",
+  max: 60, // Limit to 60 requests per minute
+  message: "Hei șefule, prea multe requesturi! Dă-i mai încet...",
 });
 
 // Apply rate limiting to all requests
 app.use(limiter);
 
-// Cache for CoinGecko data and other APIs
-const cache = {
-  altcoinSeason: {
-    data: null,
-    lastUpdated: null,
-  },
-  altcoinSeasonChart: {}, // Separate cache for each coinId and days combination
-  news: {
-    data: null,
-    lastUpdated: null,
-  },
+// Adăugat retry mechanism pentru API calls
+const fetchWithRetry = async (url, options = {}, retries = 3) => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok) return response;
+      throw new Error(`Status: ${response.status}`);
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
 };
 
-// GENERIC FUNCTION TO GET CACHED DATA -> used in all endpoints -----------------
+// Function to get cached data from Upstash Redis - optimizat cu try/catch mai robust
+const getCachedData = async (cacheKey, fetchFunction, expireTime = 60) => {
+  try {
+    // Check if data is in Redis cache
+    const cachedDataResponse = await fetchWithRetry(
+      `${REDIS_URL}/get/${cacheKey}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${REDIS_TOKEN}`,
+        },
+      }
+    );
 
-const getCachedData = (cacheKey, fetchFunction, cacheId = null) => {
-  const now = Date.now();
-  let cacheEntry;
-
-  // Debugging: Show cache state before making the request
-  console.log("Cache before:", JSON.stringify(cache, null, 2));
-
-  // Make sure cache[cacheKey] exists
-  if (!cache[cacheKey]) {
-    cache[cacheKey] = {}; // Initialize cache[cacheKey] if it doesn't exist
-  }
-
-  // If there's a cacheId, make sure it's initialized and correct
-  if (cacheId) {
-    if (!cache[cacheKey][cacheId]) {
-      cache[cacheKey][cacheId] = { data: null, lastUpdated: null }; // Initialize cache for cacheId
+    const cachedData = await cachedDataResponse.json();
+    if (cachedData.result) {
+      console.log(`[CACHE HIT] Returning cached data for: ${cacheKey}`);
+      return JSON.parse(cachedData.result);
     }
-    cacheEntry = cache[cacheKey][cacheId]; // Use specific cache for cacheId
-  } else {
-    cacheEntry = cache[cacheKey]; // Use general cache for cacheKey
+
+    // Fetch new data if not found in cache
+    console.log(`[CACHE MISS] Fetching new data for: ${cacheKey}`);
+    const freshData = await fetchFunction();
+
+    // Store the new data in Redis cache
+    await fetchWithRetry(`${REDIS_URL}/set/${cacheKey}?EX=${expireTime}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${REDIS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(freshData),
+    });
+
+    return freshData;
+  } catch (error) {
+    console.error("Redis operation failed:", error);
+    return await fetchFunction(); // If Redis fails, fetch fresh data
+  }
+};
+
+// === FETCH DATA FROM API WITH INTELLIGENT CACHING === //
+
+const DEFAULT_API_OPTIONS = {
+  retries: 3, // Număr de încercări
+  timeout: 5000, // Timeout în ms
+  cacheTtl: 3600, // Cache duration in secunde
+  fallbackEnabled: true, // Dacă permite fallback la date mai vechi
+};
+
+async function fetchApiWithStrategy({
+  url,
+  cacheKey,
+  processData = (data) => data,
+  options = {},
+}) {
+  const { retries, timeout, cacheTtl, fallbackEnabled } = {
+    ...DEFAULT_API_OPTIONS,
+    ...options,
+  };
+
+  // 1. Verificare cache
+  try {
+    const cachedData = await redis.get(cacheKey);
+    if (cachedData) {
+      console.log(`[CACHE HIT] ${cacheKey}`);
+      return cachedData;
+    }
+  } catch (cacheError) {
+    console.error(`[CACHE ERROR] ${cacheKey}:`, cacheError.message);
   }
 
-  // Check if the data is valid and hasn't expired
-  if (
-    cacheEntry.data && // Data exists in cache
-    cacheEntry.lastUpdated && // There's a timestamp for the last update
-    now - cacheEntry.lastUpdated < 60000 // Data hasn't expired (60 seconds)
-  ) {
-    console.log("Returning cached data for:", cacheKey, cacheId); // Debugging
-    return cacheEntry.data; // Return cached data
-  }
+  // 2. Fetch cu retry și timeout
+  try {
+    console.log(`[API FETCH] Începem: ${url}`);
 
-  // If data is not available or has expired, fetch it again
-  console.log("Fetching new data for:", cacheKey, cacheId); // Debugging
-  return fetchFunction().then((data) => {
-    cacheEntry.data = data; // Store new data in cache
-    cacheEntry.lastUpdated = now; // Update the timestamp
-    console.log("Cache after:", JSON.stringify(cache, null, 2)); // Debugging
-    return data; // Return the new data
+    const response = await Promise.race([
+      fetchWithRetry(url, { retries }),
+      new Promise((_, reject) =>
+        setTimeout(
+          () => reject(new Error(`Timeout after ${timeout}ms`)),
+          timeout
+        )
+      ),
+    ]);
+
+    const data = await response.json();
+    const processedData = processData(data);
+
+    // 3. Salvăm în cache
+    try {
+      await redis.setex(cacheKey, cacheTtl, processedData);
+      console.log(`[CACHE SET] ${cacheKey} pentru ${cacheTtl} secunde`);
+    } catch (saveError) {
+      console.error(`[CACHE SAVE ERROR] ${cacheKey}:`, saveError.message);
+    }
+
+    return processedData;
+  } catch (error) {
+    console.error(`[API ERROR] ${url}:`, error.message);
+
+    // 4. Fallback la ultimele date din cache dacă este permis
+    if (fallbackEnabled) {
+      try {
+        const lastGoodData = await redis.get(cacheKey);
+        if (lastGoodData) {
+          console.log(
+            `[FALLBACK] Returnăm ultimele date valide pentru ${cacheKey}`
+          );
+          return lastGoodData;
+        }
+      } catch (fallbackError) {
+        console.error("[FALLBACK ERROR]", fallbackError.message);
+      }
+    }
+
+    throw error;
+  }
+}
+
+// === FETCH DATA FROM ALL APIS === //
+
+const fetchCryptoNews = async () => {
+  return fetchApiWithStrategy({
+    url: `https://newsapi.org/v2/everything?q=crypto&apiKey=${NEWS_API_KEY}`,
+    cacheKey: "cryptoNews",
+    options: {
+      cacheTtl: 1800, // 30 minute pentru știri
+    },
   });
 };
 
-// FETCH DATA FUNCTIONS FROM API ----------------------------------------------------------------------------------------------------
-
-// Function to fetch crypto news
-const fetchCryptoNews = async () => {
-  const response = await axios.get(
-    `https://newsapi.org/v2/everything?q=crypto&apiKey=${NEWS_API_KEY}`
-  );
-  return response.data.articles || [];
-};
-
-// Function to fetch data from CoinGecko for /api/altcoin-season
 const fetchAllCryptosData = async () => {
-  const response = await fetch(
-    "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1"
-  );
+  const pages = [1, 2, 3, 4]; // 4 pagini x 250 = 1000 monede
 
-  if (!response.ok) {
-    throw new Error(`CoinGecko API returned status: ${response.status}`);
-  }
+  const fetchPage = (page) =>
+    fetchApiWithStrategy({
+      url: `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${page}&sparkline=false`,
+      cacheKey: `coinsPage${page}`,
+      options: {
+        cacheTtl: 7200, // 2 ore pentru date despre monede
+      },
+    });
 
-  return response.json();
+  const allPages = await Promise.all(pages.map(fetchPage));
+  return allPages.flat();
 };
 
-// Function to fetch data from CoinGecko for /api/altcoin-season-chart
 const fetchAltcoinSeasonChartData = async (coinId, days = 30) => {
-  const response = await fetch(
-    `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`
-  );
-
-  if (!response.ok) {
-    throw new Error(`CoinGecko API returned status: ${response.status}`);
-  }
-
-  return response.json();
+  return fetchApiWithStrategy({
+    url: `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`,
+    cacheKey: `chart_${coinId}_${days}`,
+    options: {
+      cacheTtl: 900, // 15 minute pentru grafice
+    },
+  });
 };
-
-// Function to get data from CoinGecko for a specific coinId
 
 const fetchCoinData = async (coinId) => {
-  const response = await fetch(
-    `https://api.coingecko.com/api/v3/coins/${coinId}`
-  );
-
-  if (!response.ok) {
-    throw new Error(`CoinGecko API returned status: ${response.status}`);
-  }
-
-  return response.json();
+  return fetchApiWithStrategy({
+    url: `https://api.coingecko.com/api/v3/coins/${coinId}`,
+    cacheKey: `coin_${coinId}`,
+    options: {
+      cacheTtl: 3600, // 1 oră pentru date individuale
+    },
+  });
 };
 
 const fetchTrendingCoins = async () => {
-  const response = await fetch(
-    "https://api.coingecko.com/api/v3/search/trending"
-  );
-  if (!response.ok) {
-    throw new Error(`CoinGecko API returned status: ${response.status}`);
-  }
-  return response.json();
+  return fetchApiWithStrategy({
+    url: "https://api.coingecko.com/api/v3/search/trending",
+    cacheKey: "trendingCoins",
+    options: {
+      cacheTtl: 1800, // 30 minute pentru trending
+    },
+  });
 };
 
-// ENDPOINTS ---------------------------------------------------------------------------------------------------- ENDPOINTS
-
-/* API NEWS endpoint */
-app.get("/api/news", async (req, res) => {
+// ENDPOINTS - structură păstrată dar cu error handling îmbunătățit
+app.get("/api/news", async (req, res, next) => {
   try {
-    const data = await getCachedData("news", fetchCryptoNews);
+    const data = await getCachedData("news", fetchCryptoNews, 600);
     res.json(data);
   } catch (error) {
-    console.error("Error fetching crypto news:", error);
-    res.status(500).json({
-      error: "Failed to fetch news",
-      details: error.message,
-    });
+    next(error);
   }
 });
 
-/* CRYPTO COMPARE HOMEPAGE endpoint */
-app.get("/api/cryptos", async (req, res) => {
+app.get("/api/all-cryptos", async (req, res, next) => {
   try {
-    const data = await getCachedData("cryptos", fetchCryptoDataPrice);
+    const data = await getCachedData("altcoinSeason", fetchAllCryptosData, 600);
     res.json(data);
   } catch (error) {
-    console.error("Error fetching crypto data:", error);
-    res.status(500).json({ error: "Failed to fetch data" });
+    next(error);
   }
 });
 
-/* API ALL CRYPTOS DATA endpoint */
-app.get("/api/all-cryptos", async (req, res) => {
+app.get("/api/altcoin-season-chart", async (req, res, next) => {
   try {
-    const data = await getCachedData("altcoinSeason", fetchAllCryptosData);
-    res.json(data);
-  } catch (error) {
-    console.error("Error fetching altcoin season data:", error);
-    res.status(500).json({
-      error: "Failed to fetch data",
-      details: error.message,
-    });
-  }
-});
+    const { coinId, days } = req.query;
+    if (!coinId) return res.status(400).json({ error: "coinId is required" });
 
-/* API ALTCOIN SEASON CHART endpoint */
-app.get("/api/altcoin-season-chart", async (req, res) => {
-  const { coinId, days } = req.query;
-
-  if (!coinId) {
-    return res.status(400).json({ error: "coinId is required" });
-  }
-
-  try {
+    const cacheKey = `altcoinSeasonChart_${coinId}_${days || 30}`;
     const data = await getCachedData(
-      "altcoinSeasonChart", // Cache key
-      () => fetchAltcoinSeasonChartData(coinId, days), // Fetch function
-      `${coinId}_${days}` // Cache ID for each coinId and days combination
+      cacheKey,
+      () => fetchAltcoinSeasonChartData(coinId, days),
+      600
     );
     res.json(data);
   } catch (error) {
-    console.error("Error fetching altcoin season chart data:", error);
-    res.status(500).json({
-      error: "Failed to fetch data",
-      details: error.message,
-    });
+    next(error);
   }
 });
 
-/* API COIN GECKO for a defined coinId endpoint */
-
-app.get("/api/coin-data", async (req, res) => {
-  const { coinId } = req.query;
-
-  if (!coinId) {
-    return res.status(400).json({ error: "coinId is required" });
-  }
-
+app.get("/api/coin-data", async (req, res, next) => {
   try {
+    const { coinId } = req.query;
+    if (!coinId) return res.status(400).json({ error: "coinId is required" });
+
+    const cacheKey = `coinData_${coinId}`;
     const data = await getCachedData(
-      "coinData", // Cache key
-      () => fetchCoinData(coinId), // Fetch function
-      coinId // Cache ID pentru fiecare coinId
+      cacheKey,
+      () => fetchCoinData(coinId),
+      600
     );
     res.json(data);
   } catch (error) {
-    console.error("Error fetching coin data:", error);
-    res.status(500).json({
-      error: "Failed to fetch data",
-      details: error.message,
-    });
+    next(error);
   }
 });
 
-app.get("/api/trending", async (req, res) => {
+app.get("/api/trending", async (req, res, next) => {
   try {
-    const data = await getCachedData("trendingCoins", fetchTrendingCoins);
+    const data = await getCachedData("trendingCoins", fetchTrendingCoins, 600);
     res.json(data);
   } catch (error) {
-    console.error("Error fetching trending coins:", error);
-    res.status(500).json({
-      error: "Failed to fetch trending coins",
-      details: error.message,
-    });
+    next(error);
   }
 });
 
-/* Default endpoint in VERCEL to see if the backend is running! */
+// Adăugat health check endpoint
+app.get("/health", (req, res) => {
+  res.status(200).json({
+    status: "running",
+    redis: REDIS_URL ? "connected" : "disconnected",
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get("/", (req, res) => {
-  res.send("Backend is running!");
+  res.send("Backend is running with Upstash Redis!");
 });
 
-/* Start server only for local test purposes */
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error(`[ERROR] ${err.message}`);
+  res.status(500).json({
+    error: "Something went wrong, boss!",
+    message: err.message,
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

@@ -83,14 +83,15 @@ function CurrencyStats() {
   const progress = ((currentPrice - atlPrice) / (athPrice - atlPrice)) * 100;
 
   return (
-    <div className="flex flex-col md:flex-row gap-10 p-6">
-      {/* Card Stânga */}
+    <div className="flex flex-col md:flex-row flex-wrap gap-6 p-6">
+      {/* Toate cardurile vor folosi această clasă pentru dimensiuni consistente */}
       <motion.div
-        className="flex-1 bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn"
+        className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-full md:w-[calc(25%-18px)] min-w-[300px] flex-grow transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
+        {/* Conținut card stânga */}
         <div className="flex items-center space-x-6">
           <img
             src={coinData.image.large}
@@ -104,11 +105,9 @@ function CurrencyStats() {
           </div>
         </div>
         <div className="mt-4">
-          {/* Prețul */}
           <p className="text-4xl font-semibold text-gray-900 dark:text-gray-200 text-left">
             ${formatPrice(currentPrice)}
           </p>
-          {/* Detaliile suplimentare */}
           <div className="mt-4 space-y-6 text-left">
             <p className="text-gray-600 dark:text-gray-400">
               Market Cap Rank:{" "}
@@ -134,7 +133,7 @@ function CurrencyStats() {
 
       {/* Card Price Position */}
       <motion.div
-        className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn"
+        className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-full md:w-[calc(25%-18px)] min-w-[300px] flex-grow transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -172,11 +171,8 @@ function CurrencyStats() {
           </div>
 
           <div className="space-y-4 mt-6">
-            {/* ATH */}
             <div>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {" "}
-                {/* Adaugă spațiu mai mare dedesubt */}
                 All time high change:{" "}
                 <span
                   className={`font-semibold ${
@@ -192,11 +188,8 @@ function CurrencyStats() {
               </p>
             </div>
 
-            {/* ATL */}
             <div>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {" "}
-                {/* Adaugă spațiu mai mare dedesubt */}
                 All time low change:{" "}
                 <span
                   className={`font-semibold ${
@@ -217,7 +210,7 @@ function CurrencyStats() {
 
       {/* Card 24h Statistics */}
       <motion.div
-        className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn"
+        className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-full md:w-[calc(25%-18px)] min-w-[300px] flex-grow transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -280,12 +273,12 @@ function CurrencyStats() {
 
       {/* Card Useful Links */}
       <motion.div
-        className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-96 transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn"
+        className="bg-gray-100 dark:bg-gray-900 shadow-lg rounded-lg p-6 w-full md:w-[calc(25%-18px)] min-w-[300px] flex-grow transform transition duration-500 shadow-[0_0_15px_#ffffff80] dark:shadow-[0_0_15px_#ffffff33] border border-white/40 dark:border-white/20 animate__animated animate__fadeIn"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4 ">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-200 mb-4">
           Explorer & Links
         </h2>
         <div className="space-y-3">
@@ -293,7 +286,7 @@ function CurrencyStats() {
             href={coinData.links.homepage[0]}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center text-blue-500 hover:text-blue-700  p-2 rounded-md"
+            className="flex items-center text-blue-500 hover:text-blue-700 p-2 rounded-md"
           >
             <CgWebsite className="mr-2" />
             Official Website
@@ -302,7 +295,7 @@ function CurrencyStats() {
             href={coinData.links.blockchain_site[0]}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center text-gray-500 hover:text-gray-400  p-2 rounded-md"
+            className="flex items-center text-gray-500 hover:text-gray-400 p-2 rounded-md"
           >
             <FaLink className="mr-2" />
             Blockchain Explorer
