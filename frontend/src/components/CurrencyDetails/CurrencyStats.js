@@ -17,6 +17,7 @@ function CurrencyStats() {
   const [coinData, setCoinData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -98,54 +99,64 @@ function CurrencyStats() {
 
   return (
     <div className="min-h-screen dark:bg-gray-900 p-4 md:p-8">
-      {/* Header Section */}
+      {/* Modern Header Section */}
       <motion.div
-        className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8"
+        className="mb-8"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="flex items-center space-x-4 mb-4 md:mb-0">
-          <img
-            src={coinData.image.large}
-            alt={coinData.name}
-            className="h-16 w-16 rounded-full border-4 border-white dark:border-gray-700 shadow-md"
-          />
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {coinData.name}{" "}
-              <span className="text-gray-500 dark:text-gray-400">
-                ({coinData.symbol.toUpperCase()})
-              </span>
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              #{coinData.market_cap_rank} by Market Cap
-            </p>
+        <div className="flex flex-col space-y-4">
+          {/* First Row - Coin Identity */}
+          <div className="flex items-center space-x-4">
+            <img
+              src={coinData.image.large}
+              alt={coinData.name}
+              className="h-14 w-14 rounded-full border-[3px] border-white dark:border-gray-700 shadow-lg"
+            />
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+                {coinData.name}
+                <span className="ml-2 text-xl font-semibold text-gray-500 dark:text-gray-400">
+                  {coinData.symbol.toUpperCase()}
+                </span>
+              </h1>
+              <div className="flex items-center space-x-2 mt-1">
+                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md text-sm text-gray-600 dark:text-gray-300">
+                  Rank #{coinData.market_cap_rank}
+                </span>
+                <span className="text-sm text-gray-500 dark:text-gray-400">
+                  MCap: $
+                  {(coinData.market_data.market_cap.usd / 1000000000).toFixed(
+                    2
+                  )}
+                  B
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Current Price
-          </p>
-          <div className="flex items-end space-x-2">
-            <p className="text-3xl font-bold text-gray-900 dark:text-white">
-              ${formatPrice(currentPrice)}
-            </p>
-            <span
-              className={`flex items-center text-sm font-medium mb-1 ${
-                priceChangePercentage24h >= 0
-                  ? "text-green-500"
-                  : "text-red-500"
-              }`}
-            >
-              {priceChangePercentage24h >= 0 ? (
-                <FaArrowUp className="mr-1" />
-              ) : (
-                <FaArrowDown className="mr-1" />
-              )}
-              {Math.abs(priceChangePercentage24h).toFixed(2)}%
-            </span>
+          {/* Second Row - Price Data */}
+          <div className="flex flex-col sm:flex-row sm:items-end gap-4">
+            <div className="flex items-baseline gap-3">
+              <span className="text-4xl font-bold text-gray-900 dark:text-white">
+                ${formatPrice(currentPrice)}
+              </span>
+              <span
+                className={`flex items-center text-lg font-medium ${
+                  priceChangePercentage24h >= 0
+                    ? "text-green-500"
+                    : "text-red-500"
+                }`}
+              >
+                {priceChangePercentage24h >= 0 ? (
+                  <FaArrowUp className="mr-1" />
+                ) : (
+                  <FaArrowDown className="mr-1" />
+                )}
+                {Math.abs(priceChangePercentage24h).toFixed(2)}%
+              </span>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -447,26 +458,34 @@ function CurrencyStats() {
         </motion.div>
       </div>
 
-      {/* Description Section */}
+      {/* Description Section with working Read More */}
       {coinData.description.en && (
         <motion.div
-          className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-md p-6"
+          className="mt-6 bg-white dark:bg-gray-800 rounded-xl shadow-md p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
         >
           <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
             About {coinData.name}
           </h2>
-          <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-            {coinData.description.en.split(". ")[0]}.{" "}
-            {coinData.description.en.split(". ")[1]}.
-          </p>
-          {coinData.description.en.split(". ").length > 2 && (
-            <button className="mt-3 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium">
-              Read more...
-            </button>
-          )}
+          <div className="relative">
+            <p
+              className={`text-gray-600 dark:text-gray-300 leading-relaxed ${
+                !expanded && "line-clamp-3"
+              }`}
+            >
+              {coinData.description.en}
+            </p>
+            {coinData.description.en.length > 200 && (
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="mt-2 text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium focus:outline-none"
+              >
+                {expanded ? "Read less" : "Read more..."}
+              </button>
+            )}
+          </div>
         </motion.div>
       )}
     </div>
