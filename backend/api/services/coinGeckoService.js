@@ -1,7 +1,7 @@
 const { fetchApiWithStrategy } = require("../utils/apiUtils");
 
 const fetchAllCryptosData = async () => {
-  const pages = [1, 2, 3, 4]; // 4 pages x 250 = 1000 coins
+  const pages = [1]; // 4 pages x 250 = 1000 coins
 
   const fetchPage = (page) =>
     fetchApiWithStrategy({
