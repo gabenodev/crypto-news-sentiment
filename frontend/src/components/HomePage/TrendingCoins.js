@@ -16,13 +16,6 @@ function TrendingCoins() {
     }).format(price);
   };
 
-  if (loading)
-    return (
-      <div className="flex justify-center items-center h-32">
-        <ClipLoader color="#23d996" size={40} />
-      </div>
-    );
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -44,54 +37,60 @@ function TrendingCoins() {
             </h3>
 
             <div className="space-y-3">
-              {trendingCoins.map((coin, index) => (
-                <Link
-                  key={coin.item.id}
-                  to={`/currencies/${coin.item.id}`}
-                  className="flex items-center justify-between p-3 rounded-lg bg-gray-50/70 dark:bg-gray-700/70 hover:bg-teal-50/50 dark:hover:bg-teal-900/30 transition-all group backdrop-blur-sm"
-                >
-                  <div className="flex items-center min-w-0 flex-1">
-                    <div className="relative flex-shrink-0 mr-3">
-                      <img
-                        src={coin.item.thumb}
-                        alt={coin.item.name}
-                        className="w-9 h-9 rounded-full border-2 border-white dark:border-gray-600 shadow-sm group-hover:border-teal-300 transition-colors"
-                      />
-                      <span className="absolute -bottom-1 -right-1 bg-gradient-to-br from-teal-400 to-green-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-xs">
-                        {index + 1}
-                      </span>
+              {loading ? (
+                <div className="flex justify-center items-center h-32">
+                  <ClipLoader color="#23d996" size={40} />
+                </div>
+              ) : (
+                trendingCoins.map((coin, index) => (
+                  <Link
+                    key={coin.item.id}
+                    to={`/currencies/${coin.item.id}`}
+                    className="flex items-center justify-between p-3 rounded-lg bg-gray-50/70 dark:bg-gray-700/70 hover:bg-teal-50/50 dark:hover:bg-teal-900/30 transition-all group backdrop-blur-sm"
+                  >
+                    <div className="flex items-center min-w-0 flex-1">
+                      <div className="relative flex-shrink-0 mr-3">
+                        <img
+                          src={coin.item.thumb}
+                          alt={coin.item.name}
+                          className="w-9 h-9 rounded-full border-2 border-white dark:border-gray-600 shadow-sm group-hover:border-teal-300 transition-colors"
+                        />
+                        <span className="absolute -bottom-1 -right-1 bg-gradient-to-br from-teal-400 to-green-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-xs">
+                          {index + 1}
+                        </span>
+                      </div>
+
+                      <div className="min-w-0">
+                        <span className="block font-medium text-gray-800 dark:text-gray-100 truncate">
+                          {coin.item.name}
+                        </span>
+                        <span className="block text-xs text-teal-500 dark:text-teal-400 font-medium">
+                          {coin.item.symbol.toUpperCase()}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="min-w-0">
-                      <span className="block font-medium text-gray-800 dark:text-gray-100 truncate">
-                        {coin.item.name}
+                    {/* Price section */}
+                    <div className="ml-4 text-right min-w-[120px]">
+                      <span className="block font-semibold text-gray-800 dark:text-gray-100">
+                        {formatPrice(coin.item.data?.price)}
                       </span>
-                      <span className="block text-xs text-teal-500 dark:text-teal-400 font-medium">
-                        {coin.item.symbol.toUpperCase()}
+                      <span
+                        className={`block text-xs ${
+                          coin.item.data?.price_change_percentage_24h?.usd >= 0
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {coin.item.data?.price_change_percentage_24h?.usd?.toFixed(
+                          2
+                        ) || "0.00"}
+                        %
                       </span>
                     </div>
-                  </div>
-
-                  {/* Price section */}
-                  <div className="ml-4 text-right min-w-[120px]">
-                    <span className="block font-semibold text-gray-800 dark:text-gray-100">
-                      {formatPrice(coin.item.data?.price)}
-                    </span>
-                    <span
-                      className={`block text-xs ${
-                        coin.item.data?.price_change_percentage_24h?.usd >= 0
-                          ? "text-green-500"
-                          : "text-red-500"
-                      }`}
-                    >
-                      {coin.item.data?.price_change_percentage_24h?.usd?.toFixed(
-                        2
-                      ) || "0.00"}
-                      %
-                    </span>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                ))
+              )}
             </div>
           </div>
         </div>
