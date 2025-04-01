@@ -7,13 +7,13 @@ const {
   fetchAltcoinSeasonChartData,
   fetchCoinData,
   fetchTrendingCoins,
+  fetchSearchResults, // Added the new import
 } = require("../services/coinGeckoService");
 
 /**
  * Get all cryptocurrencies data
  * Route: GET /api/all-cryptos
  */
-
 const getAllCryptos = async (req, res, next) => {
   try {
     // Try to get data from cache first, otherwise fetch from API
@@ -29,7 +29,6 @@ const getAllCryptos = async (req, res, next) => {
  * Get altcoin season chart data for a specific coin
  * Route: GET /api/altcoin-season-chart?coinId=bitcoin&days=30
  */
-
 const getAltcoinSeasonChart = async (req, res, next) => {
   try {
     const { coinId, days } = req.query;
@@ -56,7 +55,6 @@ const getAltcoinSeasonChart = async (req, res, next) => {
  * Get detailed data for a specific coin
  * Route: GET /api/coin-data?coinId=ethereum
  */
-
 const getCoinData = async (req, res, next) => {
   try {
     const { coinId } = req.query;
@@ -83,10 +81,35 @@ const getCoinData = async (req, res, next) => {
  * Get currently trending coins
  * Route: GET /api/trending
  */
-
 const getTrendingCoins = async (req, res, next) => {
   try {
     const data = await getCachedData("trendingCoins", fetchTrendingCoins, 600);
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get cryptocurrency search results
+ * Route: GET /api/search?query=bitcoin
+ */
+const getSearchResults = async (req, res, next) => {
+  try {
+    const { query } = req.query;
+
+    // Validate required parameter
+    if (!query) return res.status(400).json({ error: "query is required" });
+
+    // Create cache key specific to this search query
+    const cacheKey = `searchResults_${query.toLowerCase()}`;
+
+    // Get data with caching (600 seconds expiration)
+    const data = await getCachedData(
+      cacheKey,
+      () => fetchSearchResults(query),
+      600
+    );
     res.json(data);
   } catch (error) {
     next(error);
@@ -99,4 +122,5 @@ module.exports = {
   getAltcoinSeasonChart,
   getCoinData,
   getTrendingCoins,
+  getSearchResults, // Added the new controller function
 };

@@ -46,9 +46,20 @@ const fetchTrendingCoins = async () => {
   });
 };
 
+const fetchSearchResults = async (query) => {
+  return fetchApiWithStrategy({
+    url: `https://api.coingecko.com/api/v3/search?query=${query}`,
+    cacheKey: `search_${query.toLowerCase()}`,
+    options: {
+      cacheTtl: 1800, // 30 minutes for search results
+    },
+  });
+};
+
 module.exports = {
   fetchAllCryptosData,
   fetchAltcoinSeasonChartData,
   fetchCoinData,
   fetchTrendingCoins,
+  fetchSearchResults,
 };
