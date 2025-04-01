@@ -155,7 +155,7 @@ const AltcoinChart = ({ coin, onClose }) => {
         transition={{ duration: 0.3 }}
         className={`${
           isExpanded ? "w-[600px]" : "w-96"
-        } p-4 bg-white dark:bg-gray-900 shadow-lg rounded-lg flex flex-col`}
+        } p-4 bg-white dark:bg-gray-800 shadow-lg rounded-lg flex flex-col`}
       >
         <div className="flex justify-between items-center mb-4">
           <button
