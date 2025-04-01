@@ -47,7 +47,7 @@ function CurrencyStats() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="flex justify-center items-center min-h-screen dark:bg-gray-900">
         <ClipLoader size={50} color="#3B82F6" />
         <p className="text-center text-gray-700 dark:text-gray-300 ml-4">
           Loading cryptocurrency data...
@@ -58,7 +58,7 @@ function CurrencyStats() {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="flex justify-center items-center min-h-screen dark:bg-gray-900">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg max-w-md text-center">
           <p className="text-red-500 dark:text-red-400 text-lg font-medium">
             {error}
@@ -97,7 +97,7 @@ function CurrencyStats() {
     coinData.market_data.market_cap_change_percentage_24h;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 md:p-8">
+    <div className="min-h-screen dark:bg-gray-900 p-4 md:p-8">
       {/* Header Section */}
       <motion.div
         className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8"
