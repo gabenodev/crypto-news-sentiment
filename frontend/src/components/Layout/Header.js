@@ -1,134 +1,169 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import { FaBitcoin, FaEthereum, FaChartLine, FaGlobe } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
+import { FaSearch } from "react-icons/fa";
+import { IoMdClose } from "react-icons/io";
 import NightToggle from "./NightToggle";
-import { motion } from "framer-motion";
 
 function Header() {
-  const [cryptoData, setCryptoData] = useState({
-    bitcoinDominance: 0,
-    ethereumDominance: 0,
-    totalVolume24h: 0,
-    totalMarketCap: 0,
-    marketCapChange24h: 0,
-  });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [showResults, setShowResults] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchCoinGeckoData = async () => {
+    if (searchQuery.trim() === "") {
+      setSearchResults([]);
+      return;
+    }
+
+    const fetchSearchResults = async () => {
       try {
-        const response = await fetch("https://api.coingecko.com/api/v3/global");
+        const response = await fetch(
+          `https://api.coingecko.com/api/v3/search?query=${searchQuery}`
+        );
         const data = await response.json();
-        const globalMetrics = data.data;
-        setCryptoData({
-          bitcoinDominance: globalMetrics.market_cap_percentage.btc,
-          ethereumDominance: globalMetrics.market_cap_percentage.eth,
-          totalVolume24h: globalMetrics.total_volume.usd,
-          totalMarketCap: globalMetrics.total_market_cap.usd,
-          marketCapChange24h:
-            globalMetrics.market_cap_change_percentage_24h_usd,
-        });
+        setSearchResults(data.coins.slice(0, 5));
       } catch (error) {
-        console.error("Error fetching CoinGecko data:", error);
+        console.error("Error fetching search results:", error);
       }
     };
 
-    fetchCoinGeckoData();
-  }, []);
+    const debounceTimer = setTimeout(() => {
+      fetchSearchResults();
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery]);
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim() && searchResults.length > 0) {
+      navigate(`/currencies/${searchResults[0].id}`);
+      setSearchQuery("");
+      setShowResults(false);
+    }
+  };
+
+  const handleResultClick = (coinId) => {
+    navigate(`/currencies/${coinId}`);
+    setSearchQuery("");
+    setShowResults(false);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+  };
 
   return (
-    <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white shadow-sm w-full pt-6">
-      <div className="w-full px-6 sm:px-8 lg:px-12">
+    <header className="bg-gray-900 text-white shadow-sm w-full sticky top-0 z-50 border-b border-gray-700">
+      <div className="w-full px-6 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-10">
-            <motion.h1
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="text-3xl font-bold tracking-tight"
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-2 group">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-r from-teal-500 to-green-500 flex items-center justify-center transition-transform duration-300 group-hover:rotate-12">
+              <span className="text-white font-bold text-xl">SX</span>
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-teal-400 to-green-500 bg-clip-text text-transparent">
+              SentimentX
+            </span>
+          </Link>
+
+          {/* Navigation - Hidden on mobile */}
+          <nav className="hidden lg:flex space-x-6 text-sm font-medium">
+            <Link
+              to="/news"
+              className="text-gray-300 hover:text-teal-400 transition-colors duration-200 hover:underline underline-offset-4 decoration-2"
             >
-              <Link
-                to="/"
-                className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-green-500 hover:opacity-80 transition-opacity duration-200"
-              >
-                SentimentX
-              </Link>
-            </motion.h1>
+              News
+            </Link>
+            <Link
+              to="/altcoin-season-index"
+              className="text-gray-300 hover:text-teal-400 transition-colors duration-200 hover:underline underline-offset-4 decoration-2"
+            >
+              Altcoin Index
+            </Link>
+            <Link
+              to="/sentiment-trend"
+              className="text-gray-300 hover:text-teal-400 transition-colors duration-200 hover:underline underline-offset-4 decoration-2"
+            >
+              Sentiment
+            </Link>
+            <Link
+              to="/whale-transactions"
+              className="text-gray-300 hover:text-teal-400 transition-colors duration-200 hover:underline underline-offset-4 decoration-2"
+            >
+              Whale Watch
+            </Link>
+          </nav>
 
-            {/* Navbar cu Link în loc de butoane */}
-            <nav className="flex space-x-6 text-lg font-medium">
-              <Link
-                to="/news"
-                className="text-gray-300 hover:text-teal-400 transition duration-300"
-              >
-                News
-              </Link>
-              <Link
-                to="/altcoin-season-index"
-                className="text-gray-300 hover:text-teal-400 transition duration-300"
-              >
-                Altcoin Season Index
-              </Link>
-              <Link
-                to="/sentiment-trend"
-                className="text-gray-300 hover:text-teal-400 transition duration-300"
-              >
-                Sentiment Trend
-              </Link>
-              <Link
-                to="/whale-transactions"
-                className="text-gray-300 hover:text-teal-400 transition duration-300"
-              >
-                Whale Transactions
-              </Link>
-            </nav>
-          </div>
+          {/* Right Section */}
+          <div className="flex items-center space-x-4">
+            {/* Search Bar */}
+            <div className="relative hidden md:block">
+              <form onSubmit={handleSearchSubmit} className="relative">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search Bitcoin, Ethereum..."
+                    className="py-2 pl-4 pr-10 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500 w-64 transition-all duration-200 text-sm placeholder-gray-400"
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setShowResults(true);
+                    }}
+                    onFocus={() => setShowResults(true)}
+                  />
+                  {searchQuery ? (
+                    <button
+                      type="button"
+                      onClick={clearSearch}
+                      className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors duration-200"
+                    >
+                      <IoMdClose size={14} />
+                    </button>
+                  ) : null}
+                  <button
+                    type="submit"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-teal-400 transition-colors duration-200"
+                  >
+                    <FaSearch size={14} />
+                  </button>
+                </div>
+              </form>
 
-          <div className="flex items-center">
+              {/* Search Results Dropdown */}
+              {showResults && searchResults.length > 0 && (
+                <div className="absolute z-50 mt-1 w-full bg-gray-800 rounded-lg shadow-xl border border-gray-700 overflow-hidden">
+                  {searchResults.map((coin) => (
+                    <div
+                      key={coin.id}
+                      className="px-4 py-3 hover:bg-gray-700 cursor-pointer flex items-center space-x-3 transition-colors duration-150"
+                      onClick={() => handleResultClick(coin.id)}
+                    >
+                      <img
+                        src={coin.thumb}
+                        alt={coin.name}
+                        className="w-5 h-5 rounded-full"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {coin.name}
+                        </p>
+                        <p className="text-xs text-gray-400 truncate">
+                          {coin.symbol.toUpperCase()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <NightToggle />
           </div>
         </div>
       </div>
-
-      {/* Linia orizontală care separă navbar-ul de restul secțiunii */}
-      <div className="my-4 h-px bg-gradient-to-r from-teal-400 to-green-500 w-full"></div>
-
-      {/* Adăugarea padding-ului pentru aliniere */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
-        className="w-full px-6 sm:px-8 lg:px-12 flex space-x-8 text-xs font-medium text-gray-300"
-      >
-        <div className="flex items-center space-x-2">
-          <FaBitcoin className="text-yellow-400" />
-          <span>BTC Dominance: {cryptoData.bitcoinDominance.toFixed(2)}%</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <FaEthereum className="text-purple-400" />
-          <span>ETH Dominance: {cryptoData.ethereumDominance.toFixed(2)}%</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <FaChartLine className="text-green-400" />
-          <span>Vol: ${cryptoData.totalVolume24h.toLocaleString()}</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <FaGlobe className="text-blue-400" />
-          <span>Cap: ${cryptoData.totalMarketCap.toLocaleString()}</span>
-          <span
-            className={
-              cryptoData.marketCapChange24h >= 0
-                ? "text-green-400"
-                : "text-red-400"
-            }
-          >
-            {cryptoData.marketCapChange24h >= 0 ? "▲" : "▼"}{" "}
-            {Math.abs(cryptoData.marketCapChange24h).toFixed(2)}%
-          </span>
-        </div>
-      </motion.div>
-
-      {/* Linia de jos fără margin-bottom */}
-      <div className="mt-4 h-px bg-gradient-to-r from-teal-400 to-green-500 w-full"></div>
     </header>
   );
 }
