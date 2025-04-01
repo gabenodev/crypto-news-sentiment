@@ -106,7 +106,7 @@ const AltcoinSeason = () => {
   return (
     <div className="p-6 max-w-6xl mx-auto flex gap-6 items-start">
       {/* Cardul principal */}
-      <div className="flex-1 p-6 rounded-lg bg-white shadow-2xl dark:bg-gray-900">
+      <div className="flex-1 p-6 rounded-lg bg-white shadow-2xl dark:bg-gray-800">
         <h2 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white text-center">
           {isAltcoinSeason
             ? "It's Altcoin Season! 🚀"
