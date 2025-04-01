@@ -2,11 +2,14 @@ import React from "react";
 import CryptoTable from "./CryptoTable";
 import TrendingCoins from "./TrendingCoins";
 import useCryptoData from "../hooks/useCryptoData";
+import useTrendingCoins from "../hooks/useTrendingCoins";
 
 function Homepage() {
-  const { cryptoData, loading } = useCryptoData();
+  const { cryptoData, loading: loadingCrypto } = useCryptoData();
+  const { trendingCoins, loading: loadingTrending } = useTrendingCoins();
 
-  if (loading) {
+  // Dacă oricare dintre cele două hook-uri este în loading, afișăm spinnerul
+  if (loadingCrypto || loadingTrending) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900 dark:border-gray-100"></div>
@@ -17,7 +20,7 @@ function Homepage() {
   return (
     <>
       <div className="max-w-7xl mx-auto px-4">
-        <TrendingCoins />
+        <TrendingCoins trendingCoins={trendingCoins} />
       </div>
 
       <div className="mt-16">
