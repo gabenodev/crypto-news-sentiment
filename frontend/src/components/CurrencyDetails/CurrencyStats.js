@@ -115,7 +115,7 @@ function CurrencyStats() {
               className="h-14 w-14 rounded-full border-[3px] border-white dark:border-gray-700 shadow-lg"
             />
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center">
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white flex items-center">
                 {coinData.name}
                 <span className="ml-2 text-xl font-semibold text-gray-500 dark:text-gray-400">
                   {coinData.symbol.toUpperCase()}
@@ -139,7 +139,7 @@ function CurrencyStats() {
           {/* Second Row - Price Data */}
           <div className="flex flex-col sm:flex-row sm:items-end gap-4">
             <div className="flex items-baseline gap-3">
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">
+              <span className="text-5xl font-bold text-gray-900 dark:text-white">
                 ${formatPrice(currentPrice)}
               </span>
               <span

@@ -7,11 +7,13 @@ import AltcoinSeason from "./components/Altcoin_Season/AltcoinSeason";
 import WhaleTransactions from "./components/Whale_Transactions/WhaleTransactions";
 import Footer from "./components/Layout/Footer";
 import Homepage from "./components/HomePage/HomePage";
-import CurrencyDetails from "./components/CurrencyDetails/CurrencyDetails"; // Import nou
+import CurrencyDetails from "./components/CurrencyDetails/CurrencyDetails";
+import ScrollToTop from "./utils/ScrollToTop";
 
 function App() {
   return (
     <Router>
+      <ScrollToTop />
       <div className="App bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col">
         <Header />
         <main className="flex-grow w-full px-4 sm:px-6 lg:px-8 py-12">
