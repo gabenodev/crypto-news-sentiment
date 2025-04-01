@@ -12,7 +12,7 @@ import CurrencyDetails from "./components/CurrencyDetails/CurrencyDetails"; // I
 function App() {
   return (
     <Router>
-      <div className="App bg-gray-50 dark:bg-gradient-to-r from-gray-900 to-gray-800 min-h-screen flex flex-col">
+      <div className="App bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col">
         <Header />
         <main className="flex-grow w-full px-4 sm:px-6 lg:px-8 py-12">
           <Routes>
