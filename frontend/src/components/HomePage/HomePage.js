@@ -5,8 +5,8 @@ import useCryptoData from "../hooks/useCryptoData";
 import useTrendingCoins from "../hooks/useTrendingCoins";
 
 function Homepage() {
-  const { cryptoData, loading: loadingCrypto } = useCryptoData();
-  const { trendingCoins, loading: loadingTrending } = useTrendingCoins();
+  const { cryptoData } = useCryptoData();
+  const { trendingCoins } = useTrendingCoins();
 
   return (
     <>
