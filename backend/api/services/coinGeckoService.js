@@ -38,10 +38,11 @@ const fetchCoinData = async (coinId) => {
 
 const fetchTrendingCoins = async () => {
   return fetchApiWithStrategy({
-    url: "https://api.coingecko.com/api/v3/search/trending",
+    url: "https://api.coingecko.com/api/v3/search/trending?sparkline=false",
     cacheKey: "trendingCoins",
     options: {
-      cacheTtl: 1800, // 30 minutes for trending
+      cacheTtl: 3600, // 1 oră
+      fallbackEnabled: true, // Folosește cache-ul chiar dacă API-ul e down
     },
   });
 };

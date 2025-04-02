@@ -18,75 +18,55 @@ const { getCachedData } = require("../services/cacheService");
 async function fetchApiWithStrategy({
   url,
   cacheKey,
-  processData = (data) => data, // Default processing (identity function)
+  processData = (data) => data,
   options = {},
 }) {
-  // Merge default options with custom options
   const { retries, timeout, cacheTtl, fallbackEnabled } = {
-    ...API_OPTIONS, // Default values from config
-    ...options, // Custom overrides
+    ...API_OPTIONS,
+    ...options,
   };
 
-  // 1. FIRST TRY CACHE
+  // 1. Încearcă cache-ul (cu timeout scăzut)
   try {
-    // Check if valid data exists in cache
-    const cachedData = await getCachedData(cacheKey, () => {}, cacheTtl);
-    if (cachedData) {
-      console.log(`[CACHE HIT] ${cacheKey}`);
-      return cachedData;
-    }
-  } catch (cacheError) {
-    console.error(`[CACHE ERROR] ${cacheKey}:`, cacheError.message);
-  }
-
-  // 2. FETCH FROM API
-  try {
-    console.log(`[API FETCH] Starting: ${url}`);
-
-    // Race between API call and timeout
-    const response = await Promise.race([
-      fetchWithRetry(url, { retries }), // Fetch with retry attempts
+    const cachedData = await Promise.race([
+      getCachedData(cacheKey, () => {}, cacheTtl),
       new Promise(
-        (
-          _,
-          reject // Timeout promise
-        ) =>
-          setTimeout(
-            () => reject(new Error(`Timeout after ${timeout}ms`)),
-            timeout
-          )
+        (_, reject) =>
+          setTimeout(() => reject(new Error("Cache timeout")), 1000) // 1s pentru cache
       ),
     ]);
+    if (cachedData) return cachedData;
+  } catch (cacheError) {
+    console.error(`[CACHE]`, cacheError.message);
+  }
 
-    // Process the response data
+  // 2. Request la API extern (cu timeout mai lung)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetchWithRetry(url, {
+      retries,
+      signal: controller.signal, // Pentru abort
+    });
+    clearTimeout(timeoutId);
+
     const data = await response.json();
     const processedData = processData(data);
 
-    // 3. SAVE TO CACHE
-    try {
-      await getCachedData(cacheKey, () => processedData, cacheTtl);
-      console.log(`[CACHE SET] ${cacheKey} for ${cacheTtl} seconds`);
-    } catch (saveError) {
-      console.error(`[CACHE SAVE ERROR] ${cacheKey}:`, saveError.message);
-    }
+    // 3. Salvează în cache (fără a aștepta rezultatul)
+    getCachedData(cacheKey, () => processedData, cacheTtl)
+      .then(() => console.log(`[CACHE] Updated ${cacheKey}`))
+      .catch((e) => console.error(`[CACHE] Save failed:`, e.message));
 
     return processedData;
   } catch (error) {
-    console.error(`[API ERROR] ${url}:`, error.message);
-
-    // 4. FALLBACK TO CACHED DATA IF ENABLED
+    clearTimeout(timeoutId);
+    // 4. Fallback la cache (dacă e activat)
     if (fallbackEnabled) {
-      try {
-        const lastGoodData = await getCachedData(cacheKey, () => {}, cacheTtl);
-        if (lastGoodData) {
-          console.log(`[FALLBACK] Returning last valid data for ${cacheKey}`);
-          return lastGoodData;
-        }
-      } catch (fallbackError) {
-        console.error("[FALLBACK ERROR]", fallbackError.message);
-      }
+      const lastGoodData = await getCachedData(cacheKey, () => {}, cacheTtl);
+      if (lastGoodData) return lastGoodData;
     }
-
     throw error;
   }
 }

@@ -1,50 +1,48 @@
-const { REDIS } = require("../config/env");
 const { fetchWithRetry } = require("../utils/fetchUtils");
+const { REDIS } = require("../config/env");
 
-/**
- * Smart caching function that:
- * 1. Checks Redis cache first
- * 2. Falls back to API if no cache
- * 3. Updates cache with fresh data
- */
+const CACHE_PREFIX = "sentimentx:"; // Evită conflictul cu alte keys
 
-const getCachedData = async (cacheKey, fetchFunction, expireTime = 60) => {
+const getCachedData = async (cacheKey, fetchFreshData, expireTime = 60) => {
+  const fullKey = `${CACHE_PREFIX}${cacheKey}`;
+
   try {
-    const cachedDataResponse = await fetchWithRetry(
-      `${REDIS.URL}/get/${cacheKey}`,
+    // 1. Verifică cache-ul (GET)
+    const getResponse = await fetchWithRetry(
+      `${REDIS.URL}/get/${encodeURIComponent(fullKey)}`,
       {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${REDIS.TOKEN}`,
-        },
+        headers: { Authorization: `Bearer ${REDIS.TOKEN}` },
+        timeout: 2000, // Timeout scăzut pentru cache (nu folosi valoarea de la API extern)
       }
     );
 
-    const cachedData = await cachedDataResponse.json();
-    if (cachedData.result) {
-      console.log(`[CACHE HIT] Returning cached data for: ${cacheKey}`);
-      return JSON.parse(cachedData.result);
+    const { result } = await getResponse.json();
+    if (result) {
+      return JSON.parse(result);
     }
 
-    console.log(`[CACHE MISS] Fetching new data for: ${cacheKey}`);
-    const freshData = await fetchFunction();
+    // 2. Dacă nu există, obține date proaspete
+    const freshData = await fetchFreshData();
 
-    await fetchWithRetry(`${REDIS.URL}/set/${cacheKey}?EX=${expireTime}`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${REDIS.TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(freshData),
-    });
+    // 3. Setează cache cu EXPIRE (POST cu parametru EX)
+    await fetchWithRetry(
+      `${REDIS.URL}/set/${encodeURIComponent(fullKey)}?EX=${expireTime}`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${REDIS.TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(freshData),
+        timeout: 2000, // Timeout scăzut
+      }
+    );
 
     return freshData;
   } catch (error) {
-    console.error("Redis operation failed:", error);
-    return await fetchFunction();
+    console.error(`[CACHE FAIL] Key ${fullKey}:`, error.message);
+    return await fetchFreshData(); // Fallback la date proaspete
   }
 };
 
-module.exports = {
-  getCachedData,
-};
+module.exports = { getCachedData };
