@@ -8,15 +8,6 @@ function Homepage() {
   const { cryptoData, loading: loadingCrypto } = useCryptoData();
   const { trendingCoins, loading: loadingTrending } = useTrendingCoins();
 
-  // Dacă oricare dintre cele două hook-uri este în loading, afișăm spinnerul
-  if (loadingCrypto || loadingTrending) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-gray-900 dark:border-gray-100"></div>
-      </div>
-    );
-  }
-
   return (
     <>
       <div className="max-w-7xl mx-auto px-4">

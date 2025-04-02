@@ -308,7 +308,7 @@ export const fetchWhaleTransactions = async (page, filterValue) => {
         : `https://api.bscscan.com/api?module=account&action=txlist&address=${address}&startblock=${startBlock}&endblock=99999999&page=${page}&offset=100&sort=desc&apikey=${apiKey}`;
 
     // Așteaptă 200 ms între fiecare request pentru a nu depăși limita de 5 request-uri pe secundă
-    const data = await fetchWithDelay(url, i * 200);
+    const data = await fetchWithDelay(url, i * 30);
 
     if (data && data.status === "1") {
       const filteredTransactions = data.result.filter(
