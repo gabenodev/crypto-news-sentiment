@@ -1,17 +1,15 @@
 import React from "react";
+import TopMovers from "./TopMovers"; // adăugați importul pentru TopMovers
 import CryptoTable from "./CryptoTable";
-import TrendingCoins from "./TrendingCoins";
 import useCryptoData from "../hooks/useCryptoData";
-import useTrendingCoins from "../hooks/useTrendingCoins";
 
 function Homepage() {
   const { cryptoData } = useCryptoData();
-  const { trendingCoins } = useTrendingCoins();
 
   return (
     <>
       <div className="max-w-7xl mx-auto px-4">
-        <TrendingCoins trendingCoins={trendingCoins} />
+        <TopMovers /> {/* Adăugați card-ul Top Movers aici */}
       </div>
 
       <div className="mt-16">
