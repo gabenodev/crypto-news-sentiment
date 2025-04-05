@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-function useTopMovers() {
+function useTopMovers(page = 1) {
   const [topMovers, setTopMovers] = useState([]);
   const [topLosers, setTopLosers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -8,9 +8,10 @@ function useTopMovers() {
   useEffect(() => {
     const fetchTopMovers = async () => {
       try {
-        // Preia 200 de monede pentru a avea o gamă largă de opțiuni
         const response = await fetch(
-          "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=200&page=1"
+          `https://sentimentx-backend.vercel.app/api/all-cryptos?per_page=${
+            page * 100
+          }`
         );
         if (!response.ok) throw new Error("Network response was not ok");
 

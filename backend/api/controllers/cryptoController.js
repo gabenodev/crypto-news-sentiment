@@ -119,7 +119,7 @@ const getSearchResults = async (req, res, next) => {
 /**
  * Get top movers (top 5 gainers) from all cryptocurrencies
  * Route: GET /api/top-movers
-
+ */
 const getTopMovers = async (req, res, next) => {
   try {
     const allCryptos = await fetchAllCryptosData(); // Folosim funcția din coinGeckoService.js
@@ -136,11 +136,11 @@ const getTopMovers = async (req, res, next) => {
     next(error);
   }
 };
- */
+
 /**
  * Get top losers (top 5 losers) from all cryptocurrencies
  * Route: GET /api/top-losers
-
+ */
 const getTopLosers = async (req, res, next) => {
   try {
     const allCryptos = await fetchAllCryptosData(); // Folosim funcția din coinGeckoService.js
@@ -157,7 +157,6 @@ const getTopLosers = async (req, res, next) => {
     next(error);
   }
 };
- */
 
 // Export all controller functions
 module.exports = {
@@ -166,6 +165,6 @@ module.exports = {
   getCoinData,
   getTrendingCoins,
   getSearchResults, // Added the new controller function
-  //  getTopMovers,
-  //  getTopLosers,
+  getTopMovers,
+  getTopLosers,
 };
