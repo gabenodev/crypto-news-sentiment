@@ -23,15 +23,12 @@ function TrendingCoins() {
       transition={{ duration: 0.5 }}
     >
       <div className="flex justify-center px-4">
-        <div className="relative w-full max-w-lg">
-          {/* Glow effect */}
+        <div className="relative w-full max-w-lg h-full">
           <div className="absolute -inset-3 bg-gradient-to-r from-teal-400/30 to-green-500/30 rounded-2xl blur-xl opacity-40 dark:opacity-30 animate-pulse-slow"></div>
 
-          {/* Main card - dimensiuni egale cu TopMovers */}
-          <div className="relative w-full bg-white/95 dark:bg-gray-800/95 p-6 rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm">
-            {/* Header consistent */}
-            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200/50 dark:border-gray-700/50">
-              <h3 className="text-2xl font-bold tracking-tight">
+          <div className="relative w-full bg-white/95 dark:bg-gray-800/95 p-5 rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm h-full">
+            <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200/50 dark:border-gray-700/50">
+              <h3 className="text-xl font-bold">
                 <span className="mr-2">🔥</span>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-green-500">
                   Trending Coins
@@ -42,10 +39,10 @@ function TrendingCoins() {
               </h3>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {loading ? (
-                <div className="flex justify-center items-center h-40">
-                  <ClipLoader color="#10b981" size={45} />
+                <div className="flex justify-center items-center py-8">
+                  <ClipLoader color="#10b981" size={40} />
                 </div>
               ) : (
                 trendingCoins.map((coin, index) => (
@@ -57,18 +54,14 @@ function TrendingCoins() {
                   >
                     <Link
                       to={`/currencies/${coin.item.id}`}
-                      className={`flex items-center justify-between p-3 rounded-lg bg-gray-50/70 dark:bg-gray-700/70 ${
-                        coin.item.data?.price_change_percentage_24h?.usd >= 0
-                          ? "hover:bg-teal-50/50 dark:hover:bg-teal-900/30"
-                          : "hover:bg-red-50/50 dark:hover:bg-red-900/30"
-                      } transition-all group backdrop-blur-sm`}
+                      className="flex items-center justify-between p-3 h-[62px] rounded-lg bg-gray-50/70 dark:bg-gray-700/70 border border-gray-200/50 dark:border-gray-600/50 hover:bg-teal-50/50 dark:hover:bg-teal-900/30 transition-colors group"
                     >
                       <div className="flex items-center min-w-0 flex-1">
                         <div className="relative flex-shrink-0 mr-3">
                           <img
                             src={coin.item.thumb}
                             alt={coin.item.name}
-                            className="w-9 h-9 rounded-full border-2 border-white dark:border-gray-600 shadow-sm group-hover:border-teal-300 transition-colors"
+                            className="w-9 h-9 rounded-full border-2 border-white dark:border-gray-600 shadow-sm"
                           />
                           <span
                             className={`absolute -bottom-1 -right-1 ${
@@ -90,7 +83,7 @@ function TrendingCoins() {
                           </span>
                         </div>
                       </div>
-                      <div className="ml-4 text-right min-w-[120px]">
+                      <div className="ml-3 text-right min-w-[110px]">
                         <span className="block font-semibold text-gray-800 dark:text-gray-100">
                           {formatPrice(coin.item.data?.price)}
                         </span>
