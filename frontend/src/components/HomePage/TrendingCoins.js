@@ -24,7 +24,7 @@ function TrendingCoins() {
     >
       <div className="flex justify-center px-4">
         <div className="relative w-full max-w-lg">
-          {/* Glow effect consistent cu TopMovers */}
+          {/* Glow effect */}
           <div className="absolute -inset-3 bg-gradient-to-r from-teal-400/30 to-green-500/30 rounded-2xl blur-xl opacity-40 dark:opacity-30 animate-pulse-slow"></div>
 
           {/* Main card - dimensiuni egale cu TopMovers */}
@@ -57,34 +57,32 @@ function TrendingCoins() {
                   >
                     <Link
                       to={`/currencies/${coin.item.id}`}
-                      className={`flex items-center justify-between p-4 rounded-xl bg-gray-50/70 dark:bg-gray-700/70 ${
+                      className={`flex items-center justify-between p-3 rounded-lg bg-gray-50/70 dark:bg-gray-700/70 ${
                         coin.item.data?.price_change_percentage_24h?.usd >= 0
                           ? "hover:bg-teal-50/50 dark:hover:bg-teal-900/30"
                           : "hover:bg-red-50/50 dark:hover:bg-red-900/30"
                       } transition-all group backdrop-blur-sm`}
                     >
                       <div className="flex items-center min-w-0 flex-1">
-                        <div className="relative flex-shrink-0 mr-4">
-                          <div className="relative">
-                            <img
-                              src={coin.item.thumb}
-                              alt={coin.item.name}
-                              className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-600 shadow-sm group-hover:border-teal-300 transition-colors"
-                            />
-                            <div
-                              className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full ${
-                                coin.item.data?.price_change_percentage_24h
-                                  ?.usd >= 0
-                                  ? "bg-gradient-to-br from-teal-400 to-green-500"
-                                  : "bg-red-500"
-                              } flex items-center justify-center text-white text-xs font-bold shadow-md`}
-                            >
-                              {index + 1}
-                            </div>
-                          </div>
+                        <div className="relative flex-shrink-0 mr-3">
+                          <img
+                            src={coin.item.thumb}
+                            alt={coin.item.name}
+                            className="w-9 h-9 rounded-full border-2 border-white dark:border-gray-600 shadow-sm group-hover:border-teal-300 transition-colors"
+                          />
+                          <span
+                            className={`absolute -bottom-1 -right-1 ${
+                              coin.item.data?.price_change_percentage_24h
+                                ?.usd >= 0
+                                ? "bg-gradient-to-br from-teal-400 to-green-500"
+                                : "bg-red-500"
+                            } text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-xs`}
+                          >
+                            {index + 1}
+                          </span>
                         </div>
                         <div className="min-w-0">
-                          <span className="block font-semibold text-gray-800 dark:text-gray-100 truncate">
+                          <span className="block font-medium text-gray-800 dark:text-gray-100 truncate">
                             {coin.item.name}
                           </span>
                           <span className="block text-xs text-teal-500 dark:text-teal-400 font-medium">
@@ -93,11 +91,11 @@ function TrendingCoins() {
                         </div>
                       </div>
                       <div className="ml-4 text-right min-w-[120px]">
-                        <span className="block font-bold text-gray-800 dark:text-gray-100">
+                        <span className="block font-semibold text-gray-800 dark:text-gray-100">
                           {formatPrice(coin.item.data?.price)}
                         </span>
                         <span
-                          className={`block text-sm font-semibold ${
+                          className={`block text-xs ${
                             coin.item.data?.price_change_percentage_24h?.usd >=
                             0
                               ? "text-green-500"

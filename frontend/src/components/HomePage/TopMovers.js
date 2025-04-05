@@ -123,35 +123,33 @@ function TopMovers() {
                   >
                     <Link
                       to={`/currencies/${coin.id}`}
-                      className={`flex items-center justify-between p-4 rounded-xl bg-gradient-to-r ${getBgColor(
+                      className={`flex items-center justify-between p-3 rounded-lg bg-gradient-to-r ${getBgColor(
                         coin.price_change_percentage_24h
                       )} border ${getBorderColor(
                         coin.price_change_percentage_24h
                       )} shadow-sm ${getHoverClass(
                         coin.price_change_percentage_24h
-                      )} transition-all duration-300 group hover:shadow-md`}
+                      )} transition-all group backdrop-blur-sm`}
                     >
                       <div className="flex items-center min-w-0 flex-1">
-                        <div className="relative flex-shrink-0 mr-4">
-                          <div className="relative">
-                            <img
-                              src={coin.image}
-                              alt={coin.name}
-                              className="w-10 h-10 rounded-full border-2 border-white/80 dark:border-gray-600/80 shadow-sm group-hover:scale-105 transition-transform"
-                            />
-                            <div
-                              className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full ${
-                                coin.price_change_percentage_24h >= 0
-                                  ? "bg-green-500"
-                                  : "bg-red-500"
-                              } flex items-center justify-center text-white text-xs font-bold shadow-md`}
-                            >
-                              {index + 1}
-                            </div>
-                          </div>
+                        <div className="relative flex-shrink-0 mr-3">
+                          <img
+                            src={coin.image}
+                            alt={coin.name}
+                            className="w-9 h-9 rounded-full border-2 border-white/80 dark:border-gray-600/80 shadow-sm group-hover:scale-105 transition-transform"
+                          />
+                          <span
+                            className={`absolute -bottom-1 -right-1 ${
+                              coin.price_change_percentage_24h >= 0
+                                ? "bg-green-500"
+                                : "bg-red-500"
+                            } text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-xs`}
+                          >
+                            {index + 1}
+                          </span>
                         </div>
                         <div className="min-w-0">
-                          <span className="block font-semibold text-gray-800 dark:text-gray-100 truncate">
+                          <span className="block font-medium text-gray-800 dark:text-gray-100 truncate">
                             {coin.name}
                           </span>
                           <span className="block text-xs text-gray-500 dark:text-gray-400 font-medium">
@@ -160,13 +158,15 @@ function TopMovers() {
                         </div>
                       </div>
                       <div className="ml-4 text-right min-w-[120px]">
-                        <span className="block font-bold text-gray-800 dark:text-gray-100">
+                        <span className="block font-semibold text-gray-800 dark:text-gray-100">
                           {formatPrice(coin.current_price)}
                         </span>
                         <span
-                          className={`block text-sm font-semibold ${getPriceChangeColor(
-                            coin.price_change_percentage_24h
-                          )}`}
+                          className={`block text-xs ${
+                            coin.price_change_percentage_24h >= 0
+                              ? "text-green-500"
+                              : "text-red-500"
+                          }`}
                         >
                           {coin.price_change_percentage_24h >= 0 ? "+" : ""}
                           {coin.price_change_percentage_24h.toFixed(2)}%
