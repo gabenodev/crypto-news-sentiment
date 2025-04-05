@@ -69,7 +69,6 @@ function TopMovers() {
                 </span>
               </h3>
 
-              {/* Simple toggle icon button */}
               <button
                 onClick={toggleView}
                 className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
