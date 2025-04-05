@@ -1,5 +1,6 @@
 import React from "react";
-import TopMovers from "./TopMovers"; // adăugați importul pentru TopMovers
+import TopMovers from "./TopMovers"; // Importăm TopMovers
+import TrendingCoins from "./TrendingCoins"; // Importăm TrendingCoins
 import CryptoTable from "./CryptoTable";
 import useCryptoData from "../hooks/useCryptoData";
 
@@ -9,7 +10,11 @@ function Homepage() {
   return (
     <>
       <div className="max-w-7xl mx-auto px-4">
-        <TopMovers /> {/* Adăugați card-ul Top Movers aici */}
+        {/* Folosim grid pentru a pune cardurile una lângă alta */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <TrendingCoins /> {/* Adăugăm card-ul Trending Coins */}
+          <TopMovers /> {/* Adăugăm card-ul Top Movers */}
+        </div>
       </div>
 
       <div className="mt-16">

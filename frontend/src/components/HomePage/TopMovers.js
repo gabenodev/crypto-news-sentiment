@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom"; // Importăm Link pentru a naviga între pagini
+import { Link } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 import { motion } from "framer-motion";
 import useTopMovers from "../hooks/useTopMovers";
 
 function TopMovers() {
   const { topMovers, topLosers, loading } = useTopMovers();
-  const [showTopMovers, setShowTopMovers] = useState(true); // State pentru switch între top movers și top losers
+  const [showTopMovers, setShowTopMovers] = useState(true);
 
   const formatPrice = (price) => {
     if (!price) return "Loading...";
@@ -19,112 +19,130 @@ function TopMovers() {
   };
 
   const toggleView = () => {
-    setShowTopMovers(!showTopMovers); // Inversează starea pentru a comuta între top movers și top losers
+    setShowTopMovers(!showTopMovers);
   };
 
   const getPriceChangeColor = (percentage) => {
-    if (percentage >= 0) {
-      return "text-green-500"; // Top Movers
-    } else {
-      return "text-red-500"; // Top Losers
-    }
+    return percentage >= 0 ? "text-green-500" : "text-red-500";
   };
 
-  const getCircleClass = (percentage) => {
-    if (percentage >= 0) {
-      return "bg-green-500"; // Top Movers
-    } else {
-      return "bg-red-500"; // Top Losers
-    }
+  const getBgColor = (percentage) => {
+    return percentage >= 0
+      ? "from-teal-50/80 to-green-50/80 dark:from-teal-900/30 dark:to-green-900/30"
+      : "from-red-50/80 to-orange-50/80 dark:from-red-900/30 dark:to-orange-900/30";
+  };
+
+  const getBorderColor = (percentage) => {
+    return percentage >= 0
+      ? "border-teal-200/70 dark:border-teal-700/50"
+      : "border-red-200/70 dark:border-red-700/50";
   };
 
   const getHoverClass = (percentage) => {
-    if (percentage >= 0) {
-      return "hover:bg-teal-50/50 dark:hover:bg-teal-900/30"; // Top Movers (verde)
-    } else {
-      return "hover:bg-red-50/50 dark:hover:bg-red-900/30"; // Top Losers (roșu)
-    }
+    return percentage >= 0
+      ? "hover:shadow-teal-100/50 dark:hover:shadow-teal-900/30"
+      : "hover:shadow-red-100/50 dark:hover:shadow-red-900/30";
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 1 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
     >
       <div className="flex justify-center px-4">
         <div className="relative w-full max-w-lg">
           {/* Glow effect */}
-          <div className="absolute -inset-2 bg-gradient-to-r from-teal-400/20 to-green-500/20 rounded-xl blur-md opacity-80 dark:opacity-60 animate-pulse-slow"></div>
+          <div className="absolute -inset-3 bg-gradient-to-r from-teal-400/30 to-green-500/30 rounded-2xl blur-xl opacity-40 dark:opacity-30 animate-pulse-slow"></div>
 
           {/* Main card */}
-          <div className="w-full bg-white/90 dark:bg-gray-800/90 p-5 rounded-xl shadow-lg border border-gray-200/50 dark:border-gray-700/50 relative backdrop-blur-sm">
-            <h3 className="text-xl font-bold text-center mb-5 pb-3 border-b border-gray-200/50 dark:border-gray-700/50">
-              <span className="mr-1">📈</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-green-500">
-                {showTopMovers ? "Top Movers" : "Top Losers"} (24h)
-              </span>
-            </h3>
+          <div className="relative w-full bg-white/95 dark:bg-gray-800/95 p-6 rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm">
+            {/* Header with gradient text and animated underline */}
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200/50 dark:border-gray-700/50 relative">
+              <h3 className="text-2xl font-bold tracking-tight">
+                <span className="mr-2">📊</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-green-500">
+                  {showTopMovers ? "Top Gainers" : "Top Losers"}
+                </span>
+                <span className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
+                  (24h)
+                </span>
+              </h3>
 
-            {/* Switch button in the top-right corner */}
-            <button
-              onClick={toggleView}
-              className="absolute top-4 right-4 px-3 py-1 bg-teal-500 text-white text-sm font-semibold rounded-lg shadow-md hover:bg-teal-400 transition-all"
-            >
-              Switch to {showTopMovers ? "Top Losers" : "Top Movers"}
-            </button>
+              <button
+                onClick={toggleView}
+                className="px-3 py-1.5 bg-gradient-to-r from-teal-500 to-green-500 text-white text-sm font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-95"
+              >
+                {showTopMovers ? "Show Losers" : "Show Gainers"}
+              </button>
+            </div>
 
             <div className="space-y-3">
               {loading ? (
-                <div className="flex justify-center items-center h-32">
-                  <ClipLoader color="#23d996" size={40} />
+                <div className="flex justify-center items-center h-40">
+                  <ClipLoader color="#10b981" size={45} />
                 </div>
               ) : (
                 (showTopMovers ? topMovers : topLosers).map((coin, index) => (
-                  <Link
-                    key={coin.id} // Folosim Link pentru a redirecționa către pagina criptomonedei
-                    to={`/currencies/${coin.id}`}
-                    className={`flex items-center justify-between p-3 rounded-lg bg-gray-50/70 dark:bg-gray-700/70 ${getHoverClass(
-                      coin.price_change_percentage_24h
-                    )} transition-all group backdrop-blur-sm`}
+                  <motion.div
+                    key={coin.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
                   >
-                    <div className="flex items-center min-w-0 flex-1">
-                      <div className="relative flex-shrink-0 mr-3">
-                        <img
-                          src={coin.image}
-                          alt={coin.name}
-                          className="w-9 h-9 rounded-full border-2 border-white dark:border-gray-600 shadow-sm group-hover:border-teal-300 transition-colors"
-                        />
+                    <Link
+                      to={`/currencies/${coin.id}`}
+                      className={`flex items-center justify-between p-4 rounded-xl bg-gradient-to-r ${getBgColor(
+                        coin.price_change_percentage_24h
+                      )} border ${getBorderColor(
+                        coin.price_change_percentage_24h
+                      )} shadow-sm ${getHoverClass(
+                        coin.price_change_percentage_24h
+                      )} transition-all duration-300 group hover:shadow-md`}
+                    >
+                      <div className="flex items-center min-w-0 flex-1">
+                        <div className="relative flex-shrink-0 mr-4">
+                          <div className="relative">
+                            <img
+                              src={coin.image}
+                              alt={coin.name}
+                              className="w-10 h-10 rounded-full border-2 border-white/80 dark:border-gray-600/80 shadow-sm group-hover:scale-105 transition-transform"
+                            />
+                            <div
+                              className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full ${
+                                coin.price_change_percentage_24h >= 0
+                                  ? "bg-green-500"
+                                  : "bg-red-500"
+                              } flex items-center justify-center text-white text-xs font-bold shadow-md`}
+                            >
+                              {index + 1}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="min-w-0">
+                          <span className="block font-semibold text-gray-800 dark:text-gray-100 truncate">
+                            {coin.name}
+                          </span>
+                          <span className="block text-xs text-gray-500 dark:text-gray-400 font-medium">
+                            {coin.symbol.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="ml-4 text-right min-w-[120px]">
+                        <span className="block font-bold text-gray-800 dark:text-gray-100">
+                          {formatPrice(coin.current_price)}
+                        </span>
                         <span
-                          className={`absolute -bottom-1 -right-1 ${getCircleClass(
+                          className={`block text-sm font-semibold ${getPriceChangeColor(
                             coin.price_change_percentage_24h
-                          )} text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-xs`}
+                          )}`}
                         >
-                          {index + 1}
+                          {coin.price_change_percentage_24h >= 0 ? "+" : ""}
+                          {coin.price_change_percentage_24h.toFixed(2)}%
                         </span>
                       </div>
-                      <div className="min-w-0">
-                        <span className="block font-medium text-gray-800 dark:text-gray-100 truncate">
-                          {coin.name}
-                        </span>
-                        <span className="block text-xs text-teal-500 dark:text-teal-400 font-medium">
-                          {coin.symbol.toUpperCase()}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-4 text-right min-w-[120px]">
-                      <span className="block font-semibold text-gray-800 dark:text-gray-100">
-                        {formatPrice(coin.current_price)}
-                      </span>
-                      <span
-                        className={`block text-xs ${getPriceChangeColor(
-                          coin.price_change_percentage_24h
-                        )}`}
-                      >
-                        {coin.price_change_percentage_24h.toFixed(2)}%
-                      </span>
-                    </div>
-                  </Link>
+                    </Link>
+                  </motion.div>
                 ))
               )}
             </div>
