@@ -57,8 +57,8 @@ function TopMovers() {
 
           {/* Main card */}
           <div className="relative w-full bg-white/95 dark:bg-gray-800/95 p-6 rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm">
-            {/* Header with gradient text and animated underline */}
-            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200/50 dark:border-gray-700/50 relative">
+            {/* Header with toggle icon */}
+            <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200/50 dark:border-gray-700/50">
               <h3 className="text-2xl font-bold tracking-tight">
                 <span className="mr-2">📊</span>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-green-500">
@@ -69,11 +69,43 @@ function TopMovers() {
                 </span>
               </h3>
 
+              {/* Simple toggle icon button */}
               <button
                 onClick={toggleView}
-                className="px-3 py-1.5 bg-gradient-to-r from-teal-500 to-green-500 text-white text-sm font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-95"
+                className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+                aria-label={showTopMovers ? "Show losers" : "Show gainers"}
               >
-                {showTopMovers ? "Show Losers" : "Show Gainers"}
+                {showTopMovers ? (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                    />
+                  </svg>
+                )}
               </button>
             </div>
 

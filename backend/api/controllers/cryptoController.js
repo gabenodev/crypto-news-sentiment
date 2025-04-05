@@ -116,6 +116,48 @@ const getSearchResults = async (req, res, next) => {
   }
 };
 
+/**
+ * Get top movers (top 5 gainers) from all cryptocurrencies
+ * Route: GET /api/top-movers
+ */
+const getTopMovers = async (req, res, next) => {
+  try {
+    const allCryptos = await fetchAllCryptosData(); // Folosim funcția din coinGeckoService.js
+
+    // Sort by 24h price change percentage in descending order
+    const topMovers = allCryptos
+      .sort(
+        (a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h
+      )
+      .slice(0, 5);
+
+    res.json(topMovers);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get top losers (top 5 losers) from all cryptocurrencies
+ * Route: GET /api/top-losers
+ */
+const getTopLosers = async (req, res, next) => {
+  try {
+    const allCryptos = await fetchAllCryptosData(); // Folosim funcția din coinGeckoService.js
+
+    // Sort by 24h price change percentage in ascending order (losers)
+    const topLosers = allCryptos
+      .sort(
+        (a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h
+      )
+      .slice(0, 5);
+
+    res.json(topLosers);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Export all controller functions
 module.exports = {
   getAllCryptos,
@@ -123,4 +165,6 @@ module.exports = {
   getCoinData,
   getTrendingCoins,
   getSearchResults, // Added the new controller function
+  getTopMovers,
+  getTopLosers,
 };
