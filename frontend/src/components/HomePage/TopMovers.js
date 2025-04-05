@@ -22,10 +22,6 @@ function TopMovers() {
     setShowTopMovers(!showTopMovers);
   };
 
-  const getPriceChangeColor = (percentage) => {
-    return percentage >= 0 ? "text-green-500" : "text-red-500";
-  };
-
   const getBgColor = (percentage) => {
     return percentage >= 0
       ? "from-teal-50/80 to-green-50/80 dark:from-teal-900/30 dark:to-green-900/30"

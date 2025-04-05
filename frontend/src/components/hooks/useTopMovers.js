@@ -43,7 +43,7 @@ function useTopMovers(page = 1) {
     };
 
     fetchTopMovers();
-  }, []);
+  }, [page]);
 
   return { topMovers, topLosers, loading };
 }
