@@ -8,6 +8,8 @@ const {
   getCoinData,
   getTrendingCoins,
   getSearchResults,
+  getTopLosers,
+  getTopMovers,
 } = require("../controllers/cryptoController");
 
 // API Routes with rate limiting:
