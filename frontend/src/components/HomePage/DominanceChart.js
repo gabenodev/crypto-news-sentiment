@@ -139,20 +139,21 @@ const MarketDominanceCard = () => {
                           }}
                         />
                         <span
-                          className="text-sm text-gray-800 dark:text-gray-200"
-                          style={{
-                            color: activeIndex === i ? COLORS[i] : "inherit",
-                            fontWeight: activeIndex === i ? "600" : "400",
-                          }}
+                          className={`text-sm ${
+                            activeIndex === i
+                              ? `text-${COLORS[i]} font-semibold`
+                              : "text-gray-800 dark:text-gray-200"
+                          }`}
                         >
                           {item.name}
                         </span>
                       </div>
                       <span
-                        className="text-sm font-medium text-gray-900 dark:text-gray-100"
-                        style={{
-                          color: activeIndex === i ? COLORS[i] : "inherit",
-                        }}
+                        className={`text-sm font-medium ${
+                          activeIndex === i
+                            ? `text-${COLORS[i]}`
+                            : "text-gray-900 dark:text-gray-100"
+                        }`}
                       >
                         {item.value.toFixed(1)}%
                       </span>
