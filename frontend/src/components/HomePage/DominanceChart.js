@@ -127,7 +127,13 @@ const MarketDominanceCard = () => {
                     onMouseEnter={() => handleItemHover(i)}
                     onMouseLeave={handleItemLeave}
                   >
-                    <div className="flex justify-between items-center px-3 py-2 rounded-lg cursor-pointer">
+                    <div
+                      className={`flex justify-between items-center px-3 py-2 rounded-lg cursor-pointer border border-transparent hover:border-teal-500 hover:bg-teal-50 dark:hover:bg-teal-900 transition-colors duration-300 ${
+                        activeIndex === i
+                          ? `bg-teal-100 dark:bg-teal-800 border-teal-500`
+                          : "bg-transparent"
+                      }`}
+                    >
                       <div className="flex items-center space-x-2">
                         <div
                           className="w-2.5 h-2.5 rounded-full flex-shrink-0"
@@ -141,7 +147,7 @@ const MarketDominanceCard = () => {
                         <span
                           className={`text-sm ${
                             activeIndex === i
-                              ? `text-${COLORS[i]} font-semibold`
+                              ? `text-[${COLORS[i]}] font-semibold`
                               : "text-gray-800 dark:text-gray-200"
                           }`}
                         >
@@ -151,7 +157,7 @@ const MarketDominanceCard = () => {
                       <span
                         className={`text-sm font-medium ${
                           activeIndex === i
-                            ? `text-${COLORS[i]}`
+                            ? `text-[${COLORS[i]}]`
                             : "text-gray-900 dark:text-gray-100"
                         }`}
                       >
