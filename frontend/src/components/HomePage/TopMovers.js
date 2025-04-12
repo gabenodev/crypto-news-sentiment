@@ -30,8 +30,7 @@ function TopMovers() {
     >
       <div className="flex justify-center px-4">
         <div className="relative w-full max-w-lg">
-          <div className="absolute -inset-3 bg-gradient-to-r from-teal-400/30 to-green-500/30 rounded-2xl blur-xl opacity-40 dark:opacity-30 animate-pulse-slow"></div>
-
+          {/* Am eliminat efectul de glow */}
           <div className="relative w-full bg-white/95 dark:bg-gray-800/95 p-5 rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm">
             <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200/50 dark:border-gray-700/50">
               <h3 className="text-xl font-bold">
@@ -86,7 +85,8 @@ function TopMovers() {
               </div>
             </div>
 
-            <div className="space-y-2.5">
+            {/* Am mărit spațiul între fiecare criptomonedă */}
+            <div className="space-y-5">
               {loading ? (
                 <div className="flex justify-center items-center py-8">
                   <ClipLoader color="#10b981" size={40} />

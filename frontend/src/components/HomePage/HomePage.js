@@ -12,23 +12,23 @@ function Homepage() {
 
   return (
     <>
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Primul rând cu 3 carduri */}
+      <div className="max-w-8xl mx-auto px-4">
+        {/* Primul rând - 3 carduri */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <TopMovers /> {/* Cardul Top Movers */}
-          <TrendingCoins /> {/* Cardul Trending Coins */}
-          <MarketDominance /> {/* Cardul Market Dominance */}
-        </div>
+          <TopMovers />
+          <TrendingCoins />
 
-        {/* Al doilea rând cu FearGreedIndex Card, sub Market Dominance */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          {/* Vom plasa doar FearGreedIndex în această coloană */}
-          <div className="col-span-1 md:col-span-3">
-            <FearGreedIndex />
+          {/* Coloana dreaptă - grup compact */}
+          <div className="flex flex-col">
+            <MarketDominance />
+            <div className="mt-2">
+              {" "}
+              {/* Spațiu redus */}
+              <FearGreedIndex />
+            </div>
           </div>
         </div>
       </div>
-
       <div className="mt-16">
         <div className="max-w-7xl mx-auto px-4 mb-6 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-white mb-3">

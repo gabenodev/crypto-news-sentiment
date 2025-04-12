@@ -13,7 +13,6 @@ const MarketDominanceCard = () => {
     >
       <div className="flex justify-center px-4">
         <div className="relative w-full max-w-sm h-full">
-          <div className="absolute -inset-3 bg-gradient-to-r from-teal-400/30 to-green-500/30 rounded-2xl blur-xl opacity-40 dark:opacity-30 animate-pulse-slow"></div>
           <div className="relative w-full bg-white/95 dark:bg-gray-800/95 p-4 rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm h-full">
             <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-200/50 dark:border-gray-700/50">
               <h3 className="text-lg font-semibold">
