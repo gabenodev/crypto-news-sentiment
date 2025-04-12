@@ -86,7 +86,7 @@ function TopMovers() {
             </div>
 
             {/* Am mărit spațiul între fiecare criptomonedă */}
-            <div className="space-y-5">
+            <div className="space-y-8">
               {loading ? (
                 <div className="flex justify-center items-center py-8">
                   <ClipLoader color="#10b981" size={40} />

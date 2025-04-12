@@ -12,7 +12,7 @@ function Homepage() {
 
   return (
     <>
-      <div className="max-w-8xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-3">
         {/* Primul rând - 3 carduri */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <TopMovers />
@@ -21,7 +21,7 @@ function Homepage() {
           {/* Coloana dreaptă - grup compact */}
           <div className="flex flex-col">
             <MarketDominance />
-            <div className="mt-2">
+            <div className="mt-5">
               {" "}
               {/* Spațiu redus */}
               <FearGreedIndex />
