@@ -7,7 +7,8 @@ const {
   fetchAltcoinSeasonChartData,
   fetchCoinData,
   fetchTrendingCoins,
-  fetchSearchResults, // Added the new import
+  fetchSearchResults,
+  fetchMarketDominance,
 } = require("../services/coinGeckoService");
 
 /**
@@ -158,6 +159,19 @@ const getTopLosers = async (req, res, next) => {
   }
 };
 
+const getMarketDominance = async (req, res, next) => {
+  try {
+    const data = await getCachedData(
+      "marketDominance",
+      fetchMarketDominance,
+      600
+    );
+    res.json(data);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Export all controller functions
 module.exports = {
   getAllCryptos,
@@ -167,4 +181,5 @@ module.exports = {
   getSearchResults, // Added the new controller function
   getTopMovers,
   getTopLosers,
+  getMarketDominance,
 };

@@ -10,6 +10,7 @@ const {
   getSearchResults,
   getTopLosers,
   getTopMovers,
+  getMarketDominance,
 } = require("../controllers/cryptoController");
 
 // API Routes with rate limiting:
@@ -21,6 +22,7 @@ router.get("/trending", limiter, getTrendingCoins);
 router.get("/search", limiter, getSearchResults);
 router.get("/top-movers", limiter, getTopMovers);
 router.get("/top-losers", limiter, getTopLosers);
+router.get("/market-dominance", limiter, getMarketDominance);
 
 // Health check
 router.get("/health", (req, res) => {

@@ -57,10 +57,22 @@ const fetchSearchResults = async (query) => {
   });
 };
 
+const fetchMarketDominance = async () => {
+  return fetchApiWithStrategy({
+    url: "https://api.coingecko.com/api/v3/global",
+    cacheKey: "marketDominance",
+    options: {
+      cacheTtl: 3600, // 1 oră
+      fallbackEnabled: true, // Folosește cache-ul chiar dacă API-ul e down
+    },
+  });
+};
+
 module.exports = {
   fetchAllCryptosData,
   fetchAltcoinSeasonChartData,
   fetchCoinData,
   fetchTrendingCoins,
   fetchSearchResults,
+  fetchMarketDominance,
 };

@@ -1,40 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
-import axios from "axios";
+import useMarketDominance from "../hooks/useMarketDominance"; // Importă hook-ul tău
 
 const MarketDominanceCard = () => {
-  const [dominance, setDominance] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(false);
-        const res = await axios.get("https://api.coingecko.com/api/v3/global");
-        const data = res.data.data.market_cap_percentage;
-
-        const btc = parseFloat(data.btc.toFixed(2));
-        const eth = parseFloat(data.eth.toFixed(2));
-        const usdt = parseFloat(data.usdt?.toFixed(2) || 0);
-        const others = 100 - btc - eth - usdt;
-
-        setDominance([
-          { name: "BTC", value: btc },
-          { name: "ETH", value: eth },
-          { name: "USDT", value: usdt },
-          { name: "OTHERS", value: parseFloat(others.toFixed(2)) },
-        ]);
-        setLoading(false);
-      } catch (err) {
-        setLoading(false);
-        setError(true);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const { dominance, loading, error } = useMarketDominance(); // Folosește hook-ul
 
   return (
     <motion.div
