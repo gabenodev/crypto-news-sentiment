@@ -1,16 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import axios from "axios";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-  Legend,
-} from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
-const COLORS = ["#10B981", "#3B82F6", "#6366F1"]; // BTC, ETH, Others
+const COLORS = ["#F7931A", "#627EEA", "#26A17B", "#A6B7D4"]; // BTC, ETH, USDT, Others (distinct colors)
 
 const MarketDominanceCard = () => {
   const [dominance, setDominance] = useState(null);
@@ -28,11 +21,13 @@ const MarketDominanceCard = () => {
 
         const btc = parseFloat(data.btc.toFixed(2));
         const eth = parseFloat(data.eth.toFixed(2));
-        const others = 100 - btc - eth;
+        const usdt = parseFloat(data.usdt?.toFixed(2) || 0);
+        const others = 100 - btc - eth - usdt;
 
         setDominance([
           { name: "BTC", value: btc },
           { name: "ETH", value: eth },
+          { name: "USDT", value: usdt },
           { name: "OTHERS", value: parseFloat(others.toFixed(2)) },
         ]);
         setLoading(false);
@@ -43,8 +38,6 @@ const MarketDominanceCard = () => {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 60000);
-    return () => clearInterval(interval);
   }, []);
 
   const CustomTooltip = ({ active, payload }) => {
@@ -69,22 +62,31 @@ const MarketDominanceCard = () => {
   };
 
   const CustomLegend = ({ payload }) => (
-    <div className="flex justify-center space-x-4 mt-4">
+    <div className="flex flex-wrap justify-center gap-3 mt-4 px-2">
       {payload.map((entry, index) => (
-        <div
+        <motion.div
           key={`legend-${index}`}
-          className="flex items-center cursor-pointer"
+          className="flex items-center cursor-pointer px-3 py-1.5 rounded-full"
+          style={{
+            backgroundColor:
+              activeIndex === index ? `${entry.color}20` : "transparent",
+            border: `1px solid ${
+              activeIndex === index ? entry.color : "transparent"
+            }`,
+          }}
           onMouseEnter={() => setActiveIndex(index)}
           onMouseLeave={() => setActiveIndex(null)}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
           <div
             className="w-3 h-3 rounded-full mr-2"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
             {entry.value}
           </span>
-        </div>
+        </motion.div>
       ))}
     </div>
   );
@@ -97,26 +99,20 @@ const MarketDominanceCard = () => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="w-full max-w-md min-h-[420px]" // <- forțăm o înălțime minimă decentă
+      className="w-full max-w-md"
     >
       <div className="relative bg-gradient-to-br from-white/80 to-white/20 dark:from-gray-800/90 dark:to-gray-800/40 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700/50 overflow-hidden hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
-        <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-blue-500/5 opacity-30 dark:opacity-20" />
+        <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 via-blue-500/5 to-purple-500/5 opacity-30 dark:opacity-20" />
         <div className="relative p-5">
           <div className="flex justify-between items-start mb-6">
             <div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Market Dominance
+                Crypto Market Dominance
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Bitcoin vs Ethereum vs Other coins
+                Top cryptocurrencies by market cap
               </p>
             </div>
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              className="bg-teal-100 dark:bg-teal-900/50 text-teal-800 dark:text-teal-200 text-xs font-bold px-3 py-1 rounded-full"
-            >
-              LIVE
-            </motion.div>
           </div>
 
           {loading ? (
@@ -160,22 +156,22 @@ const MarketDominanceCard = () => {
           ) : (
             <div className="flex flex-col">
               {/* Pie Chart */}
-              <div className="aspect-square max-h-72 w-full mx-auto">
+              <div className="aspect-square max-h-72 w-full mx-auto relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={dominance}
                       cx="50%"
                       cy="50%"
-                      innerRadius={50}
-                      outerRadius={70}
-                      paddingAngle={2}
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={1}
                       dataKey="value"
                       activeIndex={activeIndex}
                       activeShape={{
-                        innerRadius: 45,
-                        outerRadius: 75,
-                        paddingAngle: 3,
+                        innerRadius: 55,
+                        outerRadius: 85,
+                        paddingAngle: 2,
                       }}
                       animationDuration={500}
                       animationEasing="ease-out"
@@ -189,23 +185,41 @@ const MarketDominanceCard = () => {
                           style={{
                             filter:
                               activeIndex === index
-                                ? `drop-shadow(0px 0px 6px ${
+                                ? `drop-shadow(0px 0px 8px ${
                                     COLORS[index % COLORS.length]
                                   }80)`
                                 : "none",
                             transition: "all 0.3s ease",
+                            opacity:
+                              activeIndex === null || activeIndex === index
+                                ? 1
+                                : 0.7,
                           }}
                         />
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend
-                      content={<CustomLegend />}
-                      wrapperStyle={{ paddingTop: "20px" }}
-                    />
                   </PieChart>
                 </ResponsiveContainer>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-center">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      BTC
+                    </p>
+                    <p className="text-2xl font-bold text-[#F7931A] dark:text-[#F8B179]">
+                      {dominance[0].value}%
+                    </p>
+                  </div>
+                </div>
               </div>
+
+              <CustomLegend
+                payload={dominance.map((item, index) => ({
+                  value: item.name,
+                  color: COLORS[index % COLORS.length],
+                  payload: item,
+                }))}
+              />
 
               {/* Detailed Data List */}
               <div className="w-full mt-4 space-y-2">
@@ -255,11 +269,13 @@ const MarketDominanceCard = () => {
                           {item.value}%
                         </span>
                         <div
-                          className={`w-10 h-1 rounded-full ${
+                          className={`w-16 h-1.5 rounded-full ${
                             activeIndex === i ? "opacity-100" : "opacity-70"
                           }`}
                           style={{
                             backgroundColor: COLORS[i % COLORS.length],
+                            width: `${item.value}%`,
+                            maxWidth: "80%",
                           }}
                         />
                       </div>

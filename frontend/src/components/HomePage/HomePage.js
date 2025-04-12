@@ -2,7 +2,8 @@ import React from "react";
 import TopMovers from "./TopMovers"; // Importăm TopMovers
 import TrendingCoins from "./TrendingCoins"; // Importăm TrendingCoins
 import CryptoTable from "./CryptoTable";
-import DominanceChart from "./DominanceChart"; // Importăm DominanceCard
+//import DominanceChart from "./DominanceChart"; // Importăm DominanceCard
+import MarketDominance from "./MarketDominance";
 import useCryptoData from "../hooks/useCryptoData";
 
 function Homepage() {
@@ -15,7 +16,7 @@ function Homepage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <TopMovers /> {/* Adăugăm card-ul Top Movers */}
           <TrendingCoins /> {/* Adăugăm card-ul Trending Coins */}
-          <DominanceChart /> {/* Adăugăm card-ul DominanceChart în dreapta */}
+          <MarketDominance /> {/* Adăugăm card-ul DominanceChart în dreapta */}
         </div>
       </div>
 
