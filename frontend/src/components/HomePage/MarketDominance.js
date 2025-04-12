@@ -44,15 +44,10 @@ const MarketDominanceCard = () => {
     >
       <div className="flex justify-center px-4">
         <div className="relative w-full max-w-sm h-full">
-          {" "}
-          {/* Lățimea mai mică */}
           <div className="absolute -inset-3 bg-gradient-to-r from-teal-400/30 to-green-500/30 rounded-2xl blur-xl opacity-40 dark:opacity-30 animate-pulse-slow"></div>
           <div className="relative w-full bg-white/95 dark:bg-gray-800/95 p-4 rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm h-full">
             <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-200/50 dark:border-gray-700/50">
               <h3 className="text-lg font-semibold">
-                {" "}
-                {/* Dimensiune font mai mică */}
-                <span className="mr-2">🔥</span>
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-green-500">
                   Market Dominance
                 </span>
@@ -65,14 +60,10 @@ const MarketDominanceCard = () => {
             <div className="space-y-2.5">
               {loading ? (
                 <div className="flex justify-center items-center py-6">
-                  {" "}
-                  {/* Padding mai mic */}
                   <div className="w-8 h-8 border-4 border-teal-400 border-t-transparent rounded-full animate-spin"></div>
                 </div>
               ) : error ? (
                 <div className="h-56 flex flex-col items-center justify-center space-y-4 text-center p-4">
-                  {" "}
-                  {/* Înălțime mai mică */}
                   <div className="bg-red-100 dark:bg-red-900/30 p-3 rounded-full">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -97,28 +88,27 @@ const MarketDominanceCard = () => {
                   </p>
                   <button
                     onClick={() => window.location.reload()}
-                    className="mt-2 px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white text-xs font-medium rounded-lg transition-colors"
+                    className="mt-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600 text-white text-xs font-medium rounded-lg transition-all duration-300 shadow-sm hover:shadow-md" // Gradient și efecte îmbunătățite
                   >
                     Retry
                   </button>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {" "}
-                  {/* Spațiu mai mic între elemente */}
                   {dominance.map((item, i) => (
                     <motion.div
                       key={item.name}
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05, duration: 0.3 }}
+                      whileHover={{ scale: 1.02 }} // Efect de hover subtil
                     >
-                      <div className="flex justify-between items-center px-3 py-2 rounded-lg bg-gray-50/70 dark:bg-gray-700/70 border border-gray-200/50 dark:border-gray-600/50">
+                      <div className="flex justify-between items-center px-3 py-2 rounded-lg bg-gray-50/70 dark:bg-gray-700/70 border border-gray-200/50 dark:border-gray-600/50 hover:bg-gray-100/70 dark:hover:bg-gray-600/70 transition-colors duration-200">
                         {" "}
-                        {/* Padding micșorat */}
+                        {/* Efect de hover */}
                         <div className="flex items-center space-x-2">
                           <div
-                            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                            className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm" // Umbra subtilă
                             style={{
                               backgroundColor:
                                 i === 0
@@ -131,13 +121,23 @@ const MarketDominanceCard = () => {
                             }}
                           />
                           <span className="font-medium text-gray-800 dark:text-gray-100 text-sm">
-                            {" "}
-                            {/* Font mai mic */}
                             {item.name}
                           </span>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <span className="font-bold text-gray-800 dark:text-gray-100 text-sm">
+                          <span
+                            className="font-bold text-gray-800 dark:text-gray-100 text-sm"
+                            style={{
+                              color:
+                                i === 0
+                                  ? "#F7931A"
+                                  : i === 1
+                                  ? "#627EEA"
+                                  : i === 2
+                                  ? "#26A17B"
+                                  : "#A6B7D4",
+                            }} // Culori consistente cu punctele
+                          >
                             {item.value}%
                           </span>
                         </div>
