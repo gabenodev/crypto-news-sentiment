@@ -26,7 +26,6 @@ const MarketDominanceCard = () => {
         const res = await axios.get("https://api.coingecko.com/api/v3/global");
         const data = res.data.data.market_cap_percentage;
 
-        // Extragem doar BTC și ETH, restul merg în Others
         const btc = parseFloat(data.btc.toFixed(2));
         const eth = parseFloat(data.eth.toFixed(2));
         const others = 100 - btc - eth;
@@ -44,7 +43,7 @@ const MarketDominanceCard = () => {
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 60000); // Actualizare la fiecare minut
+    const interval = setInterval(fetchData, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -90,20 +89,15 @@ const MarketDominanceCard = () => {
     </div>
   );
 
-  const handleItemHover = (index) => {
-    setActiveIndex(index);
-  };
-
-  const handleItemLeave = () => {
-    setActiveIndex(null);
-  };
+  const handleItemHover = (index) => setActiveIndex(index);
+  const handleItemLeave = () => setActiveIndex(null);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="w-full max-w-md"
+      className="w-full max-w-md min-h-[420px]" // <- forțăm o înălțime minimă decentă
     >
       <div className="relative bg-gradient-to-br from-white/80 to-white/20 dark:from-gray-800/90 dark:to-gray-800/40 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700/50 overflow-hidden hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
         <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-blue-500/5 opacity-30 dark:opacity-20" />
@@ -154,7 +148,7 @@ const MarketDominanceCard = () => {
                 Failed to load data
               </h4>
               <p className="text-gray-500 dark:text-gray-400 text-sm">
-                Couldn't connect to CoinGecko API. Please try again later.
+                Couldn't connect to API. Please try again later.
               </p>
               <button
                 onClick={() => window.location.reload()}
@@ -166,21 +160,21 @@ const MarketDominanceCard = () => {
           ) : (
             <div className="flex flex-col">
               {/* Pie Chart */}
-              <div className="h-48 w-full relative">
+              <div className="aspect-square max-h-72 w-full mx-auto">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={dominance}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
+                      innerRadius={50}
+                      outerRadius={70}
                       paddingAngle={2}
                       dataKey="value"
                       activeIndex={activeIndex}
                       activeShape={{
-                        innerRadius: 55,
-                        outerRadius: 85,
+                        innerRadius: 45,
+                        outerRadius: 75,
                         paddingAngle: 3,
                       }}
                       animationDuration={500}
