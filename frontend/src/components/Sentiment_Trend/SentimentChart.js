@@ -1,4 +1,3 @@
-// src/components/SentimentChart.js
 import SentimentGauge from "./SentimentGauge";
 import React, { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
@@ -15,7 +14,6 @@ import {
 } from "chart.js";
 import { format } from "date-fns";
 
-// Înregistrăm componentele Chart.js
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -31,9 +29,13 @@ function SentimentChart() {
     labels: [],
     datasets: [],
   });
-  const [timeframe, setTimeframe] = useState("365"); // Default la 7 zile
+  const [timeframe, setTimeframe] = useState("30");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const fetchSentimentData = async (limit) => {
+    setIsLoading(true);
+    setError(null);
     try {
       let url =
         limit === "max"
@@ -41,6 +43,10 @@ function SentimentChart() {
           : `https://api.alternative.me/fng/?limit=${limit}&format=json`;
 
       const response = await axios.get(url);
+
+      if (!response.data || !response.data.data) {
+        throw new Error("Invalid data format from API");
+      }
 
       const sentimentScores = response.data.data.map((item) =>
         parseInt(item.value)
@@ -53,22 +59,31 @@ function SentimentChart() {
         labels: sentimentTimestamps.reverse(),
         datasets: [
           {
-            label: "Sentiment Trend (Fear & Greed Index)",
+            label: "Fear & Greed Index",
             data: sentimentScores.reverse(),
-            fill: false,
-            borderColor: "#23d996", // Verde pentru linia graficului
-            backgroundColor: "#23d996",
-            tension: 0.1,
-            pointBackgroundColor: "#23d996",
-            pointBorderColor: "#23d996",
+            fill: true,
+            borderColor: "#9ca3af",
+            backgroundColor: "rgba(59, 130, 246, 0.1)",
+            tension: 0.4,
+            pointBackgroundColor: (context) => {
+              const value = context.dataset.data[context.dataIndex];
+              if (value <= 25) return "#ef4444";
+              if (value <= 50) return "#f59e0b";
+              if (value <= 75) return "#facc15";
+              return "#10b981";
+            },
+            pointBorderColor: "transparent",
             pointRadius: 3,
-            pointHoverRadius: 4,
+            pointHoverRadius: 5,
             borderWidth: 2,
           },
         ],
       });
     } catch (error) {
       console.error("Error fetching sentiment data:", error);
+      setError("Failed to load sentiment data. Please try again later.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -76,120 +91,345 @@ function SentimentChart() {
     fetchSentimentData(timeframe);
   }, [timeframe]);
 
-  const handleTimeframeChange = (e) => {
-    setTimeframe(e.target.value);
+  const handleTimeframeChange = (newTimeframe) => {
+    setTimeframe(newTimeframe);
   };
 
   const options = {
     responsive: true,
-    scales: {
-      x: {
-        title: { display: true, text: "Date", color: "#A0AEC0" }, // Culoare text axa X
-        ticks: {
-          autoSkip: true,
-          maxTicksLimit: 10,
-          maxRotation: 45,
-          color: "#A0AEC0",
-        }, // Culoare ticks axa X
-        grid: { color: "#2D3748" }, // Culoare grid axa X
-      },
-      y: {
-        title: {
-          display: true,
-          text: "Fear and Greed Index",
-          color: "#A0AEC0",
-        }, // Culoare text axa Y
-        ticks: { min: 0, max: 100, stepSize: 10, color: "#A0AEC0" }, // Culoare ticks axa Y
-        grid: { color: "#2D3748" }, // Culoare grid axa Y
-      },
-    },
+    maintainAspectRatio: false,
     plugins: {
       legend: {
+        position: "top",
         labels: {
-          color: "#A0AEC0", // Culoare text legenda
+          color: "#6b7280",
+          font: {
+            size: 14,
+            family: "'Inter', sans-serif",
+          },
+          padding: 20,
+          usePointStyle: true,
+        },
+      },
+      tooltip: {
+        mode: "index",
+        intersect: false,
+        backgroundColor: "#1f2937",
+        titleColor: "#f3f4f6",
+        bodyColor: "#f3f4f6",
+        padding: 12,
+        borderColor: "#374151",
+        borderWidth: 1,
+        cornerRadius: 8,
+        titleFont: {
+          family: "'Inter', sans-serif",
+          size: 14,
+          weight: "600",
+        },
+        bodyFont: {
+          family: "'Inter', sans-serif",
+          size: 13,
+        },
+        callbacks: {
+          label: (context) => {
+            let label = context.dataset.label || "";
+            if (label) {
+              label += ": ";
+            }
+            label += context.parsed.y;
+            return label;
+          },
+          footer: (tooltipItems) => {
+            const value = tooltipItems[0].parsed.y;
+            let sentiment;
+            if (value <= 25) sentiment = "Extreme Fear";
+            else if (value <= 50) sentiment = "Fear";
+            else if (value <= 75) sentiment = "Neutral";
+            else sentiment = "Greed";
+            return `Sentiment: ${sentiment}`;
+          },
         },
       },
     },
+    scales: {
+      x: {
+        grid: {
+          display: false,
+        },
+        ticks: {
+          color: "#9ca3af",
+          maxRotation: 45,
+          minRotation: 45,
+          font: {
+            family: "'Inter', sans-serif",
+          },
+        },
+      },
+      y: {
+        min: 0,
+        max: 100,
+        ticks: {
+          stepSize: 25,
+          color: "#9ca3af",
+          font: {
+            family: "'Inter', sans-serif",
+          },
+        },
+        grid: {
+          color: "rgba(229, 231, 235, 0.5)",
+        },
+      },
+    },
+    interaction: {
+      mode: "nearest",
+      axis: "x",
+      intersect: false,
+    },
   };
 
+  const timeframes = [
+    { value: "7", label: "7D" },
+    { value: "30", label: "1M" },
+    { value: "90", label: "3M" },
+    { value: "365", label: "1Y" },
+    { value: "max", label: "All" },
+  ];
+
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-      {/* Titlu principal */}
-      <h2 className="text-3xl font-semibold text-gray-800 dark:text-white">
-        Market Sentiment (Fear and Greed Index)
-      </h2>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-200">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            Market Sentiment Analysis
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            Track the Fear & Greed Index to understand investor emotions and
+            potential market trends
+          </p>
+        </div>
 
-      {/* Dropdown pentru alegerea intervalului de timp */}
-      <div className="mt-6">
-        <select
-          value={timeframe}
-          onChange={handleTimeframeChange}
-          className="bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-white px-4 py-2 rounded-md appearance-none"
-        >
-          <option value="7">Last 7 Days</option>
-          <option value="30">Last 30 Days</option>
-          <option value="365">Last 1 Year</option>
-          <option value="max">All Time</option>
-        </select>
-      </div>
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Gauge */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 lg:col-span-1 transition-all duration-200 hover:shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Current Sentiment
+              </h2>
+            </div>
 
-      {/* Graficul Sentimentului (Fear and Greed Index) */}
-      <div className="mt-6">
-        <Line data={sentimentData} options={options} />
-      </div>
+            {error ? (
+              <div className="h-64 flex flex-col items-center justify-center space-y-2 text-red-500">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-10 w-10"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+                <p>{error}</p>
+                <button
+                  onClick={() => fetchSentimentData(timeframe)}
+                  className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : isLoading ? (
+              <div className="h-64 flex flex-col items-center justify-center space-y-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Loading sentiment data...
+                </p>
+              </div>
+            ) : (
+              <>
+                <SentimentGauge
+                  value={
+                    sentimentData.datasets.length > 0
+                      ? sentimentData.datasets[0].data.slice(-1)[0]
+                      : 50
+                  }
+                />
+                <div className="mt-6 space-y-3">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        Extreme Fear
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      0-25
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 rounded-full bg-amber-500 mr-2"></div>
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        Fear
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      26-50
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 rounded-full bg-yellow-400 mr-2"></div>
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        Neutral
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      51-75
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 rounded-full bg-emerald-500 mr-2"></div>
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        Greed
+                      </span>
+                    </div>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      76-100
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
 
-      {/* Card pentru SentimentGauge */}
-      <div className="mt-8 flex flex-col items-center">
-        {sentimentData.datasets.length > 0 && (
-          <div className="w-full max-w-lg p-6 rounded-lg shadow-lg bg-white dark:bg-gray-800">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 text-center">
-              Fear & Greed Index Today
-            </h3>
-            <div className="flex flex-col items-center">
-              <SentimentGauge
-                value={sentimentData.datasets[0].data.slice(-1)[0]}
-              />
-              <p className="mt-4 text-gray-700 dark:text-gray-300 text-center">
-                The current market sentiment is based on multiple factors such
-                as volatility, volume, and social media trends.
+          {/* Right Column - Chart */}
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 lg:col-span-2 transition-all duration-200 hover:shadow-lg">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 md:mb-0">
+                Historical Trend
+              </h2>
+              <div className="inline-flex rounded-lg shadow-sm">
+                {timeframes.map((tf) => (
+                  <button
+                    key={tf.value}
+                    onClick={() => handleTimeframeChange(tf.value)}
+                    className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                      timeframe === tf.value
+                        ? "bg-blue-600 text-white"
+                        : "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
+                    } ${tf.value === "7" ? "rounded-l-lg" : ""} ${
+                      tf.value === "max" ? "rounded-r-lg" : ""
+                    }`}
+                  >
+                    {tf.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {error ? (
+              <div className="h-96 flex flex-col items-center justify-center space-y-2 text-red-500">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-10 w-10"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+                <p>{error}</p>
+                <button
+                  onClick={() => fetchSentimentData(timeframe)}
+                  className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : isLoading ? (
+              <div className="h-96 flex flex-col items-center justify-center space-y-4">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                <p className="text-gray-500 dark:text-gray-400">
+                  Loading chart data...
+                </p>
+              </div>
+            ) : (
+              <div className="h-96">
+                <Line data={sentimentData} options={options} />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Explanation Section */}
+        <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-all duration-200 hover:shadow-lg">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+            Understanding the Fear & Greed Index
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2 flex items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2 text-blue-500"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                What It Measures
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                The Fear & Greed Index analyzes emotions and sentiments from
+                different sources including volatility, market momentum, social
+                media, surveys, and more. It ranges from 0 (extreme fear) to 100
+                (extreme greed).
+              </p>
+            </div>
+            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2 flex items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2 text-blue-500"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                  <path
+                    fillRule="evenodd"
+                    d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                How To Use It
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Extreme fear can indicate potential buying opportunities, while
+                extreme greed may signal the market is due for a correction. Use
+                this alongside technical and fundamental analysis for better
+                decision making.
               </p>
             </div>
           </div>
-        )}
+        </div>
       </div>
-
-      {/* Explicația graficelor */}
-      <div className="mt-12 p-6 rounded-lg shadow-md bg-white dark:bg-gray-800">
-        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-          Understanding the Fear & Greed Index
-        </h3>
-        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-          The <strong>Fear & Greed Index</strong> is a crucial sentiment
-          indicator that reflects investor emotions in the market. Ranging from{" "}
-          <strong>0</strong> (extreme fear) to <strong>100</strong> (extreme
-          greed), it helps traders identify potential market reversals.
-        </p>
-
-        <h4 className="text-xl font-semibold text-gray-900 dark:text-white mt-6">
-          📈 Sentiment Trend Chart
-        </h4>
-        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-          The line chart above shows historical fluctuations of the Fear & Greed
-          Index. By analyzing past trends, traders can gauge whether the market
-          sentiment is shifting towards optimism or pessimism.
-        </p>
-
-        <h4 className="text-xl font-semibold text-gray-900 dark:text-white mt-6">
-          🎯 Fear & Greed Gauge
-        </h4>
-        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-          The gauge below provides a real-time snapshot of market sentiment. A
-          needle pointing toward fear suggests bearishness, while a shift toward
-          greed indicates bullish momentum. This tool is best used alongside
-          technical and fundamental analysis.
-        </p>
-      </div>
-    </section>
+    </div>
   );
 }
 
