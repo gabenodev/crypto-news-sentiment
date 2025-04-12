@@ -39,13 +39,6 @@ const AltcoinSeason = () => {
           index++;
         }
 
-        console.log("Primele 100 de monede filtrate:", filteredData);
-        console.log(
-          "✅ Final filtered list (after adding extras):",
-          filteredData.length,
-          "coins"
-        );
-
         let outperformingCountTemp = 0;
         let outperformingCoinsTemp = [];
 
@@ -87,86 +80,128 @@ const AltcoinSeason = () => {
     fetchAllCrpytosData();
   }, []);
 
-  if (loading)
-    return <div className="text-center text-gray-700 text-lg">Loading...</div>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
 
   const barColor =
     percentage >= 80
-      ? "bg-green-600"
+      ? "from-emerald-500 to-green-400"
       : percentage >= 60
-      ? "bg-green-400"
+      ? "from-teal-500 to-cyan-400"
       : percentage >= 40
-      ? "bg-yellow-400"
+      ? "from-amber-500 to-yellow-400"
       : percentage >= 20
-      ? "bg-orange-400"
-      : "bg-red-500";
+      ? "from-orange-500 to-amber-400"
+      : "from-rose-500 to-pink-400";
 
   outperformingCoins.sort((a, b) => b.priceChange - a.priceChange);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto flex gap-6 items-start">
-      {/* Cardul principal */}
-      <div className="flex-1 p-6 rounded-lg bg-white shadow-2xl dark:bg-gray-800">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white text-center">
-          {isAltcoinSeason
-            ? "It's Altcoin Season! 🚀"
-            : "It's not Altcoin Season. 📉"}
-        </h2>
-        <div className="relative w-full bg-gray-300 h-4 rounded-full mb-6 overflow-hidden">
-          <div
-            className={`h-4 rounded-full transition-all duration-500 ${barColor}`}
-            style={{ width: `${percentage}%` }}
-          ></div>
+    <div className="p-4 lg:p-8 max-w-7xl mx-auto flex flex-col lg:flex-row gap-6 items-start">
+      {/* Main Card */}
+      <div className="flex-1 w-full p-6 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 shadow-lg border border-gray-200 dark:border-gray-700">
+        {/* Header */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="flex items-center justify-center w-16 h-16 rounded-full bg-white dark:bg-gray-700 shadow-md mb-4">
+            {isAltcoinSeason ? (
+              <span className="text-3xl">🚀</span>
+            ) : (
+              <span className="text-3xl">📉</span>
+            )}
+          </div>
+          <h2 className="text-3xl font-bold text-center text-gray-800 dark:text-white">
+            {isAltcoinSeason ? "Altcoin Season is ON!" : "Not Altcoin Season"}
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mt-2 text-center">
+            {isAltcoinSeason
+              ? "Most altcoins are outperforming Bitcoin"
+              : "Bitcoin is dominating the market"}
+          </p>
         </div>
-        <p className="text-lg text-gray-700 dark:text-gray-300 text-center mb-4">
-          <span className="font-semibold text-gray-900 dark:text-white">
-            {outperformingCount}
-          </span>{" "}
-          out of
-          <span className="font-semibold text-gray-900 dark:text-white">
-            {" "}
-            {totalAltcoins}{" "}
-          </span>
-          altcoins have outperformed Bitcoin in the last 24 hours.
-        </p>
+
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {percentage.toFixed(1)}% of altcoins outperforming
+            </span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {outperformingCount}/{totalAltcoins}
+            </span>
+          </div>
+          <div className="relative w-full h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+            <div
+              className={`absolute top-0 left-0 h-full rounded-full bg-gradient-to-r ${barColor} transition-all duration-1000 ease-out`}
+              style={{ width: `${percentage}%` }}
+            ></div>
+          </div>
+          <div className="flex justify-between mt-1">
+            <span className="text-xs text-gray-500 dark:text-gray-400">0%</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              100%
+            </span>
+          </div>
+        </div>
+
+        {/* Outperforming Coins */}
         {outperformingCoins.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4 text-center">
-              Coins outperforming Bitcoin:
+          <div className="mt-8">
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white mb-4">
+              Top Performing Altcoins
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {outperformingCoins.map((coin, index) => (
-                <div
+                <motion.div
                   key={index}
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => setSelectedCoin(coin)}
-                  className="flex items-center justify-between p-4 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md hover:scale-105 transition-transform cursor-pointer"
+                  className={`p-3 rounded-lg cursor-pointer transition-colors ${
+                    selectedCoin?.id === coin.id
+                      ? "bg-blue-100 dark:bg-blue-900/50 border border-blue-200 dark:border-blue-800"
+                      : "bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600"
+                  }`}
                 >
-                  <div className="flex items-center space-x-3">
-                    <img
-                      src={coin.image}
-                      alt={coin.name}
-                      className="w-8 h-8 rounded-full"
-                    />
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {coin.name}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={coin.image}
+                        alt={coin.name}
+                        className="w-8 h-8 rounded-full"
+                      />
+                      <div>
+                        <h4 className="font-medium text-gray-900 dark:text-white">
+                          {coin.name}
+                        </h4>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          #{index + 1} performer
+                        </span>
+                      </div>
+                    </div>
+                    <span
+                      className={`font-medium ${
+                        coin.priceChange > 0
+                          ? "text-green-600 dark:text-green-400"
+                          : "text-red-500 dark:text-red-400"
+                      }`}
+                    >
+                      {coin.priceChange > 0 ? "+" : ""}
+                      {coin.priceChange.toFixed(2)}%
                     </span>
                   </div>
-                  <span
-                    className={`font-medium ${
-                      coin.priceChange > 0 ? "text-green-600" : "text-red-500"
-                    }`}
-                  >
-                    {coin.priceChange > 0 ? "+" : ""}
-                    {coin.priceChange.toFixed(2)}%
-                  </span>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
         )}
       </div>
 
-      {/* Cardul cu graficul */}
+      {/* Chart Card - Right Side */}
       <AnimatePresence>
         {selectedCoin && (
           <motion.div
@@ -174,7 +209,7 @@ const AltcoinSeason = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 50 }}
             transition={{ duration: 0.3 }}
-            className="sticky top-20"
+            className="sticky top-20 w-full lg:w-1/2 xl:w-2/5"
           >
             <AltcoinChart
               coin={selectedCoin}

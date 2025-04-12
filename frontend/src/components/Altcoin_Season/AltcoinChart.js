@@ -9,13 +9,25 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
+import { FiX, FiMinimize2, FiMaximize2 } from "react-icons/fi";
+import { FaArrowUp, FaArrowDown } from "react-icons/fa";
 
-// Funcție helper pentru formatarea prețului
+// Helper function for price formatting
 const formatPrice = (price) => {
   if (price < 0.001) {
-    return price.toFixed(6); // Afișează 6 zecimale pentru prețuri foarte mici
+    return price.toFixed(6);
   }
-  return price.toFixed(2); // Afișează 2 zecimale pentru prețuri mai mari
+  return new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: price < 1 ? 6 : 2,
+  }).format(price);
+};
+
+const formatMarketCap = (cap) => {
+  if (cap >= 1e12) return `$${(cap / 1e12).toFixed(2)}T`;
+  if (cap >= 1e9) return `$${(cap / 1e9).toFixed(2)}B`;
+  if (cap >= 1e6) return `$${(cap / 1e6).toFixed(2)}M`;
+  return `$${cap.toLocaleString()}`;
 };
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -23,26 +35,90 @@ const CustomTooltip = ({ active, payload, label }) => {
     const dataPoint = payload[0].payload;
     const fullDate = dataPoint.fullDate.toLocaleString("en-GB", {
       day: "2-digit",
-      month: "2-digit",
+      month: "short",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-      second: "2-digit",
+      hour12: false,
     });
 
     return (
-      <div className="bg-white dark:bg-gray-800 p-3 rounded-lg shadow-md border border-gray-200 dark:border-gray-700">
-        <p className="text-sm text-gray-900 dark:text-white">
-          <strong>Date:</strong> {fullDate}
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 backdrop-blur-sm">
+        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+          {fullDate}
         </p>
-        <p className="text-sm text-gray-900 dark:text-white">
-          <strong>Price:</strong> ${formatPrice(payload[0].value)}
+        <p className="text-lg font-bold text-gray-900 dark:text-white">
+          ${formatPrice(payload[0].value)}
         </p>
       </div>
     );
   }
   return null;
 };
+
+const PriceChangeIndicator = ({ change }) => {
+  const isPositive = change >= 0;
+  return (
+    <span
+      className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${
+        isPositive
+          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+      }`}
+    >
+      {isPositive ? (
+        <FaArrowUp className="mr-1" />
+      ) : (
+        <FaArrowDown className="mr-1" />
+      )}
+      {change > 0 ? "+" : ""}
+      {change.toFixed(2)}%
+    </span>
+  );
+};
+
+const LoadingSkeleton = () => (
+  <div className="w-96 p-6 bg-white dark:bg-gray-800 shadow-xl rounded-2xl">
+    <div className="animate-pulse flex flex-col space-y-4">
+      <div className="flex justify-between">
+        <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded"></div>
+        <div className="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+      </div>
+      <div className="flex items-center space-x-3">
+        <div className="h-10 w-10 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+        <div className="h-6 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
+      </div>
+      <div className="h-4 w-48 bg-gray-200 dark:bg-gray-700 rounded"></div>
+      <div className="h-40 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
+    </div>
+  </div>
+);
+
+const ErrorMessage = ({ error }) => (
+  <div className="w-96 p-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-2xl shadow-xl">
+    <div className="flex flex-col items-center text-center">
+      <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mb-3">
+        <svg
+          className="w-6 h-6 text-red-500 dark:text-red-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth="2"
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
+        </svg>
+      </div>
+      <h3 className="text-lg font-medium text-red-800 dark:text-red-200 mb-2">
+        Error Loading Data
+      </h3>
+      <p className="text-red-600 dark:text-red-300 mb-4">{error}</p>
+    </div>
+  </div>
+);
 
 const AltcoinChart = ({ coin, onClose }) => {
   const [chartData, setChartData] = useState([]);
@@ -62,7 +138,6 @@ const AltcoinChart = ({ coin, onClose }) => {
       }
       const data = await response.json();
 
-      // Găsim moneda specifică după `coinId`
       const coinData = data.find((coin) => coin.id === coinId);
       if (!coinData) {
         throw new Error("Coin not found in market data");
@@ -101,9 +176,9 @@ const AltcoinChart = ({ coin, onClose }) => {
         const formattedData = historicalData.prices.map((priceData) => ({
           date: new Date(priceData[0]).toLocaleDateString("en-GB", {
             day: "2-digit",
-            month: "2-digit",
+            month: "short",
           }),
-          price: priceData[1], // Păstrează valoarea originală fără formatare
+          price: priceData[1],
           fullDate: new Date(priceData[0]),
         }));
         setChartData(formattedData);
@@ -114,7 +189,7 @@ const AltcoinChart = ({ coin, onClose }) => {
         setRank(rank);
       } catch (error) {
         console.error("Error fetching data:", error);
-        setError("Too many requests. Please try again later.");
+        setError(error.message || "Failed to load data.");
       } finally {
         setLoading(false);
       }
@@ -124,117 +199,153 @@ const AltcoinChart = ({ coin, onClose }) => {
   }, [coin.id]);
 
   if (loading) {
-    return (
-      <div className="w-96 p-4 bg-white dark:bg-gray-800 shadow-lg rounded-lg">
-        <p className="text-gray-700 dark:text-gray-300">⏳ Loading chart...</p>
-      </div>
-    );
+    return <LoadingSkeleton />;
   }
 
   if (error) {
-    return (
-      <div className="w-96 p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg shadow-lg">
-        <p>❌ {error}</p>
-      </div>
-    );
+    return <ErrorMessage error={error} />;
   }
 
   const prices = chartData.map((data) => parseFloat(data.price));
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
   const priceRange = maxPrice - minPrice;
-  const margin = priceRange * 0.1; // Adaugă un margin de 10% pentru a evita comprimarea graficului
+  const margin = priceRange * 0.1;
   const yDomain = [Math.max(0, minPrice - margin), maxPrice + margin];
+  const currentPrice = prices[prices.length - 1];
 
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ opacity: 0, y: 50 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 50 }}
-        transition={{ duration: 0.3 }}
+        exit={{ opacity: 0, y: 20 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
         className={`${
-          isExpanded ? "w-[600px]" : "w-96"
-        } p-4 bg-white dark:bg-gray-800 shadow-lg rounded-lg flex flex-col`}
+          isExpanded ? "w-full max-w-3xl" : "w-96"
+        } bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 flex flex-col`}
       >
-        <div className="flex justify-between items-center mb-4">
-          <button
-            onClick={onClose}
-            className="text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300"
-          >
-            Close
-          </button>
-          <button
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="text-gray-700 dark:text-white hover:text-gray-900 dark:hover:text-gray-300"
-          >
-            {isExpanded ? "Minimize" : "Expand"}
-          </button>
+        <div className="p-6 pb-0 flex justify-between items-start">
+          <div className="flex items-center space-x-3">
+            <img
+              src={coin.image}
+              alt={coin.name}
+              className="w-10 h-10 rounded-full"
+            />
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+                {coin.name}
+                <span className="ml-2 text-sm font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded-full">
+                  #{rank || "--"}
+                </span>
+              </h2>
+              <div className="flex items-center space-x-2 mt-1">
+                <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                  ${formatPrice(currentPrice)}
+                </span>
+                <PriceChangeIndicator change={coin.priceChange} />
+              </div>
+            </div>
+          </div>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              aria-label={isExpanded ? "Minimize" : "Expand"}
+            >
+              {isExpanded ? (
+                <FiMinimize2 className="w-5 h-5" />
+              ) : (
+                <FiMaximize2 className="w-5 h-5" />
+              )}
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              aria-label="Close"
+            >
+              <FiX className="w-5 h-5" />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center mb-2">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-            {coin.name}
-          </h2>
-          <img
-            src={coin.image}
-            alt={coin.name}
-            className="w-8 h-8 rounded-full ml-2"
-          />
-        </div>
-        <p className="text-gray-700 dark:text-gray-300 mb-4">
-          Price Change:{" "}
-          <span style={{ color: coin.priceChange > 0 ? "#16a34a" : "#dc2626" }}>
-            {coin.priceChange > 0 ? "+" : ""}
-            {coin.priceChange.toFixed(2)}%
-          </span>
-        </p>
-        {marketCap !== null && rank !== null && (
-          <>
-            <p className="text-gray-700 dark:text-gray-300 mb-2">
-              <strong>Rank</strong> #{rank}
-            </p>
-            <p className="text-gray-700 dark:text-gray-300 mb-4">
-              <strong>Market Cap:</strong> ${marketCap.toLocaleString()}
-            </p>
-          </>
+
+        {marketCap !== null && (
+          <div className="px-6 pt-3 pb-2 flex flex-wrap gap-4">
+            <div className="flex items-center">
+              <span className="text-sm font-medium text-gray-500 dark:text-gray-400 mr-2">
+                Market Cap:
+              </span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                {formatMarketCap(marketCap)}
+              </span>
+            </div>
+          </div>
         )}
 
-        <div className="flex-1">
-          <ResponsiveContainer width="100%" height={isExpanded ? 400 : 200}>
+        <div className="flex-1 p-4 pt-2">
+          <ResponsiveContainer width="100%" height={isExpanded ? 400 : 250}>
             <LineChart data={chartData}>
               <CartesianGrid
-                strokeDasharray="none"
+                strokeDasharray="3 3"
                 stroke="#eee"
                 vertical={false}
-                horizontal={false}
+                horizontal={true}
+                strokeOpacity={0.1}
               />
               <XAxis
                 dataKey="date"
                 tick={{
-                  fill: "#666",
-                  fontSize: 10,
-                  angle: 0,
-                  textAnchor: "middle",
+                  fill: "#6b7280",
+                  fontSize: 11,
+                  fontFamily: "Inter, sans-serif",
                 }}
+                tickMargin={10}
                 interval={Math.floor(chartData.length / 7)}
-                axisLine={{ stroke: "#666" }}
+                axisLine={{ stroke: "#e5e7eb", strokeOpacity: 0.3 }}
               />
               <YAxis
-                tickFormatter={(value) => `$${formatPrice(value)}`} // Folosește funcția formatPrice
-                tick={{ fill: "#666", fontSize: 10 }}
-                axisLine={{ stroke: "#666" }}
+                tickFormatter={(value) => `$${formatPrice(value)}`}
+                tick={{
+                  fill: "#6b7280",
+                  fontSize: 11,
+                  fontFamily: "Inter, sans-serif",
+                }}
+                tickMargin={10}
+                axisLine={{ stroke: "#e5e7eb", strokeOpacity: 0.3 }}
                 domain={yDomain}
+                width={80}
               />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip
+                content={<CustomTooltip />}
+                cursor={{
+                  stroke: "#3b82f6",
+                  strokeWidth: 1,
+                  strokeDasharray: "4 4",
+                  strokeOpacity: 0.3,
+                }}
+              />
               <Line
                 type="monotone"
                 dataKey="price"
-                stroke="#23d996"
+                stroke="#3b82f6"
                 strokeWidth={2}
                 dot={false}
+                activeDot={{
+                  r: 6,
+                  stroke: "#fff",
+                  strokeWidth: 2,
+                  fill: "#3b82f6",
+                }}
               />
             </LineChart>
           </ResponsiveContainer>
+        </div>
+
+        <div className="px-6 pb-4 pt-2 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
+            <span>Updated: {new Date().toLocaleTimeString()}</span>
+            <span>Source: SentimentX API</span>
+          </div>
         </div>
       </motion.div>
     </AnimatePresence>
