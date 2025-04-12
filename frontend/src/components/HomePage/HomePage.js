@@ -5,6 +5,7 @@ import CryptoTable from "./CryptoTable";
 //import DominanceChart from "./DominanceChart"; // Importăm DominanceCard
 import MarketDominance from "./MarketDominance";
 import useCryptoData from "../hooks/useCryptoData";
+import FearGreedIndex from "./FearGreedIndex";
 
 function Homepage() {
   const { cryptoData } = useCryptoData();
@@ -12,11 +13,19 @@ function Homepage() {
   return (
     <>
       <div className="max-w-7xl mx-auto px-4">
-        {/* Folosim grid pentru a pune cardurile una lângă alta */}
+        {/* Primul rând cu 3 carduri */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <TopMovers /> {/* Adăugăm card-ul Top Movers */}
-          <TrendingCoins /> {/* Adăugăm card-ul Trending Coins */}
-          <MarketDominance /> {/* Adăugăm card-ul DominanceChart în dreapta */}
+          <TopMovers /> {/* Cardul Top Movers */}
+          <TrendingCoins /> {/* Cardul Trending Coins */}
+          <MarketDominance /> {/* Cardul Market Dominance */}
+        </div>
+
+        {/* Al doilea rând cu FearGreedIndex Card, sub Market Dominance */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+          {/* Vom plasa doar FearGreedIndex în această coloană */}
+          <div className="col-span-1 md:col-span-3">
+            <FearGreedIndex />
+          </div>
         </div>
       </div>
 

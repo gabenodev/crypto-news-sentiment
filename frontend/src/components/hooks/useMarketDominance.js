@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { fetchMarketDominance } from "../../utils/api";
 
 function useMarketDominance() {
   const [dominance, setDominance] = useState(null);
@@ -7,18 +7,18 @@ function useMarketDominance() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    const fetchMarketDominance = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
         setError(false);
-        const res = await axios.get(
-          "https://sentimentx-backend.vercel.app/api/market-dominance"
-        );
-        const data = res.data.data.market_cap_percentage;
 
-        const btc = parseFloat(data.btc.toFixed(2));
-        const eth = parseFloat(data.eth.toFixed(2));
-        const usdt = parseFloat(data.usdt?.toFixed(2) || 0);
+        const data = await fetchMarketDominance(); // Apelează funcția din api.js
+
+        const marketData = data.data.market_cap_percentage; // Obține datele de care ai nevoie
+
+        const btc = parseFloat(marketData.btc.toFixed(2));
+        const eth = parseFloat(marketData.eth.toFixed(2));
+        const usdt = parseFloat(marketData.usdt?.toFixed(2) || 0);
         const others = 100 - btc - eth - usdt;
 
         setDominance([
@@ -35,7 +35,7 @@ function useMarketDominance() {
       }
     };
 
-    fetchMarketDominance();
+    fetchData();
   }, []);
 
   return { dominance, loading, error };
