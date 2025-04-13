@@ -39,7 +39,7 @@ function NightToggle() {
         scale: 1.1,
         boxShadow: isDarkMode
           ? "0px 0px 12px rgba(255, 215, 0, 0.9)"
-          : "0px 0px 12px rgba(173, 216, 230, 0.8)",
+          : "0px 0px 12px rgba(26, 25, 25, 0.8)",
       }}
       className="relative p-2 rounded-full bg-transparent dark:bg-transparent transition-colors duration-300"
     >
@@ -53,7 +53,7 @@ function NightToggle() {
         {isDarkMode ? (
           <Sun className="w-6 h-6 text-yellow-400" />
         ) : (
-          <Moon className="w-6 h-6 text-white dark:text-gray-200" />
+          <Moon className="w-6 h-6 text-black dark:text-gray-200" />
         )}
       </motion.div>
     </motion.button>

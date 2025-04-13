@@ -8,9 +8,7 @@ const UserControls = () => (
       <FaUserCircle size={20} />
     </button>
 
-    <div className="p-1 rounded-full bg-gray-100 dark:bg-gray-800">
-      <NightToggle className="text-gray-700 dark:text-gray-300" />
-    </div>
+    <NightToggle className="text-gray-700 dark:text-gray-300" />
   </>
 );
 
