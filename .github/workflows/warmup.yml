@@ -1,0 +1,13 @@
+name: Warmup Cache
+
+on:
+  schedule:
+    - cron: "0 * * * *" # Rulează la fiecare oră (UTC)
+  workflow_dispatch: # Îți dă un buton în GitHub ca să-l rulezi manual
+
+jobs:
+  warmup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Curl warmup endpoint
+        run: curl -s https://sentimentx-backend.vercel.app/api/warmup
