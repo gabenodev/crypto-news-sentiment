@@ -1,3 +1,4 @@
+// Importăm serviciul de caching și funcțiile din ethScanService
 const { getCachedData } = require("../services/cacheService");
 const {
   getWhaleTransactionsFromEtherscan,
@@ -6,34 +7,39 @@ const {
 
 const getWhaleTransactions = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
+    // Valoarea minimă (în ETH) pentru filtrarea tranzacțiilor
     const filterValue = parseFloat(req.query.filterValue) || 10;
 
-    const cacheKey = `whale_tx_page_${page}_filter_${filterValue}`;
+    // Cheie unică pentru caching în funcție de filtru
+    const cacheKey = `whale_tx_filter_${filterValue}`;
+
+    // Timpul actual (în secunde) și acum 30 de zile
     const now = Math.floor(Date.now() / 1000);
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60;
 
+    // Verificăm dacă avem date în cache, altfel le obținem din API
     const data = await getCachedData(
       cacheKey,
       async () => {
+        // Obținem block-ul de început pentru perioada de 30 de zile
         const startBlock = await getBlockNumberByTimestamp(thirtyDaysAgo);
-        if (!startBlock) return { transactions: [], totalPages: 0 };
+        if (!startBlock) return { transactions: [] };
 
+        // Obținem tranzacțiile de la toate wallet-urile mari
         const allTx = await getWhaleTransactionsFromEtherscan(
-          page,
           filterValue,
           startBlock
         );
+
+        // Sortăm descrescător după timestamp
         allTx.sort((a, b) => b.timeStamp - a.timeStamp);
 
-        const totalPages = Math.ceil(allTx.length / 10);
-        const paginated = allTx.slice((page - 1) * 10, page * 10);
-
-        return { transactions: paginated, totalPages };
+        return { transactions: allTx };
       },
-      600
-    ); // cache 10 min
+      600 // cache pentru 10 minute (600 secunde)
+    );
 
+    // Returnăm datele către frontend
     res.json(data);
   } catch (err) {
     console.error("Error in getWhaleTransactions:", err);

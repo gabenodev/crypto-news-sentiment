@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fetchWhaleTransactions } from "./EthScan";
+import { fetchWhaleTransactions } from "../hooks/whaletransactions/useEthScan";
 import { motion, AnimatePresence } from "framer-motion";
 
 const WhaleTransactions = () => {
