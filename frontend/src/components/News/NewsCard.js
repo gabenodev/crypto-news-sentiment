@@ -11,15 +11,19 @@ function NewsCard() {
   useEffect(() => {
     const getNews = async () => {
       try {
+        console.log("Fetching news...");
         const response = await axios.get(
           `https://sentimentx-backend.vercel.app/api/news`
         );
 
-        if (Array.isArray(response.data)) {
-          setNews(response.data);
-          console.log("News array populated:", response.data);
+        console.log("API response:", response);
+
+        if (Array.isArray(response.data.articles)) {
+          setNews(response.data.articles);
+          console.log("News array populated:", response.data.articles);
         } else {
           setNews([]);
+          console.log("Response is not an array:", response.data.articles);
         }
       } catch (error) {
         console.error("Error fetching news:", error);
@@ -97,13 +101,13 @@ function NewsCard() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{
-              duration: 0.4, // Redusă durata pentru a face animația mai rapidă
+              duration: 0.4,
               delay: index * 0.1,
-              ease: "easeInOut", // Folosește easing uniform pentru o tranziție lină
+              ease: "easeInOut",
             }}
             whileHover={{
               scale: 1.05,
-              transition: { duration: 0.2, ease: "easeInOut" }, // Animație mai rapidă la hover
+              transition: { duration: 0.2, ease: "easeInOut" },
             }}
           >
             <img
