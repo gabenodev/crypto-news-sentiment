@@ -3,6 +3,7 @@ const router = express.Router();
 const limiter = require("../middlewares/rateLimiter");
 const { getNews } = require("../controllers/newsController");
 const { warmupCache } = require("../utils/warmup");
+const { getWhaleTransactions } = require("../controllers/whaleController");
 const {
   getAllCryptos,
   getAltcoinSeasonChart,
@@ -24,6 +25,7 @@ router.get("/search", limiter, getSearchResults);
 router.get("/top-movers", limiter, getTopMovers);
 router.get("/top-losers", limiter, getTopLosers);
 router.get("/market-dominance", limiter, getMarketDominance);
+router.get("/whale-transactions", getWhaleTransactions);
 
 // Ruta pentru warmup cache
 router.get("/warmup", (req, res) => {
