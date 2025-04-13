@@ -84,7 +84,7 @@ const getCoinData = async (req, res, next) => {
  */
 const getTrendingCoins = async (req, res, next) => {
   try {
-    const data = await getCachedData("trendingCoins", fetchTrendingCoins, 600);
+    const data = await getCachedData("trendingCoins", fetchTrendingCoins, 3600);
     res.json(data);
   } catch (error) {
     next(error);
@@ -123,7 +123,12 @@ const getSearchResults = async (req, res, next) => {
  */
 const getTopMovers = async (req, res, next) => {
   try {
-    const allCryptos = await fetchAllCryptosData(); // Folosim funcția din coinGeckoService.js
+    // Folosim cache pentru top movers cu expirare de 1 oră (3600 secunde)
+    const allCryptos = await getCachedData(
+      "topMovers",
+      fetchAllCryptosData,
+      3600
+    );
 
     // Sort by 24h price change percentage in descending order
     const topMovers = allCryptos
@@ -144,7 +149,12 @@ const getTopMovers = async (req, res, next) => {
  */
 const getTopLosers = async (req, res, next) => {
   try {
-    const allCryptos = await fetchAllCryptosData(); // Folosim funcția din coinGeckoService.js
+    // Folosim cache pentru top losers cu expirare de 1 oră (3600 secunde)
+    const allCryptos = await getCachedData(
+      "topLosers",
+      fetchAllCryptosData,
+      3600
+    );
 
     // Sort by 24h price change percentage in ascending order (losers)
     const topLosers = allCryptos
@@ -164,7 +174,7 @@ const getMarketDominance = async (req, res, next) => {
     const data = await getCachedData(
       "marketDominance",
       fetchMarketDominance,
-      600
+      3600 // 1 hour expiration
     );
     res.json(data);
   } catch (error) {
