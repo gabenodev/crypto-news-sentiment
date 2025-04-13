@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import useMarketDominance from "../hooks/useMarketDominance"; // Importă hook-ul tău
+import useMarketDominance from "../hooks/homepage/useMarketDominance"; // Importă hook-ul tău
 
 const MarketDominanceCard = () => {
   const { dominance, loading, error } = useMarketDominance(); // Folosește hook-ul

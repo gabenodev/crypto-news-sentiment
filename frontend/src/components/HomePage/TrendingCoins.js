@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import useTrendingCoins from "../hooks/useTrendingCoins";
+import useTrendingCoins from "../hooks/homepage/useTrendingCoins";
 import { ClipLoader } from "react-spinners";
 import { motion } from "framer-motion";
 

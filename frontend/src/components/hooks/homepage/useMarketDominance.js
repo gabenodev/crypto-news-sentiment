@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { fetchMarketDominance } from "../../utils/api";
+import { fetchMarketDominance } from "../../../utils/api";
 
 function useMarketDominance() {
   const [dominance, setDominance] = useState(null);

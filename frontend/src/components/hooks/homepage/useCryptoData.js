@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { excludedCoins } from "../../utils/excludedCoins";
+import { excludedCoins } from "../../../utils/excludedCoins";
 
 function useCryptoData(page = 1) {
   // ← Adăugăm "page" ca parametru

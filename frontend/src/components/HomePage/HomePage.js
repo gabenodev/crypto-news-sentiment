@@ -4,7 +4,7 @@ import TrendingCoins from "./TrendingCoins"; // Importăm TrendingCoins
 import CryptoTable from "./CryptoTable";
 //import DominanceChart from "./DominanceChart"; // Importăm DominanceCard
 import MarketDominance from "./MarketDominance";
-import useCryptoData from "../hooks/useCryptoData";
+import useCryptoData from "../hooks/homepage/useCryptoData";
 import FearGreedIndex from "./FearGreedIndex";
 
 function Homepage() {

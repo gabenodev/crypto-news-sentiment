@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 import { motion } from "framer-motion";
-import useTopMovers from "../hooks/useTopMovers";
+import useTopMovers from "../hooks/homepage/useTopMovers";
 
 function TopMovers() {
   const { topMovers, topLosers, loading } = useTopMovers();
