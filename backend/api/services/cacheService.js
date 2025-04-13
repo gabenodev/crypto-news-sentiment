@@ -12,7 +12,7 @@ const getCachedData = async (cacheKey, fetchFreshData, expireTime = 60) => {
       `${REDIS.URL}/get/${encodeURIComponent(fullKey)}`,
       {
         headers: { Authorization: `Bearer ${REDIS.TOKEN}` },
-        timeout: 2000, // Timeout scăzut pentru cache (nu folosi valoarea de la API extern)
+        timeout: 3600, // Timeout scăzut pentru cache (nu folosi valoarea de la API extern)
       }
     );
 
@@ -34,7 +34,7 @@ const getCachedData = async (cacheKey, fetchFreshData, expireTime = 60) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(freshData),
-        timeout: 2000, // Timeout scăzut
+        timeout: 3600, // Timeout scăzut
       }
     );
 
