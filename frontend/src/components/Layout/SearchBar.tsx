@@ -1,16 +1,39 @@
-import React, { useState, useEffect, useRef } from "react";
+"use client";
+
+import React from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import { FaSearch } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
+import type { NavigateFunction } from "react-router-dom";
+import type JSX from "react";
 
-const SearchBar = ({ navigate }) => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
-  const [showResults, setShowResults] = useState(false);
-  const searchRef = useRef(null);
+interface SearchResult {
+  id: string;
+  name: string;
+  symbol: string;
+  thumb: string;
+}
+
+interface SearchBarProps {
+  navigate: NavigateFunction;
+  mobile?: boolean;
+}
+
+const SearchBar: React.FunctionComponent<SearchBarProps> = ({
+  navigate,
+  mobile = false,
+}) => {
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [showResults, setShowResults] = useState<boolean>(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        searchRef.current &&
+        !searchRef.current.contains(event.target as Node)
+      ) {
         setShowResults(false);
       }
     };
@@ -46,7 +69,7 @@ const SearchBar = ({ navigate }) => {
     return () => clearTimeout(debounceTimer);
   }, [searchQuery]);
 
-  const handleSearchSubmit = (e) => {
+  const handleSearchSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim() && searchResults.length > 0) {
       navigate(`/currencies/${searchResults[0].id}`);
@@ -55,7 +78,7 @@ const SearchBar = ({ navigate }) => {
     }
   };
 
-  const handleResultClick = (coinId) => {
+  const handleResultClick = (coinId: string) => {
     navigate(`/currencies/${coinId}`);
     setSearchQuery("");
     setShowResults(false);
@@ -87,14 +110,14 @@ const SearchBar = ({ navigate }) => {
               onClick={clearSearch}
               className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors duration-200"
             >
-              <IoMdClose size={14} />
+              {React.createElement(IoMdClose, { size: 14 })}
             </button>
           ) : null}
           <button
             type="submit"
             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-teal-500 transition-colors duration-200"
           >
-            <FaSearch size={14} />
+            {React.createElement(FaSearch, { size: 14 })}
           </button>
         </div>
       </form>
@@ -110,7 +133,7 @@ const SearchBar = ({ navigate }) => {
                 onClick={() => handleResultClick(coin.id)}
               >
                 <img
-                  src={coin.thumb}
+                  src={coin.thumb || "/placeholder.svg"}
                   alt={coin.name}
                   className="w-6 h-6 rounded-full"
                 />

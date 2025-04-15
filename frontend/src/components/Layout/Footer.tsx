@@ -1,7 +1,7 @@
 // src/components/Footer.js
-import React from "react";
 
-function Footer() {
+import * as React from "react";
+function Footer(): JSX.Element {
   return (
     <footer className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-8 text-center">
       <p className="text-lg">

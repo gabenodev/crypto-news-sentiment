@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from "react";
+"use client";
+
+import * as React from "react";
+import { useState, useEffect } from "react";
 import { Sun, Moon } from "react-feather";
 import { motion } from "framer-motion";
 
-function NightToggle() {
-  const [isDarkMode, setIsDarkMode] = useState(true);
+function NightToggle(): JSX.Element {
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
 
-  // Verificăm tema din localStorage la încărcare
+  // Check theme from localStorage on load
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme === "dark") {
@@ -17,7 +20,7 @@ function NightToggle() {
     }
   }, []);
 
-  const toggleTheme = () => {
+  const toggleTheme = (): void => {
     setIsDarkMode((prevMode) => {
       const newMode = !prevMode;
       if (newMode) {

@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+"use client";
+
+import * as React from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "./Logo";
 import NavLinks from "./NavLinks";
@@ -6,8 +9,8 @@ import SearchBar from "./SearchBar";
 import UserControls from "./UserControls";
 import MobileMenu from "./MobileMenu";
 
-function Header() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+function Header(): JSX.Element {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
   const navigate = useNavigate();
 
   return (

@@ -1,8 +1,21 @@
-import React from "react";
+"use client";
+
+import * as React from "react";
 import NavLinks from "./NavLinks";
 import SearchBar from "./SearchBar";
+import type { NavigateFunction } from "react-router-dom";
 
-const MobileMenu = ({ isOpen, onClose, navigate }) => {
+interface MobileMenuProps {
+  isOpen: boolean;
+  onClose: () => void;
+  navigate: NavigateFunction;
+}
+
+const MobileMenu = ({
+  isOpen,
+  onClose,
+  navigate,
+}: MobileMenuProps): JSX.Element | null => {
   if (!isOpen) return null;
 
   return (

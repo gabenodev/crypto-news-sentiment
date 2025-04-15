@@ -1,4 +1,3 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/Layout/Header";
 import SentimentChart from "./components/Sentiment_Trend/SentimentChart";
@@ -9,8 +8,9 @@ import Footer from "./components/Layout/Footer";
 import Homepage from "./components/HomePage/HomePage";
 import CurrencyDetails from "./components/CurrencyDetails/CurrencyDetails";
 import ScrollToTop from "./utils/ScrollToTop";
+import React from "react";
 
-function App() {
+function App(): JSX.Element {
   return (
     <Router>
       <ScrollToTop />
@@ -23,11 +23,7 @@ function App() {
             <Route path="/news" element={<NewsCard />} />
             <Route path="/altcoin-season-index" element={<AltcoinSeason />} />
             <Route path="/whale-transactions" element={<WhaleTransactions />} />
-            <Route
-              path="/currencies/:coinId"
-              element={<CurrencyDetails />}
-            />{" "}
-            {/* Ruta nouă */}
+            <Route path="/currencies/:coinId" element={<CurrencyDetails />} />
           </Routes>
         </main>
         <Footer />
