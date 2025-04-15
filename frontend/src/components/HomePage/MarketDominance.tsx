@@ -1,9 +1,12 @@
-import React from "react";
-import { motion } from "framer-motion";
-import useMarketDominance from "../hooks/homepage/useMarketDominance"; // Importă hook-ul tău
+"use client";
 
-const MarketDominanceCard = () => {
-  const { dominance, loading, error } = useMarketDominance(); // Folosește hook-ul
+import * as React from "react";
+import { motion } from "framer-motion";
+import useMarketDominance from "../hooks/homepage/useMarketDominance";
+import type { MarketDominanceItem } from "../../types";
+
+const MarketDominanceCard = (): JSX.Element => {
+  const { dominance, loading, error } = useMarketDominance();
 
   return (
     <motion.div
@@ -56,27 +59,27 @@ const MarketDominanceCard = () => {
                   </p>
                   <button
                     onClick={() => window.location.reload()}
-                    className="mt-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600 text-white text-xs font-medium rounded-lg transition-all duration-300 shadow-sm hover:shadow-md" // Gradient și efecte îmbunătățite
+                    className="mt-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600 text-white text-xs font-medium rounded-lg transition-all duration-300 shadow-sm hover:shadow-md"
                   >
                     Retry
                   </button>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {dominance.map((item, i) => (
+                  {dominance.map((item: MarketDominanceItem, i: number) => (
                     <motion.div
                       key={item.name}
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05, duration: 0.3 }}
-                      whileHover={{ scale: 1.02 }} // Efect de hover subtil
+                      whileHover={{ scale: 1.02 }}
                     >
                       <div className="flex justify-between items-center px-3 py-2 rounded-lg bg-gray-50/70 dark:bg-gray-700/70 border border-gray-200/50 dark:border-gray-600/50 hover:bg-gray-100/70 dark:hover:bg-gray-600/70 transition-colors duration-200">
                         {" "}
-                        {/* Efect de hover */}
+                        {/* Hover effect */}
                         <div className="flex items-center space-x-2">
                           <div
-                            className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm" // Umbra subtilă
+                            className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm" // Subtle shadow
                             style={{
                               backgroundColor:
                                 i === 0
@@ -104,7 +107,7 @@ const MarketDominanceCard = () => {
                                   : i === 2
                                   ? "#26A17B"
                                   : "#A6B7D4",
-                            }} // Culori consistente cu punctele
+                            }} // Consistent colors with the points
                           >
                             {item.value}%
                           </span>

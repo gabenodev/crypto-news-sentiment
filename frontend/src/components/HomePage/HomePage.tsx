@@ -1,29 +1,26 @@
-import React from "react";
-import TopMovers from "./TopMovers"; // Importăm TopMovers
-import TrendingCoins from "./TrendingCoins"; // Importăm TrendingCoins
+import * as React from "react";
+import TopMovers from "./TopMovers";
+import TrendingCoins from "./TrendingCoins";
 import CryptoTable from "./CryptoTable";
-//import DominanceChart from "./DominanceChart"; // Importăm DominanceCard
 import MarketDominance from "./MarketDominance";
 import useCryptoData from "../hooks/homepage/useCryptoData";
 import FearGreedIndex from "./FearGreedIndex";
 
-function Homepage() {
-  const { cryptoData } = useCryptoData();
+function Homepage(): JSX.Element {
+  const { cryptoData, loading, error: cryptoError } = useCryptoData();
 
   return (
     <>
       <div className="max-w-7xl mx-auto px-3">
-        {/* Primul rând - 3 carduri */}
+        {/* First row - 3 cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <TopMovers />
           <TrendingCoins />
 
-          {/* Coloana dreaptă - grup compact */}
+          {/* Right column - compact group */}
           <div className="flex flex-col">
             <MarketDominance />
             <div className="mt-5">
-              {" "}
-              {/* Spațiu redus */}
               <FearGreedIndex />
             </div>
           </div>
@@ -44,7 +41,11 @@ function Homepage() {
         </div>
 
         <div className="overflow-x-auto">
-          <CryptoTable cryptoData={cryptoData} />
+          <CryptoTable
+            cryptoData={cryptoData}
+            isLoading={loading}
+            error={cryptoError}
+          />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 mt-4 text-sm text-gray-500 dark:text-gray-400 text-center">

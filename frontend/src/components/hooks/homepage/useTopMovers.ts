@@ -1,13 +1,18 @@
+"use client";
+
 import { useEffect, useState } from "react";
+import type { Cryptocurrency } from "../../../types";
 
 function useTopMovers(page = 1) {
-  const [topMovers, setTopMovers] = useState([]);
-  const [topLosers, setTopLosers] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [topMovers, setTopMovers] = useState<Cryptocurrency[]>([]);
+  const [topLosers, setTopLosers] = useState<Cryptocurrency[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTopMovers = async () => {
       try {
+        setLoading(true);
         const response = await fetch(
           `https://sentimentx-backend.vercel.app/api/all-cryptos?per_page=${
             page * 100
@@ -15,28 +20,30 @@ function useTopMovers(page = 1) {
         );
         if (!response.ok) throw new Error("Network response was not ok");
 
-        const data = await response.json();
+        const data: Cryptocurrency[] = await response.json();
 
-        // Sortează monedele descrescător în funcție de schimbarea procentuală în ultimele 24h pentru Top Movers
-        const sortedTopMovers = data
+        // Sort coins in descending order by 24h price change percentage for Top Movers
+        const sortedTopMovers = [...data]
           .sort(
             (a, b) =>
               b.price_change_percentage_24h - a.price_change_percentage_24h
           )
-          .slice(0, 5); // Ia doar primele 5 monede
+          .slice(0, 5); // Take only the first 5 coins
 
-        // Sortează monedele crescător în funcție de schimbarea procentuală în ultimele 24h pentru Top Losers
-        const sortedTopLosers = data
+        // Sort coins in ascending order by 24h price change percentage for Top Losers
+        const sortedTopLosers = [...data]
           .sort(
             (a, b) =>
               a.price_change_percentage_24h - b.price_change_percentage_24h
           )
-          .slice(0, 5); // Ia doar primele 5 monede
+          .slice(0, 5); // Take only the first 5 coins
 
         setTopMovers(sortedTopMovers);
         setTopLosers(sortedTopLosers);
+        setError(null);
       } catch (error) {
         console.error("Error fetching top movers:", error);
+        setError("Failed to fetch top movers data");
       } finally {
         setLoading(false);
       }
@@ -45,7 +52,7 @@ function useTopMovers(page = 1) {
     fetchTopMovers();
   }, [page]);
 
-  return { topMovers, topLosers, loading };
+  return { topMovers, topLosers, loading, error };
 }
 
 export default useTopMovers;

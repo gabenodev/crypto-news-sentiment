@@ -20,9 +20,12 @@ import {
   FiCircle,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
+import type { Cryptocurrency } from "../../types";
+import { Table, TableCell, TableContainer } from "@mui/material";
+import { styled } from "@mui/system";
 
 // Utility for price formatting
-const formatPrice = (price) => {
+const formatPrice = (price: number | undefined): string => {
   if (!price && price !== 0) return "—";
   if (price < 0.01) return price.toFixed(8).replace(/\.?0+$/, "");
   return new Intl.NumberFormat(undefined, {
@@ -32,13 +35,13 @@ const formatPrice = (price) => {
 };
 
 // Utility for formatting large numbers
-const formatNumber = (num) => {
+const formatNumber = (num: number | undefined): string => {
   if (!num && num !== 0) return "—";
   return new Intl.NumberFormat().format(num);
 };
 
 // Utility for formatting market cap
-const formatMarketCap = (marketCap) => {
+const formatMarketCap = (marketCap: number | undefined): string => {
   if (!marketCap && marketCap !== 0) return "—";
   if (marketCap >= 1_000_000_000_000) {
     return `$${(marketCap / 1_000_000_000_000).toFixed(2)}T`;
@@ -52,9 +55,25 @@ const formatMarketCap = (marketCap) => {
   return `$${formatNumber(marketCap)}`;
 };
 
+interface CryptoRowProps {
+  crypto: Cryptocurrency;
+  index: number;
+  itemsPerPage: number;
+  currentPage: number;
+  navigate: (path: string) => void;
+  isEven: boolean;
+}
+
 // Table row component for better performance
 const CryptoRow = React.memo(
-  ({ crypto, index, itemsPerPage, currentPage, navigate, isEven }) => {
+  ({
+    crypto,
+    index,
+    itemsPerPage,
+    currentPage,
+    navigate,
+    isEven,
+  }: CryptoRowProps) => {
     const maxSupply = crypto.max_supply || crypto.total_supply;
     const progress = maxSupply
       ? (crypto.circulating_supply / maxSupply) * 100
@@ -150,8 +169,13 @@ const CryptoRow = React.memo(
   }
 );
 
+interface EmptyStateProps {
+  message: string;
+  icon: React.ReactNode;
+}
+
 // Empty state component
-const EmptyState = ({ message, icon }) => (
+const EmptyState = ({ message, icon }: EmptyStateProps) => (
   <div className="flex flex-col items-center justify-center py-20 px-4">
     <div className="bg-white/30 dark:bg-gray-800/30 rounded-full p-6 mb-6">
       {icon}
@@ -175,8 +199,13 @@ const TableSkeleton = () => (
   </div>
 );
 
+interface ErrorStateProps {
+  error: string;
+  onRetry: () => void;
+}
+
 // Error state component
-const ErrorState = ({ error, onRetry }) => (
+const ErrorState = ({ error, onRetry }: ErrorStateProps) => (
   <div className="flex flex-col items-center justify-center py-16 px-4">
     <div className="bg-red-100 dark:bg-red-900/30 rounded-full p-4 mb-4">
       <FiInfo className="text-red-500 h-6 w-6" />
@@ -196,22 +225,47 @@ const ErrorState = ({ error, onRetry }) => (
   </div>
 );
 
-function CryptoTable({ cryptoData, isLoading, error }) {
+interface CryptoTableProps {
+  cryptoData: Cryptocurrency[];
+  isLoading: boolean;
+  error: string | null;
+}
+
+const StyledTableContainer = styled(TableContainer)({
+  width: "100%",
+  overflowX: "auto",
+});
+
+const StyledTable = styled(Table)({
+  minWidth: 650,
+});
+
+const StyledTableCell = styled(TableCell)({
+  fontWeight: "bold",
+});
+
+function CryptoTable({ cryptoData, isLoading, error }: CryptoTableProps) {
   const navigate = useNavigate();
-  const [sortConfig, setSortConfig] = useState({
+  const [sortConfig, setSortConfig] = useState<{
+    key: keyof Cryptocurrency;
+    direction: "asc" | "desc";
+  }>({
     key: "market_cap_rank",
     direction: "asc",
   });
-  const [itemsPerPage, setItemsPerPage] = useState(() => {
+  const [itemsPerPage, setItemsPerPage] = useState<number>(() => {
     return Number(localStorage.getItem("cryptoItemsPerPage")) || 10;
   });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterConfig, setFilterConfig] = useState({
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filterConfig, setFilterConfig] = useState<{
+    priceChange: "all" | "positive" | "negative";
+    marketCap: "all" | "large" | "medium" | "small";
+  }>({
     priceChange: "all", // all, positive, negative
     marketCap: "all", // all, large, medium, small
   });
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
 
   // Reset page when data changes
   useEffect(() => {
@@ -277,14 +331,14 @@ function CryptoTable({ cryptoData, isLoading, error }) {
     });
   }, [cryptoData, sortConfig, searchTerm, filterConfig]);
 
-  const requestSort = (key) => {
+  const requestSort = (key: keyof Cryptocurrency) => {
     setSortConfig((prev) => ({
       key,
       direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
     }));
   };
 
-  const getSortIcon = (key) => {
+  const getSortIcon = (key: keyof Cryptocurrency) => {
     if (sortConfig.key !== key) return null;
     return sortConfig.direction === "asc" ? (
       <FiArrowUp className="ml-1" size={12} />
@@ -299,7 +353,7 @@ function CryptoTable({ cryptoData, isLoading, error }) {
     currentPage * itemsPerPage
   );
 
-  const handlePageChange = (pageNumber) => {
+  const handlePageChange = (pageNumber: number) => {
     setCurrentPage(Math.max(1, Math.min(pageNumber, totalPages)));
     // Scroll to top of table
     document
@@ -307,10 +361,12 @@ function CryptoTable({ cryptoData, isLoading, error }) {
       ?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleItemsPerPageChange = (event) => {
+  const handleItemsPerPageChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
     const value = Number(event.target.value);
     setItemsPerPage(value);
-    localStorage.setItem("cryptoItemsPerPage", value);
+    localStorage.setItem("cryptoItemsPerPage", value.toString());
     setCurrentPage(1);
   };
 
@@ -330,7 +386,7 @@ function CryptoTable({ cryptoData, isLoading, error }) {
   // Calculate visible page numbers for pagination
   const getVisiblePageNumbers = () => {
     const delta = 2; // Number of pages to show before and after current page
-    const range = [];
+    const range: Array<number | string> = [];
 
     for (
       let i = Math.max(1, currentPage - delta);
@@ -339,9 +395,8 @@ function CryptoTable({ cryptoData, isLoading, error }) {
     ) {
       range.push(i);
     }
-
     // Add first page if not already in range
-    if (range[0] > 1) {
+    if (typeof range[0] === "number" && range[0] > 1) {
       if (range[0] > 2) {
         range.unshift("...");
       }
@@ -349,8 +404,9 @@ function CryptoTable({ cryptoData, isLoading, error }) {
     }
 
     // Add last page if not already in range
-    if (range[range.length - 1] < totalPages) {
-      if (range[range.length - 1] < totalPages - 1) {
+    const last = range[range.length - 1];
+    if (typeof last === "number" && last < totalPages) {
+      if (last < totalPages - 1) {
         range.push("...");
       }
       range.push(totalPages);
@@ -598,7 +654,7 @@ function CryptoTable({ cryptoData, isLoading, error }) {
                                   : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                               }`}
                             >
-                              Small Cap ($1B)\
+                              Small Cap ($1B)
                             </button>
                           </div>
                         </div>
