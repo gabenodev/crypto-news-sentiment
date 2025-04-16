@@ -6,7 +6,7 @@ const directoryPath = path.join(__dirname, "src");
 // Înlocuiri relative → aliasuri
 const aliasReplacements = [
   ["components/homepage/", "@components/homepage/"],
-  ["components/layout/", "@components/layout/"],
+  ["components/Layout/", "@components/Layout/"],
   ["components/altcoinSeason/", "@components/altcoinSeason/"],
   ["components/indicators/", "@components/indicators/"],
   ["components/news/", "@components/news/"],
