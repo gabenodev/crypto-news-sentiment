@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import useMarketDominance from "@hooks/homepage/useMarketDominance";
+import useMarketDominance from "../../hooks/homepage/useMarketDominance";
 import type { MarketDominanceItem } from "../../types";
 
 const MarketDominanceCard = (): JSX.Element => {

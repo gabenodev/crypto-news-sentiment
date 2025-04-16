@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useState, useEffect, type ReactNode } from "react";
-import { fetchWhaleTransactions } from "@hooks/whaleTransactions/useEthScan";
+import { fetchWhaleTransactions } from "../../hooks/whaleTransactions/useEthScan";
 import { motion, AnimatePresence } from "framer-motion";
 import type { WhaleTransaction } from "../../types";
 
