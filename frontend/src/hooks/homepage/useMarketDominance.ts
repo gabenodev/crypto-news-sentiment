@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchMarketDominance } from "../../../utils/api";
-import type { MarketDominanceItem } from "../../../types";
+import { fetchMarketDominance } from "../../utils/api";
+import type { MarketDominanceItem } from "../../types";
 
 function useMarketDominance() {
   const [dominance, setDominance] = useState<MarketDominanceItem[]>([]);

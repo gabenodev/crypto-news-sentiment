@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { TrendingCoin } from "../../../types";
+import type { TrendingCoin } from "../../types";
 
 function useTrendingCoins() {
   const [trendingCoins, setTrendingCoins] = useState<TrendingCoin[]>([]);

@@ -1,10 +1,10 @@
 import * as React from "react";
-import TopMovers from "./TopMovers";
-import TrendingCoins from "./TrendingCoins";
-import CryptoTable from "./CryptoTable";
-import MarketDominance from "./MarketDominance";
+import TopMovers from "../components/HomePage/TopMovers";
+import TrendingCoins from "../components/HomePage/TrendingCoins";
+import CryptoTable from "../components/HomePage/CryptoTable";
+import MarketDominance from "../components/HomePage/MarketDominance";
 import useCryptoData from "../hooks/homepage/useCryptoData";
-import FearGreedIndex from "./FearGreedIndex";
+import FearGreedIndex from "../components/HomePage/FearGreedIndex";
 
 function Homepage(): JSX.Element {
   const { cryptoData, loading, error: cryptoError } = useCryptoData();

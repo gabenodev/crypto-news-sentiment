@@ -5,7 +5,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
 import { motion } from "framer-motion";
-import useTopMovers from "../hooks/homepage/useTopMovers";
+import useTopMovers from "../../hooks/homepage/useTopMovers";
 import type { Cryptocurrency } from "../../types";
 
 function TopMovers(): JSX.Element {

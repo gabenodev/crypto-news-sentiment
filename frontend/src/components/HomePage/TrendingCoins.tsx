@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Link } from "react-router-dom";
-import useTrendingCoins from "../hooks/homepage/useTrendingCoins";
+import useTrendingCoins from "../../hooks/homepage/useTrendingCoins";
 import { ClipLoader } from "react-spinners";
 import { motion } from "framer-motion";
 import type { TrendingCoin } from "../../types";

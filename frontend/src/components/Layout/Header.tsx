@@ -3,11 +3,11 @@
 import * as React from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Logo from "./Logo";
-import NavLinks from "./NavLinks";
-import SearchBar from "./SearchBar";
-import UserControls from "./UserControls";
-import MobileMenu from "./MobileMenu";
+import Logo from "../Layout/Logo";
+import NavLinks from "../Layout/NavLinks";
+import SearchBar from "../Layout/SearchBar";
+import UserControls from "../Layout/UserControls";
+import MobileMenu from "../Layout/MobileMenu";
 
 function Header(): JSX.Element {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
