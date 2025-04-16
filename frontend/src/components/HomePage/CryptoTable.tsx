@@ -21,8 +21,6 @@ import {
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Cryptocurrency } from "../../types";
-import { Table, TableCell, TableContainer } from "@mui/material";
-import { styled } from "@mui/system";
 
 // Utility for price formatting
 const formatPrice = (price: number | undefined): string => {
