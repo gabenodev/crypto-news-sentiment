@@ -231,19 +231,6 @@ interface CryptoTableProps {
   error: string | null;
 }
 
-const StyledTableContainer = styled(TableContainer)({
-  width: "100%",
-  overflowX: "auto",
-});
-
-const StyledTable = styled(Table)({
-  minWidth: 650,
-});
-
-const StyledTableCell = styled(TableCell)({
-  fontWeight: "bold",
-});
-
 function CryptoTable({ cryptoData, isLoading, error }: CryptoTableProps) {
   const navigate = useNavigate();
   const [sortConfig, setSortConfig] = useState<{

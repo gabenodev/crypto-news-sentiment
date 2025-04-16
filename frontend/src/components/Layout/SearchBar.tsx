@@ -5,7 +5,6 @@ import { useState, useEffect, useRef, type FormEvent } from "react";
 import { FaSearch } from "react-icons/fa";
 import { IoMdClose } from "react-icons/io";
 import type { NavigateFunction } from "react-router-dom";
-import type JSX from "react";
 
 interface SearchResult {
   id: string;
