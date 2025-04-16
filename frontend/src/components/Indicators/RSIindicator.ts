@@ -1,9 +1,7 @@
-// RSIindicator.js
-
-// Funcție pentru calculul RSI
-export const calculateRSI = (prices, period = 14) => {
-  const gains = [];
-  const losses = [];
+// Function to calculate RSI
+export const calculateRSI = (prices: number[], period = 14): number[] => {
+  const gains: number[] = [];
+  const losses: number[] = [];
 
   for (let i = 1; i < prices.length; i++) {
     const change = prices[i] - prices[i - 1];
@@ -19,7 +17,7 @@ export const calculateRSI = (prices, period = 14) => {
   let avgGain = gains.slice(0, period).reduce((a, b) => a + b, 0) / period;
   let avgLoss = losses.slice(0, period).reduce((a, b) => a + b, 0) / period;
 
-  const rsiValues = [];
+  const rsiValues: number[] = [];
   for (let i = period; i < prices.length; i++) {
     if (i > period) {
       avgGain = (avgGain * (period - 1) + gains[i - 1]) / period;

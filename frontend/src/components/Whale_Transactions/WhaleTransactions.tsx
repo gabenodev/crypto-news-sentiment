@@ -1,17 +1,21 @@
-import { useState, useEffect } from "react";
+"use client";
+
+import * as React from "react";
+import { useState, useEffect, type ReactNode } from "react";
 import { fetchWhaleTransactions } from "../hooks/whaletransactions/useEthScan";
 import { motion, AnimatePresence } from "framer-motion";
+import type { WhaleTransaction } from "../../types";
 
-const WhaleTransactions = () => {
-  const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1); // Pagina curentă
-  const [totalPages, setTotalPages] = useState(1); // Numărul total de pagini
+const WhaleTransactions = (): JSX.Element => {
+  const [transactions, setTransactions] = useState<WhaleTransaction[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
 
-  const loadTransactions = async (page) => {
+  const loadTransactions = async (page: number): Promise<void> => {
     setLoading(true);
     const { transactions: fetchedTransactions, totalPages: fetchedTotalPages } =
-      await fetchWhaleTransactions(page, 100); // Filtrează tranzacții mai mari de 1000 ETH
+      await fetchWhaleTransactions(page, 100);
     setTransactions(fetchedTransactions);
     setTotalPages(fetchedTotalPages);
     setLoading(false);
@@ -21,8 +25,8 @@ const WhaleTransactions = () => {
     loadTransactions(page);
   }, [page]);
 
-  // Functie pentru trunchierea adreselor și a hash-urilor
-  const truncate = (str) => {
+  // Function for truncating addresses and hashes
+  const truncate = (str: string): string => {
     return str.length > 15 ? `${str.slice(0, 6)}...${str.slice(-4)}` : str;
   };
 
@@ -30,9 +34,9 @@ const WhaleTransactions = () => {
     <div className="container mx-auto p-6 dark:bg-gray-900 dark:text-white rounded-lg">
       <h2
         className="text-3xl font-bold text-center mb-8 
-  text-transparent bg-clip-text 
-  bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
-  dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-teal-300 dark:to-green-400"
+ text-transparent bg-clip-text 
+ bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
+ dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-teal-300 dark:to-green-400"
       >
         Whale Transactions
       </h2>
@@ -46,7 +50,7 @@ const WhaleTransactions = () => {
           exit={{ opacity: 0 }}
           className="text-center text-xl text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md mx-auto shadow-lg"
         >
-          {/* Animație de puncte îmbunătățită */}
+          {/* Improved dots animation */}
           <div className="flex justify-center items-center space-x-2 mb-4">
             {[0, 0.2, 0.4].map((delay, index) => (
               <motion.div
@@ -58,7 +62,7 @@ const WhaleTransactions = () => {
                 }}
                 transition={{
                   duration: 0.6,
-                  repeat: Infinity,
+                  repeat: Number.POSITIVE_INFINITY,
                   repeatType: "mirror",
                   delay,
                 }}
@@ -72,7 +76,7 @@ const WhaleTransactions = () => {
               />
             ))}
           </div>
-          {/* Text animat îmbunătățit */}
+          {/* Animated text */}
           <motion.p
             animate={{
               opacity: [0.5, 1, 0.5],
@@ -80,7 +84,7 @@ const WhaleTransactions = () => {
             }}
             transition={{
               duration: 1.5,
-              repeat: Infinity,
+              repeat: Number.POSITIVE_INFINITY,
             }}
             className="mt-4 mb-6 text-lg font-semibold text-gray-700 dark:text-gray-300"
           >
@@ -92,7 +96,7 @@ const WhaleTransactions = () => {
             transactions.
           </p>
 
-          {/* Skeleton Loading pentru tranzacții */}
+          {/* Skeleton Loading for transactions */}
           <div className="mt-8 space-y-4">
             {[...Array(5)].map((_, index) => (
               <motion.div
@@ -145,7 +149,7 @@ const WhaleTransactions = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900 rounded-full flex justify-center items-center">
-                        {tx.icon}
+                        {tx.icon as ReactNode}
                       </div>
                       <div>
                         <div className="font-semibold text-md text-gray-800 dark:text-gray-200">
@@ -221,7 +225,7 @@ const WhaleTransactions = () => {
             </p>
           )}
 
-          {/* Butoane de paginare */}
+          {/* Pagination buttons */}
           <div className="flex justify-center mt-6 space-x-4">
             <button
               onClick={() => setPage(1)}

@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
@@ -26,14 +27,15 @@ import {
 import { CgWebsite } from "react-icons/cg";
 import { motion } from "framer-motion";
 import { Tab } from "@headlessui/react";
+import type { CoinDetail } from "../../types";
 
-function CurrencyStats() {
-  const { coinId } = useParams();
-  const [coinData, setCoinData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [expanded, setExpanded] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
+function CurrencyStats(): JSX.Element {
+  const { coinId } = useParams<{ coinId: string }>();
+  const [coinData, setCoinData] = useState<CoinDetail | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<number>(0);
 
   useEffect(() => {
     async function fetchData() {
@@ -106,21 +108,25 @@ function CurrencyStats() {
     );
   }
 
-  const formatPrice = (price) => {
+  if (!coinData) {
+    return <></>;
+  }
+
+  const formatPrice = (price: number): string => {
     if (price < 0.0001) {
       return price.toFixed(8);
     }
     return price.toLocaleString();
   };
 
-  const formatMarketCap = (cap) => {
+  const formatMarketCap = (cap: number): string => {
     if (cap >= 1e12) return `$${(cap / 1e12).toFixed(2)}T`;
     if (cap >= 1e9) return `$${(cap / 1e9).toFixed(2)}B`;
     if (cap >= 1e6) return `$${(cap / 1e6).toFixed(2)}M`;
     return `$${cap.toLocaleString()}`;
   };
 
-  const formatSupply = (supply) => {
+  const formatSupply = (supply: number | null): string => {
     if (!supply) return "N/A";
     if (supply >= 1e9) return `${(supply / 1e9).toFixed(2)}B`;
     if (supply >= 1e6) return `${(supply / 1e6).toFixed(2)}M`;
@@ -243,12 +249,12 @@ function CurrencyStats() {
                 key={index}
                 className={({ selected }) =>
                   `w-full rounded-lg py-3 text-sm font-medium leading-5 transition-all duration-200
-                  ${
-                    selected
-                      ? "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 shadow-sm"
-                      : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50"
-                  }
-                  `
+                 ${
+                   selected
+                     ? "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 shadow-sm"
+                     : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/50"
+                 }
+                 `
                 }
               >
                 <div className="flex items-center justify-center">
@@ -613,7 +619,9 @@ function CurrencyStats() {
                   <div className="space-y-4">
                     {["7d", "14d", "30d", "60d", "200d", "1y"].map((period) => {
                       const changeKey = `price_change_percentage_${period}`;
-                      const changeValue = coinData.market_data[changeKey];
+                      const changeValue = coinData.market_data[
+                        changeKey as keyof typeof coinData.market_data
+                      ] as number;
                       return (
                         <div
                           key={period}

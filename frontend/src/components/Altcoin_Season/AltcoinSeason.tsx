@@ -1,16 +1,28 @@
-import React, { useEffect, useState } from "react";
+"use client";
+
+import * as React from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AltcoinChart from "./AltcoinChart";
 import { excludedCoins } from "../../utils/excludedCoins";
+import type { Cryptocurrency } from "../../types";
 
-const AltcoinSeason = () => {
-  const [isAltcoinSeason, setIsAltcoinSeason] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [outperformingCount, setOutperformingCount] = useState(0);
-  const [totalAltcoins, setTotalAltcoins] = useState(0);
-  const [percentage, setPercentage] = useState(0);
-  const [outperformingCoins, setOutperformingCoins] = useState([]);
-  const [selectedCoin, setSelectedCoin] = useState(null);
+interface CoinData {
+  id: string;
+  name: string;
+  symbol: string;
+  image: string;
+  priceChange: number;
+}
+
+const AltcoinSeason = (): JSX.Element => {
+  const [isAltcoinSeason, setIsAltcoinSeason] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [outperformingCount, setOutperformingCount] = useState<number>(0);
+  const [totalAltcoins, setTotalAltcoins] = useState<number>(0);
+  const [percentage, setPercentage] = useState<number>(0);
+  const [outperformingCoins, setOutperformingCoins] = useState<CoinData[]>([]);
+  const [selectedCoin, setSelectedCoin] = useState<CoinData | null>(null);
 
   useEffect(() => {
     const fetchAllCrpytosData = async () => {
@@ -19,17 +31,17 @@ const AltcoinSeason = () => {
         const response = await fetch(
           `https://sentimentx-backend.vercel.app/api/all-cryptos`
         );
-        const data = await response.json();
+        const data: Cryptocurrency[] = await response.json();
 
-        // Pas 1: Selectăm primele 100 de monede
-        let filteredData = data
+        // Step 1: Select the first 100 coins
+        const filteredData = data
           .slice(0, 100)
           .filter((coin) => !excludedCoins.has(coin.id));
 
-        // Pas 2: Dacă avem mai puțin de 100, adăugăm altele din listă
+        // Step 2: If we have less than 100, add others from the list
         let index = 100;
         while (filteredData.length < 100 && index < data.length) {
-          let coin = data[index];
+          const coin = data[index];
           if (
             !excludedCoins.has(coin.id) &&
             !filteredData.some((c) => c.id === coin.id)
@@ -40,7 +52,7 @@ const AltcoinSeason = () => {
         }
 
         let outperformingCountTemp = 0;
-        let outperformingCoinsTemp = [];
+        const outperformingCoinsTemp: CoinData[] = [];
 
         const bitcoin = data.find((coin) => coin.id === "bitcoin");
         if (!bitcoin) {
@@ -48,7 +60,7 @@ const AltcoinSeason = () => {
           return;
         }
 
-        for (let coin of filteredData) {
+        for (const coin of filteredData) {
           if (
             coin.price_change_percentage_24h >
             bitcoin.price_change_percentage_24h
@@ -59,6 +71,7 @@ const AltcoinSeason = () => {
               priceChange: coin.price_change_percentage_24h,
               image: coin.image,
               id: coin.id,
+              symbol: coin.symbol,
             });
           }
         }
@@ -80,13 +93,12 @@ const AltcoinSeason = () => {
     fetchAllCrpytosData();
   }, []);
 
-  if (loading) {
+  if (loading)
     return (
       <div className="flex justify-center items-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
-  }
 
   const barColor =
     percentage >= 80
@@ -170,7 +182,7 @@ const AltcoinSeason = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <img
-                        src={coin.image}
+                        src={coin.image || "/placeholder.svg"}
                         alt={coin.name}
                         className="w-8 h-8 rounded-full"
                       />

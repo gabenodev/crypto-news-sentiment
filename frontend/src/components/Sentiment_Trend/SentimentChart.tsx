@@ -1,5 +1,8 @@
+"use client";
+
+import * as React from "react";
 import SentimentGauge from "./SentimentGauge";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
 import axios from "axios";
 import {
@@ -13,6 +16,7 @@ import {
   Legend,
 } from "chart.js";
 import { format } from "date-fns";
+import type { SentimentChartData, FearGreedIndexData } from "../../types";
 
 ChartJS.register(
   CategoryScale,
@@ -24,20 +28,20 @@ ChartJS.register(
   Legend
 );
 
-function SentimentChart() {
-  const [sentimentData, setSentimentData] = useState({
+function SentimentChart(): JSX.Element {
+  const [sentimentData, setSentimentData] = useState<SentimentChartData>({
     labels: [],
     datasets: [],
   });
-  const [timeframe, setTimeframe] = useState("30");
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [timeframe, setTimeframe] = useState<string | number>("30");
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const fetchSentimentData = async (limit) => {
+  const fetchSentimentData = async (limit: string | number): Promise<void> => {
     setIsLoading(true);
     setError(null);
     try {
-      let url =
+      const url =
         limit === "max"
           ? "https://api.alternative.me/fng/?limit=2000&format=json"
           : `https://api.alternative.me/fng/?limit=${limit}&format=json`;
@@ -48,10 +52,9 @@ function SentimentChart() {
         throw new Error("Invalid data format from API");
       }
 
-      const sentimentScores = response.data.data.map((item) =>
-        parseInt(item.value)
-      );
-      const sentimentTimestamps = response.data.data.map((item) =>
+      const data: FearGreedIndexData[] = response.data.data;
+      const sentimentScores = data.map((item) => Number.parseInt(item.value));
+      const sentimentTimestamps = data.map((item) =>
         format(new Date(item.timestamp * 1000), "MMM dd, yyyy")
       );
 
@@ -91,7 +94,7 @@ function SentimentChart() {
     fetchSentimentData(timeframe);
   }, [timeframe]);
 
-  const handleTimeframeChange = (newTimeframe) => {
+  const handleTimeframeChange = (newTimeframe: string | number): void => {
     setTimeframe(newTimeframe);
   };
 
@@ -100,7 +103,7 @@ function SentimentChart() {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        position: "top",
+        position: "top" as const,
         labels: {
           color: "#6b7280",
           font: {
@@ -112,7 +115,7 @@ function SentimentChart() {
         },
       },
       tooltip: {
-        mode: "index",
+        mode: "index" as const,
         intersect: false,
         backgroundColor: "#1f2937",
         titleColor: "#f3f4f6",
@@ -124,14 +127,14 @@ function SentimentChart() {
         titleFont: {
           family: "'Inter', sans-serif",
           size: 14,
-          weight: "600",
+          weight: 700,
         },
         bodyFont: {
           family: "'Inter', sans-serif",
           size: 13,
         },
         callbacks: {
-          label: (context) => {
+          label: (context: any) => {
             let label = context.dataset.label || "";
             if (label) {
               label += ": ";
@@ -139,7 +142,7 @@ function SentimentChart() {
             label += context.parsed.y;
             return label;
           },
-          footer: (tooltipItems) => {
+          footer: (tooltipItems: any[]) => {
             const value = tooltipItems[0].parsed.y;
             let sentiment;
             if (value <= 25) sentiment = "Extreme Fear";
@@ -181,8 +184,8 @@ function SentimentChart() {
       },
     },
     interaction: {
-      mode: "nearest",
-      axis: "x",
+      mode: "nearest" as const,
+      axis: "x" as const,
       intersect: false,
     },
   };

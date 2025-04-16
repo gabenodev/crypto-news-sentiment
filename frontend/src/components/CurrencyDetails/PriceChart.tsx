@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
@@ -31,6 +32,7 @@ import {
   FiMaximize2,
   FiMinimize2,
 } from "react-icons/fi";
+import type { ChartDataPoint } from "../../types";
 
 const maColors = {
   ma5: "#3b82f6", // Blue
@@ -41,13 +43,24 @@ const maColors = {
   ma200: "#10b981", // Emerald
 };
 
-function PriceChart({ coinId }) {
-  const [priceData, setPriceData] = useState([]);
-  const [rsiData, setRsiData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [days, setDays] = useState(1);
-  const [movingAverages, setMovingAverages] = useState({
+interface PriceChartProps {
+  coinId: string;
+}
+
+function PriceChart({ coinId }: PriceChartProps): JSX.Element {
+  const [priceData, setPriceData] = useState<ChartDataPoint[]>([]);
+  const [rsiData, setRsiData] = useState<ChartDataPoint[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [days, setDays] = useState<number | string>(1);
+  const [movingAverages, setMovingAverages] = useState<{
+    ma5: boolean;
+    ma8: boolean;
+    ma13: boolean;
+    ma50: boolean;
+    ma100: boolean;
+    ma200: boolean;
+  }>({
     ma5: false,
     ma8: false,
     ma13: false,
@@ -55,14 +68,18 @@ function PriceChart({ coinId }) {
     ma100: false,
     ma200: false,
   });
-  const [referenceLines, setReferenceLines] = useState({
+  const [referenceLines, setReferenceLines] = useState<{
+    min: boolean;
+    max: boolean;
+    avg: boolean;
+  }>({
     min: false,
     max: false,
     avg: false,
   });
-  const [activeTab, setActiveTab] = useState(0);
-  const [fullscreen, setFullscreen] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [activeTab, setActiveTab] = useState<number>(0);
+  const [fullscreen, setFullscreen] = useState<boolean>(false);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   const fetchPriceData = useCallback(async () => {
     try {
@@ -75,7 +92,7 @@ function PriceChart({ coinId }) {
       const data = await response.json();
 
       if (data && Array.isArray(data.prices)) {
-        const priceChartData = data.prices.map((item) => ({
+        const priceChartData = data.prices.map((item: [number, number]) => ({
           time: new Date(item[0]).toLocaleString(),
           price: item[1],
           timestamp: item[0],
@@ -83,11 +100,11 @@ function PriceChart({ coinId }) {
         setPriceData(priceChartData);
 
         // Calculate RSI using the function from RSIindicator.js
-        const prices = data.prices.map((item) => item[1]);
+        const prices = data.prices.map((item: [number, number]) => item[1]);
         const rsiValues = calculateRSI(prices);
         const rsiChartData = priceChartData
           .slice(14) // Ignore first 14 points (RSI period)
-          .map((item, index) => ({
+          .map((item: ChartDataPoint, index: number) => ({
             ...item,
             rsi: rsiValues[index],
           }));
@@ -98,7 +115,7 @@ function PriceChart({ coinId }) {
       }
     } catch (error) {
       console.error("Error fetching data:", error);
-      setError(error.message || "Failed to load chart data");
+      setError((error as Error).message || "Failed to load chart data");
     } finally {
       setLoading(false);
     }
@@ -108,14 +125,14 @@ function PriceChart({ coinId }) {
     fetchPriceData();
   }, [fetchPriceData]);
 
-  const toggleMovingAverage = (key) => {
+  const toggleMovingAverage = (key: keyof typeof movingAverages) => {
     setMovingAverages((prev) => ({
       ...prev,
       [key]: !prev[key],
     }));
   };
 
-  const toggleReferenceLine = (key) => {
+  const toggleReferenceLine = (key: keyof typeof referenceLines) => {
     setReferenceLines((prev) => ({
       ...prev,
       [key]: !prev[key],
@@ -211,7 +228,7 @@ function PriceChart({ coinId }) {
   const dataWithMAs5 = movingAverage(dataWithMAs4, 100, "ma100");
   const dataWithMAs6 = movingAverage(dataWithMAs5, 200, "ma200");
 
-  const formatPrice = (price) => {
+  const formatPrice = (price: number): string => {
     if (price < 0.001) {
       return price.toFixed(6);
     }
@@ -221,14 +238,20 @@ function PriceChart({ coinId }) {
     }).format(price);
   };
 
-  const CustomTooltip = ({ active, payload, label }) => {
+  interface CustomTooltipProps {
+    active?: boolean;
+    payload?: any[];
+    label?: string;
+  }
+
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700">
           <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
-            {days < 7
-              ? `Time: ${new Date(label).toLocaleString()}`
-              : `Date: ${new Date(label).toLocaleDateString()}`}
+            {typeof days === "number" && days < 7
+              ? `Time: ${new Date(label ?? "").toLocaleString()}`
+              : `Date: ${new Date(label ?? "").toLocaleDateString()}`}
           </p>
           {payload.map((entry, index) => (
             <div key={index} className="flex items-center justify-between mb-1">
@@ -300,7 +323,7 @@ function PriceChart({ coinId }) {
             {/* Timeframe Selector */}
             <div className="relative">
               <select
-                value={days}
+                value={days.toString()}
                 onChange={(e) =>
                   setDays(Number(e.target.value) || e.target.value)
                 }
@@ -421,8 +444,10 @@ function PriceChart({ coinId }) {
                     key={key}
                     className="px-2 py-1 text-xs font-medium rounded-full flex items-center"
                     style={{
-                      backgroundColor: `${maColors[key]}20`,
-                      color: maColors[key],
+                      backgroundColor: `${
+                        maColors[key as keyof typeof maColors]
+                      }20`,
+                      color: maColors[key as keyof typeof maColors],
                     }}
                   >
                     {key.toUpperCase()}
@@ -440,12 +465,12 @@ function PriceChart({ coinId }) {
                 key={index}
                 className={({ selected }) =>
                   `px-4 py-2 text-sm font-medium rounded-t-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500
-                  ${
-                    selected
-                      ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
-                      : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
-                  }
-                  `
+                 ${
+                   selected
+                     ? "bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white"
+                     : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                 }
+                 `
                 }
               >
                 <div className="flex items-center">
@@ -495,7 +520,7 @@ function PriceChart({ coinId }) {
                         dataKey="time"
                         tick={{ fill: "#6b7280", fontSize: 11 }}
                         tickFormatter={(time) =>
-                          days < 7
+                          typeof days === "number" && days < 7
                             ? new Date(time).toLocaleTimeString([], {
                                 hour: "2-digit",
                                 minute: "2-digit",
@@ -545,7 +570,7 @@ function PriceChart({ coinId }) {
                               key={key}
                               type="monotone"
                               dataKey={key}
-                              stroke={maColors[key]}
+                              stroke={maColors[key as keyof typeof maColors]}
                               strokeWidth={1.5}
                               dot={false}
                               activeDot={false}
@@ -648,7 +673,7 @@ function PriceChart({ coinId }) {
                         dataKey="time"
                         tick={{ fill: "#6b7280", fontSize: 11 }}
                         tickFormatter={(time) =>
-                          days < 7
+                          typeof days === "number" && days < 7
                             ? new Date(time).toLocaleTimeString([], {
                                 hour: "2-digit",
                                 minute: "2-digit",
@@ -666,7 +691,10 @@ function PriceChart({ coinId }) {
                         axisLine={{ stroke: "#e5e7eb", strokeOpacity: 0.3 }}
                       />
                       <Tooltip
-                        formatter={(value) => [`${Math.round(value)}`, "RSI"]}
+                        formatter={(value) => [
+                          `${Math.round(value as number)}`,
+                          "RSI",
+                        ]}
                         content={<CustomTooltip />}
                       />
                       <ReferenceLine
@@ -757,14 +785,23 @@ function PriceChart({ coinId }) {
                       {Object.entries(movingAverages).map(([key, value]) => (
                         <button
                           key={key}
-                          onClick={() => toggleMovingAverage(key)}
+                          onClick={() =>
+                            toggleMovingAverage(
+                              key as keyof typeof movingAverages
+                            )
+                          }
                           className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center gap-2 ${
                             value
                               ? "text-white shadow-md"
                               : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                           } hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500`}
                           style={
-                            value ? { backgroundColor: maColors[key] } : {}
+                            value
+                              ? {
+                                  backgroundColor:
+                                    maColors[key as keyof typeof maColors],
+                                }
+                              : {}
                           }
                         >
                           {key.toUpperCase()}

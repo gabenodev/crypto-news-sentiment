@@ -1,4 +1,7 @@
-import React, { useEffect, useState } from "react";
+"use client";
+
+import * as React from "react";
+import { useEffect, useState } from "react";
 import {
   LineChart,
   Line,
@@ -11,9 +14,10 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { FiX, FiMinimize2, FiMaximize2 } from "react-icons/fi";
 import { FaArrowUp, FaArrowDown } from "react-icons/fa";
+import type { ChartDataPoint } from "../../types";
 
 // Helper function for price formatting
-const formatPrice = (price) => {
+const formatPrice = (price: number): string => {
   if (price < 0.001) {
     return price.toFixed(6);
   }
@@ -23,17 +27,24 @@ const formatPrice = (price) => {
   }).format(price);
 };
 
-const formatMarketCap = (cap) => {
+const formatMarketCap = (cap: number | null): string => {
+  if (!cap) return "N/A";
   if (cap >= 1e12) return `$${(cap / 1e12).toFixed(2)}T`;
   if (cap >= 1e9) return `$${(cap / 1e9).toFixed(2)}B`;
   if (cap >= 1e6) return `$${(cap / 1e6).toFixed(2)}M`;
   return `$${cap.toLocaleString()}`;
 };
 
-const CustomTooltip = ({ active, payload, label }) => {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: any[];
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
-    const dataPoint = payload[0].payload;
-    const fullDate = dataPoint.fullDate.toLocaleString("en-GB", {
+    const dataPoint = payload[0].payload as ChartDataPoint;
+    const fullDate = dataPoint.fullDate?.toLocaleString("en-GB", {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -56,7 +67,11 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-const PriceChangeIndicator = ({ change }) => {
+interface PriceChangeIndicatorProps {
+  change: number;
+}
+
+const PriceChangeIndicator = ({ change }: PriceChangeIndicatorProps) => {
   const isPositive = change >= 0;
   return (
     <span
@@ -94,7 +109,11 @@ const LoadingSkeleton = () => (
   </div>
 );
 
-const ErrorMessage = ({ error }) => (
+interface ErrorMessageProps {
+  error: string;
+}
+
+const ErrorMessage = ({ error }: ErrorMessageProps) => (
   <div className="w-96 p-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-2xl shadow-xl">
     <div className="flex flex-col items-center text-center">
       <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mb-3">
@@ -120,15 +139,28 @@ const ErrorMessage = ({ error }) => (
   </div>
 );
 
-const AltcoinChart = ({ coin, onClose }) => {
-  const [chartData, setChartData] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [marketCap, setMarketCap] = useState(null);
-  const [rank, setRank] = useState(null);
+interface CoinData {
+  id: string;
+  name: string;
+  symbol: string;
+  image: string;
+  priceChange: number;
+}
 
-  const fetchMarketData = async (coinId) => {
+interface AltcoinChartProps {
+  coin: CoinData;
+  onClose: () => void;
+}
+
+const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [marketCap, setMarketCap] = useState<number | null>(null);
+  const [rank, setRank] = useState<number | null>(null);
+
+  const fetchMarketData = async (coinId: string) => {
     try {
       const response = await fetch(
         `https://sentimentx-backend.vercel.app/api/all-cryptos`
@@ -138,7 +170,7 @@ const AltcoinChart = ({ coin, onClose }) => {
       }
       const data = await response.json();
 
-      const coinData = data.find((coin) => coin.id === coinId);
+      const coinData = data.find((coin: any) => coin.id === coinId);
       if (!coinData) {
         throw new Error("Coin not found in market data");
       }
@@ -173,14 +205,16 @@ const AltcoinChart = ({ coin, onClose }) => {
           throw new Error("Invalid data format: prices not found");
         }
 
-        const formattedData = historicalData.prices.map((priceData) => ({
-          date: new Date(priceData[0]).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-          }),
-          price: priceData[1],
-          fullDate: new Date(priceData[0]),
-        }));
+        const formattedData = historicalData.prices.map(
+          (priceData: [number, number]) => ({
+            date: new Date(priceData[0]).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+            }),
+            price: priceData[1],
+            fullDate: new Date(priceData[0]),
+          })
+        );
         setChartData(formattedData);
 
         // Fetch market cap and rank
@@ -189,7 +223,7 @@ const AltcoinChart = ({ coin, onClose }) => {
         setRank(rank);
       } catch (error) {
         console.error("Error fetching data:", error);
-        setError(error.message || "Failed to load data.");
+        setError((error as Error).message || "Failed to load data.");
       } finally {
         setLoading(false);
       }
@@ -206,7 +240,9 @@ const AltcoinChart = ({ coin, onClose }) => {
     return <ErrorMessage error={error} />;
   }
 
-  const prices = chartData.map((data) => parseFloat(data.price));
+  const prices = chartData.map((data) =>
+    Number.parseFloat(data.price.toString())
+  );
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
   const priceRange = maxPrice - minPrice;
@@ -228,7 +264,7 @@ const AltcoinChart = ({ coin, onClose }) => {
         <div className="p-6 pb-0 flex justify-between items-start">
           <div className="flex items-center space-x-3">
             <img
-              src={coin.image}
+              src={coin.image || "/placeholder.svg"}
               alt={coin.name}
               className="w-10 h-10 rounded-full"
             />

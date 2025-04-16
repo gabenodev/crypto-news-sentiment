@@ -1,4 +1,14 @@
-export const fetchWhaleTransactions = async (page = 1, threshold = 100) => {
+import type { WhaleTransaction } from "../../../types";
+
+interface WhaleTransactionsResponse {
+  transactions: WhaleTransaction[];
+  totalPages: number;
+}
+
+export const fetchWhaleTransactions = async (
+  page = 1,
+  threshold = 100
+): Promise<WhaleTransactionsResponse> => {
   try {
     const res = await fetch(
       `https://sentimentx-backend.vercel.app/api/whale-transactions?page=${page}&threshold=${threshold}`

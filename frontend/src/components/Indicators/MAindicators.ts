@@ -1,7 +1,11 @@
-// MAindicators.js
+import type { ChartDataPoint } from "../../types";
 
-// Funcție pentru calculul Mediei Mobile Simple (SMA)
-export const movingAverage = (data, period, key) => {
+// Function to calculate Simple Moving Average (SMA)
+export const movingAverage = (
+  data: ChartDataPoint[],
+  period: number,
+  key: string
+): ChartDataPoint[] => {
   if (data.length < period) {
     console.error(`Cannot calculate ${key} on a timeframe this small.`);
     return data.map((item) => ({ ...item, [key]: null }));
@@ -15,18 +19,18 @@ export const movingAverage = (data, period, key) => {
   });
 };
 
-// Funcție pentru calculul prețului minim
-export const calculateMinPrice = (data) => {
+// Function to calculate minimum price
+export const calculateMinPrice = (data: ChartDataPoint[]): number => {
   return Math.min(...data.map((item) => item.price));
 };
 
-// Funcție pentru calculul prețului maxim
-export const calculateMaxPrice = (data) => {
+// Function to calculate maximum price
+export const calculateMaxPrice = (data: ChartDataPoint[]): number => {
   return Math.max(...data.map((item) => item.price));
 };
 
-// Funcție pentru calculul prețului mediu
-export const calculateAveragePrice = (data) => {
+// Function to calculate average price
+export const calculateAveragePrice = (data: ChartDataPoint[]): number => {
   const min = calculateMinPrice(data);
   const max = calculateMaxPrice(data);
   return (min + max) / 2;

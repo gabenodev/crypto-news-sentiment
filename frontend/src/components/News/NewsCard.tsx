@@ -1,16 +1,20 @@
-import React, { useEffect, useState } from "react";
+"use client";
+
+import * as React from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
+import type { NewsArticle } from "../../types";
 
-function NewsCard() {
-  const [news, setNews] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortOption, setSortOption] = useState("date");
-  const [error, setError] = useState(null);
+function NewsCard(): JSX.Element {
+  const [news, setNews] = useState<NewsArticle[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [sortOption, setSortOption] = useState<"relevance" | "date">("date");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const getNews = async () => {
+    const getNews = async (): Promise<void> => {
       try {
         setLoading(true);
         setError(null);
@@ -145,11 +149,13 @@ function NewsCard() {
   const sortedNews = filteredNews.sort((a, b) => {
     if (sortOption === "relevance") {
       return (
-        b.title.toLowerCase().includes(searchTerm.toLowerCase()) -
-        a.title.toLowerCase().includes(searchTerm.toLowerCase())
+        (b.title.toLowerCase().includes(searchTerm.toLowerCase()) ? 1 : 0) -
+        (a.title.toLowerCase().includes(searchTerm.toLowerCase()) ? 1 : 0)
       );
     } else if (sortOption === "date") {
-      return new Date(b.publishedAt) - new Date(a.publishedAt);
+      return (
+        new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+      );
     }
     return 0;
   });
@@ -195,7 +201,9 @@ function NewsCard() {
               <select
                 className="appearance-none w-full pl-3 pr-8 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 value={sortOption}
-                onChange={(e) => setSortOption(e.target.value)}
+                onChange={(e) =>
+                  setSortOption(e.target.value as "relevance" | "date")
+                }
               >
                 <option value="date">Newest First</option>
                 <option value="relevance">Most Relevant</option>
@@ -248,14 +256,14 @@ function NewsCard() {
                 <img
                   src={
                     article.urlToImage ||
-                    "https://picsum.photos/600/400?random=" + index
+                    `https://picsum.photos/600/400?random=${index}`
                   }
                   alt={article.title}
                   className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                  onError={(e) =>
-                    (e.target.src =
-                      "https://picsum.photos/600/400?random=" + index)
-                  }
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.src = `https://picsum.photos/600/400?random=${index}`;
+                  }}
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                   {article.source?.name && (

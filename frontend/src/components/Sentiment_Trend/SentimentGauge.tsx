@@ -1,16 +1,21 @@
-import React from "react";
+// SentimentGauge.tsx
+import * as React from "react";
 import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
 
-const SentimentGauge = ({ value }) => {
-  const getColor = (score) => {
+interface SentimentGaugeProps {
+  value: number;
+}
+
+const SentimentGauge = ({ value }: SentimentGaugeProps): JSX.Element => {
+  const getColor = (score: number): string => {
     if (score <= 25) return "#ef4444"; // Red for extreme fear
     if (score <= 50) return "#f59e0b"; // Orange for fear
     if (score <= 75) return "#facc15"; // Yellow for neutral
     return "#10b981"; // Green for greed
   };
 
-  const getSentimentLabel = (score) => {
+  const getSentimentLabel = (score: number): string => {
     if (score <= 25) return "Extreme Fear";
     if (score <= 50) return "Fear";
     if (score <= 75) return "Neutral";
