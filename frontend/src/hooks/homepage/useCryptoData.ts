@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { excludedCoins } from "../../../utils/excludedCoins";
-import type { Cryptocurrency } from "../../../types";
+import { excludedCoins } from "../../utils/excludedCoins";
+import type { Cryptocurrency } from "../../types";
 
 function useCryptoData(page = 1) {
   const [cryptoData, setCryptoData] = useState<Cryptocurrency[]>([]);

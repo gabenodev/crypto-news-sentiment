@@ -1,12 +1,12 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Header from "./components/Layout/Header";
-import SentimentChart from "./components/Sentiment_Trend/SentimentChart";
-import NewsCard from "./components/News/NewsCard";
-import AltcoinSeason from "./components/Altcoin_Season/AltcoinSeason";
-import WhaleTransactions from "./components/Whale_Transactions/WhaleTransactions";
-import Footer from "./components/Layout/Footer";
-import Homepage from "./components/HomePage/HomePage";
-import CurrencyDetails from "./components/CurrencyDetails/CurrencyDetails";
+import Header from "@components/Layout/Header";
+import SentimentChart from "@components/sentimentTrend/SentimentChart";
+import NewsCard from "@components/News/NewsCard";
+import AltcoinSeason from "@components/altcoinSeason/AltcoinSeason";
+import WhaleTransactions from "@components/whaleTransactions/WhaleTransactions";
+import Footer from "@components/Layout/Footer";
+import Homepage from "@pages/HomePage";
+import CurrencyDetails from "@components/CurrencyDetails/CurrencyDetails";
 import ScrollToTop from "./utils/ScrollToTop";
 import React from "react";
 

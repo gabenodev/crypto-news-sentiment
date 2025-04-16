@@ -1,6 +1,6 @@
 import React from "react"; // Adaugă acest import
 import { FaUserCircle } from "react-icons/fa";
-import NightToggle from "./NightToggle";
+import NightToggle from "../Layout/NightToggle";
 
 const UserControls = (): JSX.Element => (
   <>

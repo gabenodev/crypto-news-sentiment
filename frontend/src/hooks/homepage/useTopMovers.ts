@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Cryptocurrency } from "../../../types";
+import type { Cryptocurrency } from "../../types";
 
 function useTopMovers(page = 1) {
   const [topMovers, setTopMovers] = useState<Cryptocurrency[]>([]);

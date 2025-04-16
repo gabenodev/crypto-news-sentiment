@@ -1,4 +1,4 @@
-import type { WhaleTransaction } from "../../../types";
+import type { WhaleTransaction } from "../../types";
 
 interface WhaleTransactionsResponse {
   transactions: WhaleTransaction[];
