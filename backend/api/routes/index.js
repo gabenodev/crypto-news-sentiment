@@ -13,7 +13,6 @@ const {
   getTopLosers,
   getTopMovers,
   getMarketDominance,
-  getDashboardData,
 } = require("../controllers/cryptoController");
 
 // API Routes with rate limiting:
@@ -28,17 +27,11 @@ router.get("/top-losers", limiter, getTopLosers);
 router.get("/market-dominance", limiter, getMarketDominance);
 router.get("/whale-transactions", getWhaleTransactions);
 
-// New combined endpoint for dashboard data
-router.get("/dashboard-data", limiter, getDashboardData);
-
-// Route for warmup cache
+// Ruta pentru warmup cache
 router.get("/warmup", (req, res) => {
   warmupCache()
-    .then((result) =>
-      res.status(200).json({
-        message: "Cache warmed up successfully!",
-        details: result,
-      })
+    .then(() =>
+      res.status(200).json({ message: "Cache warmed up successfully!" })
     )
     .catch((err) =>
       res
