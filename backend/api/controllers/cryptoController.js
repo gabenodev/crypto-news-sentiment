@@ -1,5 +1,6 @@
 // Import the caching service to use Redis
-const { getCachedData } = require("../services/cacheService");
+const { getCachedData, batchSetCache } = require("../services/cacheService");
+const { batchFetchApis } = require("../utils/apiUtils");
 
 // Import all CoinGecko API service functions
 const {
@@ -18,8 +19,8 @@ const {
 const getAllCryptos = async (req, res, next) => {
   try {
     // Try to get data from cache first, otherwise fetch from API
-    // Cache key: "allCryptos", expires after 600 seconds (10 minutes)
-    const data = await getCachedData("allCryptos", fetchAllCryptosData, 600);
+    // Cache key: "allCryptos", expires after 1 hour (3600 seconds)
+    const data = await getCachedData("allCryptos", fetchAllCryptosData, 3600);
     res.json(data);
   } catch (error) {
     next(error);
@@ -40,11 +41,11 @@ const getAltcoinSeasonChart = async (req, res, next) => {
     // Create dynamic cache key based on coinId and days
     const cacheKey = `altcoinSeasonChart_${coinId}_${days || 30}`;
 
-    // Get data with caching (600 seconds expiration)
+    // Get data with caching (1 hour expiration)
     const data = await getCachedData(
       cacheKey,
       () => fetchAltcoinSeasonChartData(coinId, days),
-      600
+      3600
     );
     res.json(data);
   } catch (error) {
@@ -66,11 +67,11 @@ const getCoinData = async (req, res, next) => {
     // Create cache key specific to this coin
     const cacheKey = `coinData_${coinId}`;
 
-    // Get data with caching
+    // Get data with caching (1 hour expiration)
     const data = await getCachedData(
       cacheKey,
       () => fetchCoinData(coinId),
-      600
+      3600
     );
     res.json(data);
   } catch (error) {
@@ -105,7 +106,7 @@ const getSearchResults = async (req, res, next) => {
     // Create cache key specific to this search query
     const cacheKey = `searchResults_${query.toLowerCase()}`;
 
-    // Get data with caching (600 seconds expiration)
+    // Get data with caching (10 minutes expiration)
     const data = await getCachedData(
       cacheKey,
       () => fetchSearchResults(query),
@@ -123,9 +124,9 @@ const getSearchResults = async (req, res, next) => {
  */
 const getTopMovers = async (req, res, next) => {
   try {
-    // Folosim cache pentru top movers cu expirare de 1 oră (3600 secunde)
+    // Use cache for top movers with expiration of 1 hour (3600 seconds)
     const allCryptos = await getCachedData(
-      "topMovers",
+      "allCryptos",
       fetchAllCryptosData,
       3600
     );
@@ -149,9 +150,9 @@ const getTopMovers = async (req, res, next) => {
  */
 const getTopLosers = async (req, res, next) => {
   try {
-    // Folosim cache pentru top losers cu expirare de 1 oră (3600 secunde)
+    // Use cache for top losers with expiration of 1 hour (3600 seconds)
     const allCryptos = await getCachedData(
-      "topLosers",
+      "allCryptos",
       fetchAllCryptosData,
       3600
     );
@@ -169,6 +170,10 @@ const getTopLosers = async (req, res, next) => {
   }
 };
 
+/**
+ * Get market dominance data
+ * Route: GET /api/market-dominance
+ */
 const getMarketDominance = async (req, res, next) => {
   try {
     const data = await getCachedData(
@@ -182,14 +187,73 @@ const getMarketDominance = async (req, res, next) => {
   }
 };
 
+/**
+ * Get multiple data endpoints in a single request
+ * Route: GET /api/dashboard-data
+ */
+const getDashboardData = async (req, res, next) => {
+  try {
+    // Fetch multiple endpoints in parallel and cache them
+    const [allCryptos, trending, marketDominance] = await batchFetchApis([
+      {
+        url: "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=false",
+        cacheKey: "allCryptos",
+        options: { cacheTtl: 3600 },
+      },
+      {
+        url: "https://api.coingecko.com/api/v3/search/trending?sparkline=false",
+        cacheKey: "trendingCoins",
+        options: { cacheTtl: 3600 },
+      },
+      {
+        url: "https://api.coingecko.com/api/v3/global",
+        cacheKey: "marketDominance",
+        options: { cacheTtl: 3600 },
+      },
+    ]);
+
+    // Process the data for top movers and losers
+    let topMovers = [];
+    let topLosers = [];
+
+    if (allCryptos) {
+      topMovers = [...allCryptos]
+        .sort(
+          (a, b) =>
+            b.price_change_percentage_24h - a.price_change_percentage_24h
+        )
+        .slice(0, 5);
+
+      topLosers = [...allCryptos]
+        .sort(
+          (a, b) =>
+            a.price_change_percentage_24h - b.price_change_percentage_24h
+        )
+        .slice(0, 5);
+    }
+
+    // Return all data in a single response
+    res.json({
+      allCryptos: allCryptos?.slice(0, 50) || [], // Only return top 50 to reduce payload size
+      trending: trending?.coins || [],
+      marketDominance: marketDominance?.data?.market_cap_percentage || {},
+      topMovers,
+      topLosers,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Export all controller functions
 module.exports = {
   getAllCryptos,
   getAltcoinSeasonChart,
   getCoinData,
   getTrendingCoins,
-  getSearchResults, // Added the new controller function
+  getSearchResults,
   getTopMovers,
   getTopLosers,
   getMarketDominance,
+  getDashboardData,
 };
