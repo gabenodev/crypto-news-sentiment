@@ -31,7 +31,7 @@ interface CoinData {
 }
 
 const AltcoinSeason = (): JSX.Element => {
-  const [isAltcoinSeason, setIsAltcoinSeason] = useState<boolean | null>(null);
+  const [, setIsAltcoinSeason] = useState<boolean | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [outperformingCount, setOutperformingCount] = useState<number>(0);
   const [totalAltcoins, setTotalAltcoins] = useState<number>(0);
@@ -45,7 +45,6 @@ const AltcoinSeason = (): JSX.Element => {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [bitcoinData, setBitcoinData] = useState<Cryptocurrency | null>(null);
   const [showInfo, setShowInfo] = useState<boolean>(false);
-  const [timeframe, setTimeframe] = useState<"24h" | "7d" | "30d">("24h");
 
   useEffect(() => {
     const fetchAllCrpytosData = async () => {

@@ -255,7 +255,7 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
         setChartData(formattedData);
 
         // Fetch market cap and rank
-        const { market_cap, rank, volume } = await fetchMarketData(coin.id);
+        const { market_cap, rank } = await fetchMarketData(coin.id);
         setMarketCap(market_cap);
         setRank(rank);
 
