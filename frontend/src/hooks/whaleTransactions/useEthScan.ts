@@ -2,7 +2,7 @@ import { fetchWhaleTransactions } from "../../utils/API/CoinGeckoAPI"; // Import
 import { useState, useEffect } from "react";
 import type { WhaleTransaction } from "../../types";
 
-function useWhaleTransactions(page = 1, threshold = 1000) {
+function useWhaleTransactions(page = 1, threshold = 100) {
   const [transactions, setTransactions] = useState<WhaleTransaction[]>([]);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(true);

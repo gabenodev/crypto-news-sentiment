@@ -40,7 +40,7 @@ const getWhaleTransactionsFromEtherscan = async (filterValue, startBlock) => {
     // Dacă status-ul e OK, filtrăm tranzacțiile după valoare minimă (ex: >10 ETH)
     if (json?.status === "1") {
       const filtered = json.result.filter(
-        (tx) => parseFloat(tx.value) > 1000 ** 18 * filterValue
+        (tx) => parseFloat(tx.value) > 10 ** 18 * filterValue
       );
 
       // Formatăm datele pentru frontend

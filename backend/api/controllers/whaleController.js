@@ -8,7 +8,7 @@ const {
 const getWhaleTransactions = async (req, res) => {
   try {
     // Valoarea minimă (în ETH) pentru filtrarea tranzacțiilor
-    const filterValue = parseFloat(req.query.filterValue) || 1000;
+    const filterValue = parseFloat(req.query.filterValue) || 10;
 
     // Cheie unică pentru caching în funcție de filtru
     const cacheKey = `whale_tx_filter_${filterValue}`;
@@ -36,7 +36,7 @@ const getWhaleTransactions = async (req, res) => {
 
         return { transactions: allTx };
       },
-      86400 // cache pentru o zi  (86400 secunde)
+      600 // cache pentru 10 minute (600 secunde)
     );
 
     // Returnăm datele către frontend
