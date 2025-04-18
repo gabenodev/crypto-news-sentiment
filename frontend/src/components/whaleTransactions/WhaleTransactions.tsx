@@ -67,7 +67,13 @@ export default function WhaleTransactions(): JSX.Element {
       KuCoin: "bg-pink-500",
     };
 
-    return exchangeColors[exchange] || "bg-gray-500";
+    // Căutare case-insensitive
+    const match = Object.entries(exchangeColors).find(([key]) =>
+      exchange.toLowerCase().includes(key.toLowerCase())
+    );
+
+    // Returnăm culoarea găsită sau una default
+    return match ? match[1] : "bg-gray-400";
   };
 
   const formatValue = (value: number): string => {

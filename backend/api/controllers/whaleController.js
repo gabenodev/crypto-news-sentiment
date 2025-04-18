@@ -36,7 +36,7 @@ const getWhaleTransactions = async (req, res) => {
 
         return { transactions: allTx };
       },
-      86400 // cache pentru 1 zi (86400 secunde)
+      600 // cache pentru 10 minute (600 secunde)
     );
 
     // Returnăm datele către frontend

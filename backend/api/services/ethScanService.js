@@ -31,7 +31,7 @@ const getWhaleTransactionsFromEtherscan = async (filterValue, startBlock) => {
     const url = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=${startBlock}&endblock=99999999&page=1&offset=100&sort=desc&apikey=${apiKey}`;
 
     // Așteptăm 300ms între request-uri pentru a evita rate-limit
-    await delay(300);
+    await delay(200);
 
     // Apelăm API-ul și parcurgem datele
     const response = await fetch(url);
