@@ -2,26 +2,21 @@
 
 import * as React from "react";
 import { useState, useEffect, type ReactNode } from "react";
-import { fetchWhaleTransactions } from "../../hooks/whaleTransactions/useEthScan";
+import useWhaleTransactions from "../../hooks/whaleTransactions/useEthScan";
 import { motion, AnimatePresence } from "framer-motion";
-import type { WhaleTransaction } from "../../types";
 
 const WhaleTransactions = (): JSX.Element => {
-  const [transactions, setTransactions] = useState<WhaleTransaction[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
   const [page, setPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
 
-  const loadTransactions = async (page: number): Promise<void> => {
-    setLoading(true);
-    const { transactions: fetchedTransactions, totalPages: fetchedTotalPages } =
-      await fetchWhaleTransactions(page, 100);
-    setTransactions(fetchedTransactions);
-    setTotalPages(fetchedTotalPages);
-    setLoading(false);
+  // Folosește hook-ul personalizat pentru a prelua tranzacțiile
+  const { transactions, totalPages, loading } = useWhaleTransactions(page, 100);
+
+  const loadTransactions = (newPage: number): void => {
+    setPage(newPage); // Actualizează pagina și va declanșa fetch-ul din hook
   };
 
   useEffect(() => {
+    // Aceasta va face ca tranzacțiile să fie încărcate automat când pagina se schimbă
     loadTransactions(page);
   }, [page]);
 

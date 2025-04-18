@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fetchMarketDominance } from "../../utils/api";
+import { fetchMarketDominance } from "../../utils/API/CoinGeckoAPI";
 import type { MarketDominanceItem } from "../../types";
 
 function useMarketDominance() {

@@ -1,7 +1,7 @@
 "use client";
-
-import { useEffect, useState } from "react";
-import type { TrendingCoin } from "../../types";
+import { TrendingCoin } from "../../types"; // Asigură-te că ai definit tipul TrendingCoin în types.ts
+import { useState, useEffect } from "react";
+import { fetchTrendingCoins } from "../../utils/API/CoinGeckoAPI"; // Importa funcția din api.ts
 
 function useTrendingCoins() {
   const [trendingCoins, setTrendingCoins] = useState<TrendingCoin[]>([]);
@@ -9,16 +9,11 @@ function useTrendingCoins() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchTrendingCoins = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          "https://sentimentxv2-project.vercel.app/api/trending"
-        );
-        if (!response.ok) throw new Error("Network response was not ok");
-
-        const data = await response.json();
-        setTrendingCoins(data.coins.slice(0, 5));
+        const data = await fetchTrendingCoins(); // Folosește funcția importată
+        setTrendingCoins(data.coins.slice(0, 5)); // Prelucrarea datelor primite
         setError(null);
       } catch (error) {
         console.error("Error fetching trending coins:", error);
@@ -28,7 +23,7 @@ function useTrendingCoins() {
       }
     };
 
-    fetchTrendingCoins();
+    fetchData();
   }, []);
 
   return { trendingCoins, loading, error };

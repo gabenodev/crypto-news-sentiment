@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { excludedCoins } from "../../utils/excludedCoins";
+import { fetchCryptoData } from "../../utils/API/CoinGeckoAPI"; // Importă funcția din api.ts
 import type { Cryptocurrency } from "../../types";
 
 function useCryptoData(page = 1) {
@@ -10,23 +10,11 @@ function useCryptoData(page = 1) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCryptoData = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          `https://sentimentxv2-project.vercel.app/api/all-cryptos?per_page=${
-            page * 100
-          }`
-        );
-        if (!response.ok) throw new Error("Network response was not ok");
-
-        const data: Cryptocurrency[] = await response.json();
-
-        const filteredData = data
-          .filter((coin) => !excludedCoins.has(coin.id)) // Exclude coins
-          .sort((a, b) => a.market_cap_rank - b.market_cap_rank); // Sort
-
-        setCryptoData(filteredData);
+        const data = await fetchCryptoData(page); // Folosește funcția din api.ts
+        setCryptoData(data);
         setError(null);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -36,7 +24,7 @@ function useCryptoData(page = 1) {
       }
     };
 
-    fetchCryptoData();
+    fetchData();
   }, [page]);
 
   return { cryptoData, loading, error };

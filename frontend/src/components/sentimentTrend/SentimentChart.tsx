@@ -4,7 +4,7 @@ import * as React from "react";
 import SentimentGauge from "./SentimentGauge";
 import { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
-import axios from "axios";
+import { fetchSentimentData } from "../../utils/API/sentimentAPI";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -15,8 +15,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { format } from "date-fns";
-import type { SentimentChartData, FearGreedIndexData } from "../../types";
+import type { SentimentChartData } from "../../types";
 
 ChartJS.register(
   CategoryScale,
@@ -37,33 +36,19 @@ function SentimentChart(): JSX.Element {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSentimentData = async (limit: string | number): Promise<void> => {
+  const loadSentimentData = async (limit: string | number) => {
     setIsLoading(true);
     setError(null);
     try {
-      const url =
-        limit === "max"
-          ? "https://api.alternative.me/fng/?limit=2000&format=json"
-          : `https://api.alternative.me/fng/?limit=${limit}&format=json`;
-
-      const response = await axios.get(url);
-
-      if (!response.data || !response.data.data) {
-        throw new Error("Invalid data format from API");
-      }
-
-      const data: FearGreedIndexData[] = response.data.data;
-      const sentimentScores = data.map((item) => Number.parseInt(item.value));
-      const sentimentTimestamps = data.map((item) =>
-        format(new Date(item.timestamp * 1000), "MMM dd, yyyy")
+      const { sentimentScores, sentimentTimestamps } = await fetchSentimentData(
+        limit
       );
-
       setSentimentData({
-        labels: sentimentTimestamps.reverse(),
+        labels: sentimentTimestamps,
         datasets: [
           {
             label: "Fear & Greed Index",
-            data: sentimentScores.reverse(),
+            data: sentimentScores,
             fill: true,
             borderColor: "#9ca3af",
             backgroundColor: "rgba(59, 130, 246, 0.1)",
@@ -83,7 +68,6 @@ function SentimentChart(): JSX.Element {
         ],
       });
     } catch (error) {
-      console.error("Error fetching sentiment data:", error);
       setError("Failed to load sentiment data. Please try again later.");
     } finally {
       setIsLoading(false);
@@ -91,7 +75,7 @@ function SentimentChart(): JSX.Element {
   };
 
   useEffect(() => {
-    fetchSentimentData(timeframe);
+    loadSentimentData(timeframe);
   }, [timeframe]);
 
   const handleTimeframeChange = (newTimeframe: string | number): void => {

@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { motion } from "framer-motion";
+import { fetchNews } from "../../utils/API/newsAPI";
 import type { NewsArticle } from "../../types";
 
 function NewsCard(): JSX.Element {
@@ -18,18 +18,9 @@ function NewsCard(): JSX.Element {
       try {
         setLoading(true);
         setError(null);
-        const response = await axios.get(
-          `https://sentimentxv2-project.vercel.app/api/news`
-        );
-
-        if (Array.isArray(response.data.articles)) {
-          setNews(response.data.articles);
-        } else {
-          setNews([]);
-          setError("Unexpected data format received from server");
-        }
+        const fetchedNews = await fetchNews();
+        setNews(fetchedNews);
       } catch (error) {
-        console.error("Error fetching news:", error);
         setError("Failed to load news. Please try again later.");
         setNews([]);
       } finally {

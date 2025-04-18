@@ -87,6 +87,11 @@ export interface WhaleTransaction {
   icon?: React.ReactNode;
 }
 
+export interface WhaleTransactionsResponse {
+  transactions: WhaleTransaction[];
+  totalPages: number;
+}
+
 // Fear and Greed Index type
 export interface FearGreedIndexData {
   value: string;
