@@ -58,9 +58,12 @@ export const fetchWhaleTransactions = async (
   threshold = 100
 ): Promise<WhaleTransactionsResponse> => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/whale-transactions`, {
-      params: { page, threshold },
-    });
+    const response = await axios.get(
+      `${API_BASE_URL}/whale-transactions?filterValue=300`,
+      {
+        params: { page, threshold },
+      }
+    );
 
     return {
       transactions: response.data.transactions || [],
