@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // Call the warmup function before the server starts
-warmupCache(); // Execută logica de warm-up pentru cache
+//warmupCache(); // Execută logica de warm-up pentru cache
 
 // Basic test route to verify server is running
 app.get("/", (req, res) => res.send("The backend is running!"));
