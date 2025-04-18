@@ -1,4 +1,5 @@
 {
+  "name": "sentimentxv2-backend",
   "version": 2,
   "builds": [
     {

@@ -13,7 +13,7 @@ function useTrendingCoins() {
       try {
         setLoading(true);
         const response = await fetch(
-          "https://sentimentx-backend.vercel.app/api/trending"
+          "https://sentimentxv2-project.vercel.app/api/trending"
         );
         if (!response.ok) throw new Error("Network response was not ok");
 

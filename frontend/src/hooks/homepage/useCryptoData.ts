@@ -14,7 +14,7 @@ function useCryptoData(page = 1) {
       try {
         setLoading(true);
         const response = await fetch(
-          `https://sentimentx-backend.vercel.app/api/all-cryptos?per_page=${
+          `https://sentimentxv2-project.vercel.app/api/all-cryptos?per_page=${
             page * 100
           }`
         );

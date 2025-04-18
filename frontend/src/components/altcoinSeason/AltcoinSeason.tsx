@@ -51,7 +51,7 @@ const AltcoinSeason = (): JSX.Element => {
       try {
         setLoading(true);
         const response = await fetch(
-          `https://sentimentx-backend.vercel.app/api/all-cryptos`
+          `https://sentimentxv2-project.vercel.app/api/all-cryptos`
         );
         const data: Cryptocurrency[] = await response.json();
 

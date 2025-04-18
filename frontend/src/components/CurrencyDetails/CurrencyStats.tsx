@@ -42,7 +42,7 @@ function CurrencyStats(): JSX.Element {
       try {
         setLoading(true);
         const response = await fetch(
-          `https://sentimentx-backend.vercel.app/api/coin-data?coinId=${coinId}`
+          `https://sentimentxv2-project.vercel.app/api/coin-data?coinId=${coinId}`
         );
 
         if (!response.ok) {

@@ -191,7 +191,7 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
   const fetchMarketData = async (coinId: string) => {
     try {
       const response = await fetch(
-        `https://sentimentx-backend.vercel.app/api/all-cryptos`
+        `https://sentimentxv2-project.vercel.app/api/all-cryptos`
       );
       if (!response.ok) {
         throw new Error(`Server returned status: ${response.status}`);
@@ -230,7 +230,7 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
       try {
         // Fetch historical data
         const historicalResponse = await fetch(
-          `https://sentimentx-backend.vercel.app/api/altcoin-season-chart?coinId=${coin.id}&days=${timeframe}`
+          `https://sentimentxv2-project.vercel/api/altcoin-season-chart?coinId=${coin.id}&days=${timeframe}`
         );
         if (!historicalResponse.ok) {
           throw new Error(

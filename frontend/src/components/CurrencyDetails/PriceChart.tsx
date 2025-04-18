@@ -86,7 +86,7 @@ function PriceChart({ coinId }: PriceChartProps): JSX.Element {
       setLoading(true);
       setError(null);
       const response = await fetch(
-        `https://sentimentx-backend.vercel.app/api/altcoin-season-chart?coinId=${coinId}&days=${days}`
+        `https://sentimentxv2-project.vercel.app/api/altcoin-season-chart?coinId=${coinId}&days=${days}`
       );
       if (!response.ok) throw new Error("Failed to fetch data");
       const data = await response.json();
