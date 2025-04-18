@@ -394,14 +394,14 @@ const AltcoinSeason = (): JSX.Element => {
                     className={`absolute top-0 left-0 h-full rounded-full bg-gradient-to-r ${seasonStatus.color}`}
                   />
 
-                  {/* Bitcoin marker */}
+                  {/* Bitcoin marker - Fixed positioning */}
                   {bitcoinData && (
                     <div
-                      className="absolute top-0 h-full flex items-center"
+                      className="absolute top-1/2 -translate-y-1/2"
                       style={{ left: `${percentage}%` }}
                     >
-                      <div className="relative">
-                        <div className="absolute -left-3 w-6 h-6 rounded-full bg-white dark:bg-gray-800 border-2 border-orange-500 flex items-center justify-center shadow-md">
+                      <div className="relative -translate-x-1/2">
+                        <div className="w-6 h-6 rounded-full bg-white dark:bg-gray-800 border-2 border-orange-500 flex items-center justify-center shadow-md">
                           <FaBitcoin className="text-orange-500 text-xs" />
                         </div>
                       </div>
