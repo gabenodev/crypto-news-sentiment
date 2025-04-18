@@ -272,11 +272,11 @@ const AltcoinSeason = (): JSX.Element => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 lg:p-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-8xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
           <motion.h1
-            className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-teal-500 to-blue-600"
+            className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-green-500"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -294,10 +294,10 @@ const AltcoinSeason = (): JSX.Element => {
           </motion.p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-5 gap-8">
           {/* Main Card */}
           <motion.div
-            className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200/50 dark:border-gray-700/50"
+            className="lg:col-span-3 bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200/50 dark:border-gray-700/50"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -624,10 +624,10 @@ const AltcoinSeason = (): JSX.Element => {
 
           {/* Chart Card - Right Side */}
           <motion.div
+            className="lg:col-span-2"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="lg:col-span-1"
           >
             <div className="sticky top-20">
               {selectedCoin ? (

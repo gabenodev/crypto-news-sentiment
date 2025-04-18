@@ -222,9 +222,9 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
         // Fetch Bitcoin data
         const bitcoinData = await fetchBitcoinData();
         setBitcoinData(bitcoinData);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error fetching data:", error);
-        setError((error as Error).message || "Failed to load data.");
+        setError(error.message || "Failed to load data.");
       } finally {
         setLoading(false);
       }
