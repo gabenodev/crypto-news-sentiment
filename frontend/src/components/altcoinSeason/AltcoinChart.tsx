@@ -1,5 +1,10 @@
 "use client";
 import * as React from "react";
+import {
+  fetchMarketData,
+  fetchHistoricalData,
+  fetchBitcoinData,
+} from "../../utils/API/CoinGeckoAPI";
 import { useEffect, useState, useRef } from "react";
 import {
   LineChart,
@@ -188,40 +193,6 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
     price_change_percentage_24h: number;
   } | null>(null);
 
-  const fetchMarketData = async (coinId: string) => {
-    try {
-      const response = await fetch(
-        `https://sentimentxv2-project.vercel.app/api/all-cryptos`
-      );
-      if (!response.ok) {
-        throw new Error(`Server returned status: ${response.status}`);
-      }
-      const data = await response.json();
-
-      const coinData = data.find((coin: any) => coin.id === coinId);
-      if (!coinData) {
-        throw new Error("Coin not found in market data");
-      }
-
-      return {
-        market_cap: coinData.market_cap,
-        rank: coinData.market_cap_rank,
-        volume: coinData.total_volume,
-        ath: coinData.ath,
-        atl: coinData.atl,
-      };
-    } catch (error) {
-      console.error("Error fetching market data:", error);
-      return {
-        market_cap: null,
-        rank: null,
-        volume: null,
-        ath: null,
-        atl: null,
-      };
-    }
-  };
-
   useEffect(() => {
     setLoading(true);
     setError(null);
@@ -229,18 +200,7 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
     const fetchData = async () => {
       try {
         // Fetch historical data
-        const historicalResponse = await fetch(
-          `https://sentimentxv2-project.vercel.app/api/altcoin-season-chart?coinId=${coin.id}&days=${timeframe}`
-        );
-        if (!historicalResponse.ok) {
-          throw new Error(
-            `Server returned status: ${historicalResponse.status}`
-          );
-        }
-        const historicalData = await historicalResponse.json();
-        if (!historicalData || !historicalData.prices) {
-          throw new Error("Invalid data format: prices not found");
-        }
+        const historicalData = await fetchHistoricalData(coin.id, timeframe);
 
         const formattedData = historicalData.prices.map(
           (priceData: [number, number]) => ({
@@ -260,19 +220,8 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
         setRank(rank);
 
         // Fetch Bitcoin data
-        const bitcoinResponse = await fetch(
-          `https://api.coingecko.com/api/v3/coins/bitcoin`
-        );
-        if (bitcoinResponse.ok) {
-          const bitcoinData = await bitcoinResponse.json();
-          setBitcoinData({
-            price_change_percentage_24h:
-              bitcoinData.market_data.price_change_percentage_24h,
-          });
-        } else {
-          console.error("Failed to fetch Bitcoin data");
-          setBitcoinData(null);
-        }
+        const bitcoinData = await fetchBitcoinData();
+        setBitcoinData(bitcoinData);
       } catch (error) {
         console.error("Error fetching data:", error);
         setError((error as Error).message || "Failed to load data.");

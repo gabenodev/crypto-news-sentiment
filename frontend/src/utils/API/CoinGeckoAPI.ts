@@ -123,3 +123,67 @@ export const fetchTopMoversData = async (page = 1) => {
     throw new Error("Failed to fetch top movers data");
   }
 };
+
+// Fetch market data for a specific coin
+export const fetchMarketData = async (coinId: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/all-cryptos`);
+    const data = response.data;
+
+    const coinData = data.find((coin: any) => coin.id === coinId);
+    if (!coinData) {
+      throw new Error("Coin not found in market data");
+    }
+
+    return {
+      market_cap: coinData.market_cap,
+      rank: coinData.market_cap_rank,
+      volume: coinData.total_volume,
+      ath: coinData.ath,
+      atl: coinData.atl,
+    };
+  } catch (error) {
+    console.error("Error fetching market data:", error);
+    return {
+      market_cap: null,
+      rank: null,
+      volume: null,
+      ath: null,
+      atl: null,
+    };
+  }
+};
+
+// Fetch historical price data for a coin
+export const fetchHistoricalData = async (coinId: string, days: string) => {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/altcoin-season-chart`, {
+      params: { coinId, days },
+    });
+
+    if (!response.data || !response.data.prices) {
+      throw new Error("Invalid data format: prices not found");
+    }
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching historical data:", error);
+    throw error;
+  }
+};
+
+// Fetch Bitcoin data from CoinGecko
+export const fetchBitcoinData = async () => {
+  try {
+    const response = await axios.get(
+      `https://api.coingecko.com/api/v3/coins/bitcoin`
+    );
+    return {
+      price_change_percentage_24h:
+        response.data.market_data.price_change_percentage_24h,
+    };
+  } catch (error) {
+    console.error("Failed to fetch Bitcoin data", error);
+    return null;
+  }
+};
