@@ -55,7 +55,7 @@ export const fetchSearchResults = async (query: string) => {
 // Fetch pentru Whale Transactions
 export const fetchWhaleTransactions = async (
   page = 1,
-  threshold = 100
+  threshold = 1000
 ): Promise<WhaleTransactionsResponse> => {
   try {
     const response = await axios.get(`${API_BASE_URL}/whale-transactions`, {
