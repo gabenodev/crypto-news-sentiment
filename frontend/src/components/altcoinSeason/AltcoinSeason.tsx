@@ -271,7 +271,7 @@ const AltcoinSeason = (): JSX.Element => {
   const seasonStatus = getSeasonStatus();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br bg-gray-50 dark:bg-gray-900 p-4 lg:p-8">
       <div className="max-w-8xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
