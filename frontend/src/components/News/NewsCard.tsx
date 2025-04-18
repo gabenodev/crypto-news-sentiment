@@ -19,7 +19,7 @@ function NewsCard(): JSX.Element {
         setLoading(true);
         setError(null);
         const response = await axios.get(
-          `https://sentimentx-backend.vercel.app/api/news`
+          `https://sentimentxv2-project.vercel.app/api/news`
         );
 
         if (Array.isArray(response.data.articles)) {

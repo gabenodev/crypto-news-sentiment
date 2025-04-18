@@ -230,7 +230,7 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
       try {
         // Fetch historical data
         const historicalResponse = await fetch(
-          `https://sentimentxv2-project.vercel/api/altcoin-season-chart?coinId=${coin.id}&days=${timeframe}`
+          `https://sentimentxv2-project.vercel.app/api/altcoin-season-chart?coinId=${coin.id}&days=${timeframe}`
         );
         if (!historicalResponse.ok) {
           throw new Error(
