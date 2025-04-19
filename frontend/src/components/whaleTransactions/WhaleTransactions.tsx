@@ -4,14 +4,11 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import useWhaleTransactions from "../../hooks/whaleTransactions/useEthScan";
 import type { WhaleTransaction } from "../../types";
-
-interface CryptoData {
-  id: string;
-  symbol: string;
-  name: string;
-  current_price: number;
-  [key: string]: any;
-}
+import { CryptoData } from "./types";
+import { truncate, formatValue, formatCurrency } from "./utils/formatters";
+import { getExchangeColor, getTrendIcon } from "./utils/exchanges";
+import { getCryptoPrice, getUsdValue } from "./utils/cryptoData";
+import { getTopExchange } from "./utils/analysis";
 
 export default function WhaleTransactions(): JSX.Element {
   const [page, setPage] = useState<number>(1);
@@ -48,176 +45,6 @@ export default function WhaleTransactions(): JSX.Element {
 
     fetchCryptoData();
   }, []);
-
-  const truncate = (str: string): string => {
-    return str.length > 15 ? `${str.slice(0, 6)}...${str.slice(-4)}` : str;
-  };
-
-  const getExchangeColor = (exchange: string): string => {
-    const exchangeColors: Record<string, string> = {
-      Binance: "bg-yellow-500",
-      Coinbase: "bg-blue-500",
-      Huobi: "bg-teal-500",
-      Kraken: "bg-purple-500",
-      FTX: "bg-orange-500",
-      Bitfinex: "bg-red-500",
-      OKX: "bg-indigo-500",
-      Bybit: "bg-green-500",
-      KuCoin: "bg-pink-500",
-    };
-
-    // Case-insensitive search for partial matches
-    const match = Object.entries(exchangeColors).find(([key]) =>
-      exchange.toLowerCase().includes(key.toLowerCase())
-    );
-
-    // Return the found color or a default one
-    return match ? match[1] : "bg-gray-400";
-  };
-
-  const formatValue = (value: number): string => {
-    return value.toLocaleString("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 5,
-    });
-  };
-
-  const formatCurrency = (value: number): string => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
-
-  const getCryptoPrice = (symbol: string): number | null => {
-    const crypto = cryptoData[symbol.toLowerCase()];
-    return crypto ? crypto.current_price : null;
-  };
-
-  const getUsdValue = (value: number, symbol: string): string | null => {
-    const price = getCryptoPrice(symbol);
-    if (price === null) return null;
-    return formatCurrency(value * price);
-  };
-
-  const getTrendIcon = (exchange: string): JSX.Element | null => {
-    const trendIcons: Record<string, JSX.Element> = {
-      Binance: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 text-yellow-500"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M16.624 13.9202l2.7175 2.7154-7.353 7.353-7.353-7.352 2.7175-2.7164 4.6355 4.6595 4.6356-4.6595zm4.6366-4.6366L24 12l-2.7154 2.7164L18.5682 12l2.6924-2.7164zm-9.272.001l2.7163 2.6914-2.7164 2.7174v-.001L9.2721 12l2.7164-2.7154zm-9.2722-.001L5.4088 12l-2.6914 2.6924L0 12l2.7164-2.7164zM11.9885.0115l7.353 7.329-2.7174 2.7154-4.6356-4.6356-4.6355 4.6595-2.7174-2.7154 7.353-7.353z" />
-        </svg>
-      ),
-      Coinbase: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 text-blue-500"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M12 24C5.376 24 0 18.624 0 12S5.376 0 12 0s12 5.376 12 12-5.376 12-12 12zm4.5-15.5h-9v7h9v-7z" />
-        </svg>
-      ),
-      Kraken: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 text-purple-500"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M12 24C5.376 24 0 18.624 0 12S5.376 0 12 0s12 5.376 12 12-5.376 12-12 12zm-5.5-7.5h11v-4h-11v4z" />
-        </svg>
-      ),
-      OKX: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 text-indigo-500"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <circle cx="12" cy="12" r="4.5" />
-        </svg>
-      ),
-      Bitfinex: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 text-red-500"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M12 22.5C6.201 22.5 1.5 17.799 1.5 12S6.201 1.5 12 1.5 22.5 6.201 22.5 12 17.799 22.5 12 22.5zM8.4 7.2v9.6h7.2v-9.6H8.4z" />
-        </svg>
-      ),
-      Bybit: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 text-green-500"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 4.5L17 9l-5 2.5L7 9l5-2.5z" />
-        </svg>
-      ),
-      KuCoin: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 text-pink-500"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M12 2L4 6v12l8 4 8-4V6l-8-4zM8 12l4-2 4 2-4 2-4-2z" />
-        </svg>
-      ),
-      Huobi: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 text-teal-500"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" />
-        </svg>
-      ),
-      FTX: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-4 w-4 text-orange-500"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M5 5h14v3H5V5zm0 5h14v3H5v-3zm0 5h14v3H5v-3z" />
-        </svg>
-      ),
-    };
-
-    // Check for partial matches in exchange name (case insensitive)
-    for (const [key, icon] of Object.entries(trendIcons)) {
-      if (exchange.toLowerCase().includes(key.toLowerCase())) {
-        return icon;
-      }
-    }
-
-    return null;
-  };
-  const getTopExchange = (): string => {
-    if (transactions.length === 0) return "N/A";
-
-    const exchangeCounts = transactions.reduce((acc, tx) => {
-      acc[tx.exchange] = (acc[tx.exchange] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-
-    const sortedExchanges = Object.entries(exchangeCounts).sort(
-      (a, b) => b[1] - a[1]
-    );
-    return sortedExchanges[0][0];
-  };
 
   return (
     <div className="container mx-auto p-4">
@@ -301,7 +128,10 @@ export default function WhaleTransactions(): JSX.Element {
                         (sum, tx) =>
                           sum +
                           tx.value *
-                            (getCryptoPrice(tx.blockchain.toLowerCase()) || 0),
+                            (getCryptoPrice(
+                              tx.blockchain.toLowerCase(),
+                              cryptoData
+                            ) || 0),
                         0
                       ) / transactions.length
                     )
@@ -331,7 +161,7 @@ export default function WhaleTransactions(): JSX.Element {
                 Top Exchange
               </p>
               <p className="font-semibold text-gray-900 dark:text-white">
-                {getTopExchange()}
+                {getTopExchange(transactions)}
               </p>
             </div>
           </div>
@@ -570,16 +400,29 @@ export default function WhaleTransactions(): JSX.Element {
                             <span className="font-medium text-emerald-600 dark:text-emerald-400">
                               {formatValue(tx.value)} {tx.blockchain}
                             </span>
-                            {getUsdValue(tx.value, tx.blockchain) && (
+                            {getUsdValue(
+                              tx.value,
+                              tx.blockchain,
+                              cryptoData
+                            ) && (
                               <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                ≈ {getUsdValue(tx.value, tx.blockchain)}
+                                ≈{" "}
+                                {getUsdValue(
+                                  tx.value,
+                                  tx.blockchain,
+                                  cryptoData
+                                )}
                               </span>
                             )}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {getUsdValue(tx.value, tx.blockchain) || (
+                            {getUsdValue(
+                              tx.value,
+                              tx.blockchain,
+                              cryptoData
+                            ) || (
                               <span className="text-gray-400 dark:text-gray-500">
                                 N/A
                               </span>
@@ -766,9 +609,9 @@ export default function WhaleTransactions(): JSX.Element {
                             {formatValue(tx.value)} {tx.blockchain}
                           </span>
                         </div>
-                        {getUsdValue(tx.value, tx.blockchain) && (
+                        {getUsdValue(tx.value, tx.blockchain, cryptoData) && (
                           <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 ml-4">
-                            ≈ {getUsdValue(tx.value, tx.blockchain)}
+                            ≈ {getUsdValue(tx.value, tx.blockchain, cryptoData)}
                           </span>
                         )}
                       </div>
