@@ -1,6 +1,5 @@
 "use client";
-
-import React from "react";
+import * as React from "react";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import useWhaleTransactions from "../../hooks/whaleTransactions/useEthScan";
@@ -67,12 +66,12 @@ export default function WhaleTransactions(): JSX.Element {
       KuCoin: "bg-pink-500",
     };
 
-    // Căutare case-insensitive
+    // Case-insensitive search for partial matches
     const match = Object.entries(exchangeColors).find(([key]) =>
       exchange.toLowerCase().includes(key.toLowerCase())
     );
 
-    // Returnăm culoarea găsită sau una default
+    // Return the found color or a default one
     return match ? match[1] : "bg-gray-400";
   };
 
@@ -135,9 +134,26 @@ export default function WhaleTransactions(): JSX.Element {
           <path d="M12 24C5.376 24 0 18.624 0 12S5.376 0 12 0s12 5.376 12 12-5.376 12-12 12zm-5.5-7.5h11v-4h-11v4z" />
         </svg>
       ),
+      OKX: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4 text-indigo-500"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM12 16.5a4.5 4.5 0 100-9 4.5 4.5 0 000 9z" />
+        </svg>
+      ),
     };
 
-    return trendIcons[exchange] || null;
+    // Check for partial matches in exchange name (case insensitive)
+    for (const [key, icon] of Object.entries(trendIcons)) {
+      if (exchange.toLowerCase().includes(key.toLowerCase())) {
+        return icon;
+      }
+    }
+
+    return null;
   };
   const getTopExchange = (): string => {
     if (transactions.length === 0) return "N/A";
@@ -157,18 +173,18 @@ export default function WhaleTransactions(): JSX.Element {
     <div className="container mx-auto p-4">
       <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-teal-500 to-emerald-600">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
                 Whale Transactions
               </h2>
-              <p className="text-sm text-teal-100 dark:text-teal-200 mt-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Tracking large cryptocurrency movements across major exchanges
               </p>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="px-3 py-1 text-xs font-medium bg-white/20 text-white rounded-full flex items-center">
+              <div className="px-3 py-1 text-xs font-medium bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-300 rounded-full flex items-center">
                 <span className="relative flex h-2 w-2 mr-1">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -179,12 +195,12 @@ export default function WhaleTransactions(): JSX.Element {
                 onClick={() => {
                   setPage(1);
                 }}
-                className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+                className="p-2 rounded-full bg-gray-200/50 hover:bg-gray-200/80 dark:bg-gray-700/50 dark:hover:bg-gray-700/80 transition-colors"
                 title="Refresh"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 text-white"
+                  className="h-4 w-4 text-gray-700 dark:text-gray-300"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
