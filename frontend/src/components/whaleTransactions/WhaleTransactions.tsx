@@ -102,7 +102,7 @@ export default function WhaleTransactions(): JSX.Element {
     return formatCurrency(value * price);
   };
 
-  const getTrendIcon = (exchange: string) => {
+  const getTrendIcon = (exchange: string): JSX.Element | null => {
     const trendIcons: Record<string, JSX.Element> = {
       Binance: (
         <svg
@@ -141,7 +141,57 @@ export default function WhaleTransactions(): JSX.Element {
           viewBox="0 0 24 24"
           fill="currentColor"
         >
-          <path d="M7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM12 16.5a4.5 4.5 0 100-9 4.5 4.5 0 000 9z" />
+          <circle cx="12" cy="12" r="4.5" />
+        </svg>
+      ),
+      Bitfinex: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4 text-red-500"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M12 22.5C6.201 22.5 1.5 17.799 1.5 12S6.201 1.5 12 1.5 22.5 6.201 22.5 12 17.799 22.5 12 22.5zM8.4 7.2v9.6h7.2v-9.6H8.4z" />
+        </svg>
+      ),
+      Bybit: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4 text-green-500"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M12 2L2 7v10l10 5 10-5V7L12 2zm0 4.5L17 9l-5 2.5L7 9l5-2.5z" />
+        </svg>
+      ),
+      KuCoin: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4 text-pink-500"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M12 2L4 6v12l8 4 8-4V6l-8-4zM8 12l4-2 4 2-4 2-4-2z" />
+        </svg>
+      ),
+      Huobi: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4 text-teal-500"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" />
+        </svg>
+      ),
+      FTX: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4 text-orange-500"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M5 5h14v3H5V5zm0 5h14v3H5v-3zm0 5h14v3H5v-3z" />
         </svg>
       ),
     };
@@ -191,28 +241,6 @@ export default function WhaleTransactions(): JSX.Element {
                 </span>
                 Live Data
               </div>
-              <button
-                onClick={() => {
-                  setPage(1);
-                }}
-                className="p-2 rounded-full bg-gray-200/50 hover:bg-gray-200/80 dark:bg-gray-700/50 dark:hover:bg-gray-700/80 transition-colors"
-                title="Refresh"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 text-gray-700 dark:text-gray-300"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
-                </svg>
-              </button>
             </div>
           </div>
         </div>
