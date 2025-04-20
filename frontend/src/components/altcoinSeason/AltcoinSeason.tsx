@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import AltcoinChart from "./AltcoinChart";
 import { CoinData, MarketDominanceData, SeasonStatus } from "./types";
 import { excludedCoins } from "../../utils/excludedCoins";
@@ -367,38 +367,24 @@ const AltcoinSeason: React.FC = () => {
       <div className="max-w-8xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
-          <motion.h1
-            className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-green-500"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-green-500">
             Altcoin Season Index
-          </motion.h1>
-          <motion.p
-            className="text-gray-600 dark:text-gray-300 max-w-3xl mx-auto text-lg"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300 max-w-3xl mx-auto text-lg">
             Track whether we're in an Altcoin Season or Bitcoin Season based on
             market performance
-          </motion.p>
+          </p>
         </div>
 
+        {/* Main Content Area */}
         <div
-          className={`grid ${
-            selectedCoin ? "lg:grid-cols-7" : "lg:grid-cols-3 lg:px-16"
-          } gap-8`}
+          className={`flex flex-col ${selectedCoin ? "lg:flex-row" : ""} gap-8`}
         >
-          {/* Main Card */}
-          <motion.div
-            className={`${
-              selectedCoin ? "lg:col-span-3" : "lg:col-span-3"
-            } bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200/50 dark:border-gray-700/50 transition-all duration-300`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+          {/* Left Card */}
+          <div
+            className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200/50 dark:border-gray-700/50 ${
+              selectedCoin ? "lg:min-w-[500px] lg:w-[55%]" : "w-full"
+            }`}
           >
             <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -432,44 +418,35 @@ const AltcoinSeason: React.FC = () => {
                 </div>
               </div>
 
-              <AnimatePresence>
-                {showEnhancedInfo && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className="mt-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-xl p-4 overflow-hidden"
-                  >
-                    <h3 className="font-bold text-purple-800 dark:text-purple-300 mb-2">
-                      Altcoin Season Index Explained
-                    </h3>
-                    <p className="text-purple-700 dark:text-purple-200 mb-2">
-                      This index combines multiple market factors to provide a
-                      comprehensive view of the current market cycle:
-                    </p>
-                    <ul className="list-disc list-inside text-purple-700 dark:text-purple-200 space-y-1">
-                      <li>
-                        <strong>Altcoin Performance (60%):</strong> Percentage
-                        of top altcoins outperforming Bitcoin
-                      </li>
-                      <li>
-                        <strong>Bitcoin Dominance (35%):</strong> Lower Bitcoin
-                        dominance indicates more capital flowing to altcoins
-                      </li>
-                      <li>
-                        <strong>Market Momentum (5%):</strong> General market
-                        trend direction
-                      </li>
-                    </ul>
-                    <p className="text-purple-700 dark:text-purple-200 mt-2">
-                      The index ranges from 0-100, with values above 75
-                      indicating Altcoin Season and below 25 indicating Bitcoin
-                      Season.
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {showEnhancedInfo && (
+                <div className="mt-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
+                  <h3 className="font-bold text-purple-800 dark:text-purple-300 mb-2">
+                    Altcoin Season Index Explained
+                  </h3>
+                  <p className="text-purple-700 dark:text-purple-200 mb-2">
+                    This index combines multiple market factors to provide a
+                    comprehensive view of the current market cycle:
+                  </p>
+                  <ul className="list-disc list-inside text-purple-700 dark:text-purple-200 space-y-1">
+                    <li>
+                      <strong>Altcoin Performance (60%):</strong> Percentage of
+                      top altcoins outperforming Bitcoin
+                    </li>
+                    <li>
+                      <strong>Bitcoin Dominance (35%):</strong> Lower Bitcoin
+                      dominance indicates more capital flowing to altcoins
+                    </li>
+                    <li>
+                      <strong>Market Momentum (5%):</strong> General market
+                      trend direction
+                    </li>
+                  </ul>
+                  <p className="text-purple-700 dark:text-purple-200 mt-2">
+                    The index ranges from 0-100, with values above 75 indicating
+                    Altcoin Season and below 25 indicating Bitcoin Season.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="p-6">
@@ -652,11 +629,8 @@ const AltcoinSeason: React.FC = () => {
                   <div className="bg-white dark:bg-gray-800 rounded-b-lg overflow-hidden">
                     {filteredAndSortedCoins.length > 0 ? (
                       filteredAndSortedCoins.map((coin, index) => (
-                        <motion.div
+                        <div
                           key={coin.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: index * 0.05 }}
                           className={`grid grid-cols-2 md:grid-cols-5 gap-4 p-4 items-center ${
                             index % 2 === 0
                               ? "bg-white dark:bg-gray-800"
@@ -705,7 +679,7 @@ const AltcoinSeason: React.FC = () => {
                                 : "View Chart"}
                             </button>
                           </div>
-                        </motion.div>
+                        </div>
                       ))
                     ) : (
                       <div className="p-8 text-center">
@@ -725,44 +699,34 @@ const AltcoinSeason: React.FC = () => {
                 </div>
               )}
             </div>
-          </motion.div>
+          </div>
 
-          {/* Chart Card */}
-          <motion.div
-            className={`${
-              selectedCoin ? "lg:col-span-4" : "hidden lg:block lg:col-span-0"
-            }`}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{
-              opacity: selectedCoin ? 1 : 0,
-              x: selectedCoin ? 0 : 20,
-            }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <div className="sticky top-20">
-              {selectedCoin ? (
+          {/* Right Chart Card */}
+          {selectedCoin ? (
+            <div className="lg:flex-1 min-w-0">
+              <div className="sticky top-20 h-[calc(100vh-32px)] overflow-y-auto">
                 <AltcoinChart
                   coin={selectedCoin}
                   onClose={() => setSelectedCoin(null)}
                 />
-              ) : (
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50 h-full">
-                  <div className="flex flex-col items-center justify-center h-full text-center py-10">
-                    <div className="w-20 h-20 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mb-4">
-                      <FaChartLine className="text-teal-500 text-2xl" />
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
-                      Select a Coin
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 max-w-xs">
-                      Click on any coin from the list to view its detailed price
-                      chart and performance metrics.
-                    </p>
-                  </div>
-                </div>
-              )}
+              </div>
             </div>
-          </motion.div>
+          ) : (
+            <div className="hidden lg:block bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50 h-full">
+              <div className="flex flex-col items-center justify-center h-full text-center py-10">
+                <div className="w-20 h-20 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mb-4">
+                  <FaChartLine className="text-teal-500 text-2xl" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+                  Select a Coin
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 max-w-xs">
+                  Click on any coin from the list to view its detailed price
+                  chart and performance metrics.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
