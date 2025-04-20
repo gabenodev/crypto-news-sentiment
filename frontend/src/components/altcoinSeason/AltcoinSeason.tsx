@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import * as React from "react";
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AltcoinChart from "./AltcoinChart";
@@ -169,31 +169,49 @@ const AltcoinSeason = (): JSX.Element => {
   // Calculate enhanced altcoin season index when dependencies change
   useEffect(() => {
     if (marketDominance && percentage) {
-      // Formula for enhanced index:
+      // CoinMarketCap-style formula for enhanced index:
       // - Higher percentage of outperforming altcoins increases the index
       // - Lower BTC dominance increases the index
       // - Lower USDT dominance increases the index (less stablecoin parking)
+      // - Market momentum factor (based on Bitcoin's performance)
 
       // Weights for each factor
-      const altcoinPerformanceWeight = 0.5;
-      const btcDominanceWeight = 0.35;
+      const altcoinPerformanceWeight = 0.45;
+      const btcDominanceWeight = 0.3;
       const usdtDominanceWeight = 0.15;
+      const marketMomentumWeight = 0.1;
 
       // Normalize each factor to a 0-100 scale
       const altcoinPerformanceFactor = percentage; // Already 0-100
       const btcDominanceFactor = 100 - marketDominance.btc; // Invert so lower BTC dominance = higher score
       const usdtDominanceFactor = 100 - marketDominance.usdt * 5; // Invert and scale (USDT is usually much lower)
 
+      // Market momentum factor - higher when Bitcoin is down or flat, lower when Bitcoin is strongly up
+      // This is because altcoin seasons often happen when Bitcoin consolidates
+      const bitcoinPerformance = bitcoinData?.price_change_percentage_24h || 0;
+      const marketMomentumFactor =
+        bitcoinPerformance > 5
+          ? 30
+          : // Bitcoin strongly up = less likely altcoin season
+          bitcoinPerformance < -5
+          ? 50
+          : // Bitcoin strongly down = mixed for altcoins
+          bitcoinPerformance > 0
+          ? 70
+          : // Bitcoin slightly up = good for altcoins
+            90; // Bitcoin flat to slightly down = best for altcoins
+
       // Calculate weighted average
       const enhancedIndexValue =
         altcoinPerformanceFactor * altcoinPerformanceWeight +
         btcDominanceFactor * btcDominanceWeight +
-        usdtDominanceFactor * usdtDominanceWeight;
+        usdtDominanceFactor * usdtDominanceWeight +
+        marketMomentumFactor * marketMomentumWeight;
 
       // Ensure the index is between 0-100
       setEnhancedIndex(Math.min(100, Math.max(0, enhancedIndexValue)));
     }
-  }, [marketDominance, percentage]);
+  }, [marketDominance, percentage, bitcoinData]);
 
   const handleSort = (
     newSortBy: "priceChange" | "marketCap" | "name" | "rank"
@@ -450,11 +468,6 @@ const AltcoinSeason = (): JSX.Element => {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center">
-                  <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-green-500">
-                    {enhancedIndex.toFixed(1)}
-                  </div>
-                </div>
               </div>
 
               {/* Enhanced Index Info Panel */}
@@ -501,91 +514,95 @@ const AltcoinSeason = (): JSX.Element => {
             {/* Progress Bar */}
             <div className="p-6">
               <div className="mb-8">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg font-bold text-gray-800 dark:text-white">
-                      {percentage.toFixed(1)}%
-                    </span>
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                      of altcoins outperforming Bitcoin
-                    </span>
-                  </div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                    {outperformingCount}/{totalAltcoins}
-                  </span>
-                </div>
-                <div className="relative w-full h-6 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: `${percentage}%` }}
-                    transition={{ duration: 1, ease: "easeOut" }}
-                    className={`absolute top-0 left-0 h-full rounded-full bg-gradient-to-r ${seasonStatus.color}`}
-                  />
-
-                  {/* Bitcoin marker - Fixed positioning */}
-                  {bitcoinData && (
-                    <div
-                      className="absolute top-1/2 -translate-y-1/2"
-                      style={{ left: `${percentage}%` }}
-                    >
-                      <div className="relative -translate-x-1/2">
-                        <div className="w-6 h-6 rounded-full bg-white dark:bg-gray-800 border-2 border-orange-500 flex items-center justify-center shadow-md">
-                          <FaBitcoin className="text-orange-500 text-xs" />
-                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div
+                    className={`p-6 rounded-xl border shadow-md ${
+                      enhancedStatus.bgColor
+                    } bg-opacity-10 dark:bg-opacity-20 border-${enhancedStatus.bgColor.replace(
+                      "bg-",
+                      ""
+                    )}/30`}
+                  >
+                    <div className="flex items-center mb-3">
+                      <div
+                        className={`w-10 h-10 rounded-full ${enhancedStatus.bgColor} flex items-center justify-center mr-3`}
+                      >
+                        {enhancedStatus.icon}
                       </div>
+                      <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                        {enhancedStatus.title}
+                      </h3>
                     </div>
-                  )}
-                </div>
-                <div className="flex justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
-                  <span>Bitcoin Season</span>
-                  <span>Neutral</span>
-                  <span>Altcoin Season</span>
-                </div>
-              </div>
+                    <div className="flex items-baseline">
+                      <span className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-green-500">
+                        {enhancedIndex.toFixed(1)}
+                      </span>
+                      <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-300">
+                        / 100
+                      </span>
+                    </div>
+                  </div>
 
-              {/* Bitcoin Performance */}
-              {bitcoinData && (
-                <div className="mb-8 p-4 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-900/20 dark:to-yellow-900/20 rounded-xl border border-orange-100 dark:border-orange-800/30">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={bitcoinData.image || "/placeholder.svg"}
-                      alt="Bitcoin"
-                      className="w-10 h-10 rounded-full"
-                    />
-                    <div>
-                      <h3 className="font-bold text-gray-800 dark:text-white">
+                  <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-md">
+                    <div className="flex items-center mb-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center mr-3">
+                        <FaChartLine className="text-white text-lg" />
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                        Outperforming Altcoins
+                      </h3>
+                    </div>
+                    <div className="flex items-baseline">
+                      <span className="text-4xl font-bold text-blue-500 dark:text-blue-400">
+                        {outperformingCount}
+                      </span>
+                      <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-300">
+                        / {totalAltcoins} coins
+                      </span>
+                    </div>
+                    <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                      {percentage.toFixed(1)}% outperforming Bitcoin
+                    </div>
+                  </div>
+
+                  <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 shadow-md">
+                    <div className="flex items-center mb-3">
+                      <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center mr-3">
+                        <FaBitcoin className="text-white text-lg" />
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-800 dark:text-white">
                         Bitcoin Performance
                       </h3>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
-                          24h Change:
-                        </span>
-                        <span
-                          className={`font-medium ${
-                            bitcoinData.price_change_percentage_24h >= 0
-                              ? "text-green-600 dark:text-green-400"
-                              : "text-red-600 dark:text-red-400"
-                          }`}
-                        >
-                          {bitcoinData.price_change_percentage_24h >= 0
-                            ? "+"
-                            : ""}
-                          {bitcoinData.price_change_percentage_24h.toFixed(2)}%
-                        </span>
-                      </div>
                     </div>
-                    <div className="ml-auto text-right">
-                      <div className="text-lg font-bold text-gray-800 dark:text-white">
-                        ${bitcoinData.current_price.toLocaleString()}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        Market Cap: $
-                        {(bitcoinData.market_cap / 1_000_000_000).toFixed(2)}B
-                      </div>
+                    <div className="flex items-baseline">
+                      <span
+                        className={`text-4xl font-bold ${
+                          bitcoinData &&
+                          bitcoinData.price_change_percentage_24h >= 0
+                            ? "text-green-500"
+                            : "text-red-500"
+                        }`}
+                      >
+                        {bitcoinData
+                          ? (bitcoinData.price_change_percentage_24h >= 0
+                              ? "+"
+                              : "") +
+                            bitcoinData.price_change_percentage_24h.toFixed(2) +
+                            "%"
+                          : "0.00%"}
+                      </span>
+                      <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-300">
+                        24h change
+                      </span>
                     </div>
+                    {bitcoinData && (
+                      <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        Price: ${bitcoinData.current_price.toLocaleString()}
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Outperforming Coins */}
               {outperformingCoins.length > 0 && (

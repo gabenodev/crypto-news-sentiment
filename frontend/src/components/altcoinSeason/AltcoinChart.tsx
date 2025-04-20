@@ -257,7 +257,6 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
     { value: "30", label: "30d" },
     { value: "90", label: "90d" },
     { value: "365", label: "1y" },
-    { value: "max", label: "Max" },
   ];
 
   return (
