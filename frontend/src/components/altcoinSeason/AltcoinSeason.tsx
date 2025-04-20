@@ -1,15 +1,15 @@
 "use client";
-import * as React from "react";
+import React from "react";
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AltcoinChart from "./AltcoinChart";
 import { excludedCoins } from "../../utils/excludedCoins";
 import {
-  FiInfo,
   FiSearch,
   FiX,
   FiChevronDown,
   FiChevronUp,
+  FiHelpCircle,
 } from "react-icons/fi";
 import {
   FaRocket,
@@ -30,8 +30,16 @@ interface CoinData {
   rank: number;
 }
 
+// Add interface for market dominance data
+interface MarketDominanceData {
+  btc: number;
+  eth: number;
+  usdt: number;
+  others: number;
+}
+
 const AltcoinSeason = (): JSX.Element => {
-  const [, setIsAltcoinSeason] = useState<boolean | null>(null);
+  const [isAltcoinSeason, setIsAltcoinSeason] = useState<boolean | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [outperformingCount, setOutperformingCount] = useState<number>(0);
   const [totalAltcoins, setTotalAltcoins] = useState<number>(0);
@@ -45,6 +53,13 @@ const AltcoinSeason = (): JSX.Element => {
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [bitcoinData, setBitcoinData] = useState<Cryptocurrency | null>(null);
   const [showInfo, setShowInfo] = useState<boolean>(false);
+  // Add new state for market dominance
+  const [marketDominance, setMarketDominance] =
+    useState<MarketDominanceData | null>(null);
+  // Add new state for the enhanced altcoin season index
+  const [enhancedIndex, setEnhancedIndex] = useState<number>(0);
+  // Add state for showing the enhanced index explanation
+  const [showEnhancedInfo, setShowEnhancedInfo] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchAllCrpytosData = async () => {
@@ -106,10 +121,10 @@ const AltcoinSeason = (): JSX.Element => {
         setOutperformingCount(outperformingCountTemp);
         setTotalAltcoins(filteredData.length);
         setOutperformingCoins(outperformingCoinsTemp);
-        setPercentage((outperformingCountTemp / filteredData.length) * 100);
-        setIsAltcoinSeason(
-          (outperformingCountTemp / filteredData.length) * 100 >= 75
-        );
+        const altcoinPercentage =
+          (outperformingCountTemp / filteredData.length) * 100;
+        setPercentage(altcoinPercentage);
+        setIsAltcoinSeason(altcoinPercentage >= 75);
       } catch (error) {
         console.error("Error fetching altcoin season data:", error);
         setIsAltcoinSeason(false);
@@ -117,8 +132,68 @@ const AltcoinSeason = (): JSX.Element => {
         setLoading(false);
       }
     };
+
+    // Add new function to fetch market dominance data
+    const fetchMarketDominance = async () => {
+      try {
+        const response = await fetch(
+          "https://sentimentxv2-project.vercel.app/api/market-dominance"
+        );
+        const data = await response.json();
+
+        if (data && data.data && data.data.market_cap_percentage) {
+          const marketData = data.data.market_cap_percentage;
+
+          const btcDominance = marketData.btc || 0;
+          const ethDominance = marketData.eth || 0;
+          const usdtDominance = marketData.usdt || 0;
+          const othersDominance =
+            100 - btcDominance - ethDominance - usdtDominance;
+
+          setMarketDominance({
+            btc: btcDominance,
+            eth: ethDominance,
+            usdt: usdtDominance,
+            others: othersDominance,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching market dominance data:", error);
+      }
+    };
+
     fetchAllCrpytosData();
+    fetchMarketDominance();
   }, []);
+
+  // Calculate enhanced altcoin season index when dependencies change
+  useEffect(() => {
+    if (marketDominance && percentage) {
+      // Formula for enhanced index:
+      // - Higher percentage of outperforming altcoins increases the index
+      // - Lower BTC dominance increases the index
+      // - Lower USDT dominance increases the index (less stablecoin parking)
+
+      // Weights for each factor
+      const altcoinPerformanceWeight = 0.5;
+      const btcDominanceWeight = 0.35;
+      const usdtDominanceWeight = 0.15;
+
+      // Normalize each factor to a 0-100 scale
+      const altcoinPerformanceFactor = percentage; // Already 0-100
+      const btcDominanceFactor = 100 - marketDominance.btc; // Invert so lower BTC dominance = higher score
+      const usdtDominanceFactor = 100 - marketDominance.usdt * 5; // Invert and scale (USDT is usually much lower)
+
+      // Calculate weighted average
+      const enhancedIndexValue =
+        altcoinPerformanceFactor * altcoinPerformanceWeight +
+        btcDominanceFactor * btcDominanceWeight +
+        usdtDominanceFactor * usdtDominanceWeight;
+
+      // Ensure the index is between 0-100
+      setEnhancedIndex(Math.min(100, Math.max(0, enhancedIndexValue)));
+    }
+  }, [marketDominance, percentage]);
 
   const handleSort = (
     newSortBy: "priceChange" | "marketCap" | "name" | "rank"
@@ -172,6 +247,90 @@ const AltcoinSeason = (): JSX.Element => {
       return `$${(marketCap / 1_000).toFixed(2)}K`;
     }
   };
+
+  // Function to determine the enhanced index status
+  const getEnhancedIndexStatus = () => {
+    if (enhancedIndex >= 80) {
+      return {
+        title: "Strong Altcoin Season",
+        description:
+          "Multiple indicators suggest we're in a strong altcoin season. Altcoins are significantly outperforming Bitcoin, and Bitcoin dominance is decreasing.",
+        color: "from-emerald-500 to-green-400",
+        icon: <FaRocket className="text-white text-2xl" />,
+        bgColor: "bg-emerald-500",
+      };
+    } else if (enhancedIndex >= 60) {
+      return {
+        title: "Moderate Altcoin Season",
+        description:
+          "Several indicators point to a moderate altcoin season. Many altcoins are outperforming Bitcoin, with decreasing Bitcoin dominance.",
+        color: "from-teal-500 to-cyan-400",
+        icon: <FaChartLine className="text-white text-2xl" />,
+        bgColor: "bg-teal-500",
+      };
+    } else if (enhancedIndex >= 40) {
+      return {
+        title: "Neutral Market",
+        description:
+          "The market shows mixed signals. Some altcoins are performing well, but Bitcoin still maintains significant dominance.",
+        color: "from-amber-500 to-yellow-400",
+        icon: <FaExchangeAlt className="text-white text-2xl" />,
+        bgColor: "bg-amber-500",
+      };
+    } else {
+      return {
+        title: "Bitcoin Season",
+        description:
+          "Bitcoin is outperforming most altcoins and maintains high market dominance. This is typically a good time to focus on Bitcoin.",
+        color: "from-orange-500 to-red-400",
+        icon: <FaBitcoin className="text-white text-2xl" />,
+        bgColor: "bg-orange-500",
+      };
+    }
+  };
+
+  const getSeasonStatus = () => {
+    if (percentage >= 80) {
+      return {
+        title: "Strong Altcoin Season",
+        description:
+          "Altcoins are significantly outperforming Bitcoin. This is typically a good time for altcoin investments.",
+        color: "from-emerald-500 to-green-400",
+        icon: <FaRocket className="text-white text-2xl" />,
+        bgColor: "bg-emerald-500",
+      };
+    } else if (percentage >= 60) {
+      return {
+        title: "Moderate Altcoin Season",
+        description:
+          "Many altcoins are outperforming Bitcoin. The market is showing signs of altcoin strength.",
+        color: "from-teal-500 to-cyan-400",
+        icon: <FaChartLine className="text-white text-2xl" />,
+        bgColor: "bg-teal-500",
+      };
+    } else if (percentage >= 40) {
+      return {
+        title: "Neutral Market",
+        description:
+          "The market is balanced between Bitcoin and altcoins. No clear trend is visible.",
+        color: "from-amber-500 to-yellow-400",
+        icon: <FaExchangeAlt className="text-white text-2xl" />,
+        bgColor: "bg-amber-500",
+      };
+    } else {
+      return {
+        title: "Bitcoin Season",
+        description:
+          "Bitcoin is outperforming most altcoins. This is typically a good time to focus on Bitcoin.",
+        color: "from-orange-500 to-red-400",
+        icon: <FaBitcoin className="text-white text-2xl" />,
+        bgColor: "bg-orange-500",
+      };
+    }
+  };
+
+  const seasonStatus = getSeasonStatus();
+  const enhancedStatus = getEnhancedIndexStatus();
 
   if (loading)
     return (
@@ -228,48 +387,6 @@ const AltcoinSeason = (): JSX.Element => {
       </div>
     );
 
-  const getSeasonStatus = () => {
-    if (percentage >= 80) {
-      return {
-        title: "Strong Altcoin Season",
-        description:
-          "Altcoins are significantly outperforming Bitcoin. This is typically a good time for altcoin investments.",
-        color: "from-emerald-500 to-green-400",
-        icon: <FaRocket className="text-white text-2xl" />,
-        bgColor: "bg-emerald-500",
-      };
-    } else if (percentage >= 60) {
-      return {
-        title: "Moderate Altcoin Season",
-        description:
-          "Many altcoins are outperforming Bitcoin. The market is showing signs of altcoin strength.",
-        color: "from-teal-500 to-cyan-400",
-        icon: <FaChartLine className="text-white text-2xl" />,
-        bgColor: "bg-teal-500",
-      };
-    } else if (percentage >= 40) {
-      return {
-        title: "Neutral Market",
-        description:
-          "The market is balanced between Bitcoin and altcoins. No clear trend is visible.",
-        color: "from-amber-500 to-yellow-400",
-        icon: <FaExchangeAlt className="text-white text-2xl" />,
-        bgColor: "bg-amber-500",
-      };
-    } else {
-      return {
-        title: "Bitcoin Season",
-        description:
-          "Bitcoin is outperforming most altcoins. This is typically a good time to focus on Bitcoin.",
-        color: "from-orange-500 to-red-400",
-        icon: <FaBitcoin className="text-white text-2xl" />,
-        bgColor: "bg-orange-500",
-      };
-    }
-  };
-
-  const seasonStatus = getSeasonStatus();
-
   return (
     <div className="min-h-screen bg-gradient-to-br bg-gray-50 dark:bg-gray-900 p-4 lg:p-8">
       <div className="max-w-8xl mx-auto">
@@ -294,76 +411,87 @@ const AltcoinSeason = (): JSX.Element => {
           </motion.p>
         </div>
 
-        <div className="grid lg:grid-cols-5 gap-8">
+        <div
+          className={`grid ${
+            selectedCoin ? "lg:grid-cols-7" : "lg:grid-cols-3 lg:px-16"
+          } gap-8`}
+        >
           {/* Main Card */}
           <motion.div
-            className="lg:col-span-3 bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200/50 dark:border-gray-700/50"
+            className={`${
+              selectedCoin ? "lg:col-span-3" : "lg:col-span-3"
+            } bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200/50 dark:border-gray-700/50 transition-all duration-300`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            {/* Status Header */}
             <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="flex items-center">
                   <div
-                    className={`w-12 h-12 rounded-full ${seasonStatus.bgColor} flex items-center justify-center mr-4 shadow-lg`}
+                    className={`w-12 h-12 rounded-full ${enhancedStatus.bgColor} flex items-center justify-center mr-4 shadow-lg`}
                   >
-                    {seasonStatus.icon}
+                    {enhancedStatus.icon}
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-                      {seasonStatus.title}
-                    </h2>
+                    <div className="flex items-center">
+                      <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+                        Altcoin Season Index
+                      </h2>
+                      <button
+                        onClick={() => setShowEnhancedInfo(!showEnhancedInfo)}
+                        className="ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                      >
+                        <FiHelpCircle size={16} />
+                      </button>
+                    </div>
                     <p className="text-gray-600 dark:text-gray-300">
-                      {seasonStatus.description}
+                      {enhancedStatus.description}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center">
-                  <button
-                    onClick={() => setShowInfo(!showInfo)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-                  >
-                    <FiInfo size={18} />
-                    <span>What is this?</span>
-                  </button>
+                  <div className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-green-500">
+                    {enhancedIndex.toFixed(1)}
+                  </div>
                 </div>
               </div>
 
-              {/* Info Panel */}
+              {/* Enhanced Index Info Panel */}
               <AnimatePresence>
-                {showInfo && (
+                {showEnhancedInfo && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="mt-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-xl p-4 overflow-hidden"
+                    className="mt-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-xl p-4 overflow-hidden"
                   >
-                    <h3 className="font-bold text-blue-800 dark:text-blue-300 mb-2">
-                      Understanding the Altcoin Season Index
+                    <h3 className="font-bold text-purple-800 dark:text-purple-300 mb-2">
+                      Altcoin Season Index Explained
                     </h3>
-                    <p className="text-blue-700 dark:text-blue-200 mb-2">
-                      The Altcoin Season Index measures whether the market is in
-                      an "Altcoin Season" or a "Bitcoin Season".
+                    <p className="text-purple-700 dark:text-purple-200 mb-2">
+                      This index combines multiple market factors to provide a
+                      comprehensive view of the current market cycle:
                     </p>
-                    <ul className="list-disc list-inside text-blue-700 dark:text-blue-200 space-y-1">
+                    <ul className="list-disc list-inside text-purple-700 dark:text-purple-200 space-y-1">
                       <li>
-                        <strong>Altcoin Season (75%+):</strong> When 75% or more
-                        of the top 50 altcoins perform better than Bitcoin over
-                        the last 90 days
+                        <strong>Altcoin Performance (50%):</strong> Percentage
+                        of top altcoins outperforming Bitcoin
                       </li>
                       <li>
-                        <strong>Bitcoin Season (below 75%):</strong> When more
-                        than 25% of altcoins underperform Bitcoin over the last
-                        90 days
+                        <strong>Bitcoin Dominance (35%):</strong> Lower Bitcoin
+                        dominance indicates more capital flowing to altcoins
+                      </li>
+                      <li>
+                        <strong>Stablecoin Dominance (15%):</strong> Lower
+                        stablecoin dominance suggests more active market
+                        participation
                       </li>
                     </ul>
-                    <p className="text-blue-700 dark:text-blue-200 mt-2">
-                      This index helps investors understand market cycles and
-                      potentially adjust their investment strategies
-                      accordingly.
+                    <p className="text-purple-700 dark:text-purple-200 mt-2">
+                      The index ranges from 0-100, with higher values indicating
+                      stronger altcoin market conditions.
                     </p>
                   </motion.div>
                 )}
@@ -624,9 +752,14 @@ const AltcoinSeason = (): JSX.Element => {
 
           {/* Chart Card - Right Side */}
           <motion.div
-            className="lg:col-span-2"
+            className={`${
+              selectedCoin ? "lg:col-span-4" : "hidden lg:block lg:col-span-0"
+            }`}
             initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
+            animate={{
+              opacity: selectedCoin ? 1 : 0,
+              x: selectedCoin ? 0 : 20,
+            }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <div className="sticky top-20">

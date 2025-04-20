@@ -20,7 +20,7 @@ export const StatsBar = ({ transactions, cryptoData }: StatsBarProps) => {
     {
       icon: <ChartIcon />,
       title: "Total Transactions",
-      value: `${transactions.length * 10}+`,
+      value: `${transactions.length}+`,
       bgColor: "bg-teal-100 dark:bg-teal-900/50",
     },
     {
