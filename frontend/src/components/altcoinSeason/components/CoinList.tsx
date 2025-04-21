@@ -3,6 +3,25 @@ import React from "react";
 import { FiChevronUp, FiChevronDown, FiSearch } from "react-icons/fi";
 import type { CoinListProps } from "../types";
 
+const getRowClasses = (index: number, isSelected: boolean) => {
+  let baseColor =
+    index % 2 === 0
+      ? "bg-white dark:bg-gray-800"
+      : "bg-gray-50 dark:bg-gray-700/30";
+
+  if (isSelected) {
+    baseColor = "bg-teal-50 dark:bg-teal-900/30";
+  }
+
+  return `
+    grid grid-cols-2 md:grid-cols-5 gap-4 p-4 items-center
+    border-l-4 ${isSelected ? "border-teal-500" : "border-transparent"}
+    ${baseColor}
+    hover:!bg-teal-50/50 dark:hover:!bg-teal-900/20
+    transition-colors
+  `;
+};
+
 const CoinList = ({
   filteredAndSortedCoins,
   selectedCoin,
@@ -70,15 +89,7 @@ const CoinList = ({
           filteredAndSortedCoins.map((coin, index) => (
             <div
               key={coin.id}
-              className={`grid grid-cols-2 md:grid-cols-5 gap-4 p-4 items-center ${
-                index % 2 === 0
-                  ? "bg-white dark:bg-gray-800"
-                  : "bg-gray-50 dark:bg-gray-700/30"
-              } ${
-                selectedCoin?.id === coin.id
-                  ? "bg-teal-50 dark:bg-teal-900/30 border-l-4 border-teal-500"
-                  : "border-l-4 border-transparent"
-              } hover:bg-teal-50/50 dark:hover:bg-teal-900/20 transition-colors`}
+              className={getRowClasses(index, selectedCoin?.id === coin.id)}
             >
               <div className="text-gray-800 dark:text-gray-200 font-medium">
                 #{coin.rank}
@@ -98,8 +109,15 @@ const CoinList = ({
                   </div>
                 </div>
               </div>
-              <div className="text-green-600 dark:text-green-400 font-medium">
-                +{coin.priceChange.toFixed(2)}%
+              <div
+                className={`font-medium ${
+                  coin.priceChange >= 0
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-500 dark:text-red-400"
+                }`}
+              >
+                {coin.priceChange >= 0 ? "+" : ""}
+                {coin.priceChange.toFixed(2)}%
               </div>
               <div className="hidden md:block text-gray-700 dark:text-gray-300">
                 {formatMarketCap(coin.marketCap)}

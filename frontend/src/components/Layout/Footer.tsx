@@ -1,5 +1,4 @@
 import React from "react";
-import type { JSX } from "react";
 
 function Footer(): JSX.Element {
   return (
