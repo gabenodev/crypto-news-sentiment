@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { fetchNews } from "../../utils/API/newsAPI";
 import type { NewsArticle } from "../../types";
-import type { JSX } from "react/jsx-runtime";
 
 function NewsCard(): JSX.Element {
   const [news, setNews] = useState<NewsArticle[]>([]);
