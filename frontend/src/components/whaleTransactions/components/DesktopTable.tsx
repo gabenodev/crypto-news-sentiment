@@ -1,9 +1,11 @@
+"use client";
+
 // components/whaleTransactions/DesktopTable.tsx
 
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { WhaleTransaction } from "../../../types";
-import { CryptoData } from "./../types";
+import type { WhaleTransaction } from "../../../types";
+import type { CryptoData } from "./../types";
 import { truncate, formatValue } from "../utils/formatters";
 import { getExchangeColor, getTrendIcon } from "../utils/exchanges";
 import { getUsdValue } from "../utils/cryptoData";

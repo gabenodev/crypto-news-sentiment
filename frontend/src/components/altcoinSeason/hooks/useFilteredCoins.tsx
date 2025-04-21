@@ -1,47 +1,33 @@
-"use client";
+"use client"
 
-import { useMemo } from "react";
-import type { FilteredAndSortedCoinsProps } from "../types";
+import { useMemo } from "react"
+import type { FilteredAndSortedCoinsProps } from "../types"
 
-export const useFilteredCoins = ({
-  outperformingCoins,
-  searchTerm,
-  sortConfig,
-}: FilteredAndSortedCoinsProps) => {
+export const useFilteredCoins = ({ outperformingCoins, searchTerm, sortConfig }: FilteredAndSortedCoinsProps) => {
   const filteredAndSortedCoins = useMemo(() => {
-    let filtered = outperformingCoins;
+    let filtered = outperformingCoins
 
     if (searchTerm) {
-      const term = searchTerm.toLowerCase();
+      const term = searchTerm.toLowerCase()
       filtered = filtered.filter(
-        (coin) =>
-          coin.name.toLowerCase().includes(term) ||
-          coin.symbol.toLowerCase().includes(term)
-      );
+        (coin) => coin.name.toLowerCase().includes(term) || coin.symbol.toLowerCase().includes(term),
+      )
     }
 
     return [...filtered].sort((a, b) => {
       if (sortConfig.key === "priceChange") {
-        return sortConfig.direction === "asc"
-          ? a.priceChange - b.priceChange
-          : b.priceChange - a.priceChange;
+        return sortConfig.direction === "asc" ? a.priceChange - b.priceChange : b.priceChange - a.priceChange
       } else if (sortConfig.key === "marketCap") {
-        return sortConfig.direction === "asc"
-          ? a.marketCap - b.marketCap
-          : b.marketCap - a.marketCap;
+        return sortConfig.direction === "asc" ? a.marketCap - b.marketCap : b.marketCap - a.marketCap
       } else if (sortConfig.key === "name") {
-        return sortConfig.direction === "asc"
-          ? a.name.localeCompare(b.name)
-          : b.name.localeCompare(a.name);
+        return sortConfig.direction === "asc" ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name)
       } else {
-        return sortConfig.direction === "asc"
-          ? a.rank - b.rank
-          : b.rank - a.rank;
+        return sortConfig.direction === "asc" ? a.rank - b.rank : b.rank - a.rank
       }
-    });
-  }, [outperformingCoins, searchTerm, sortConfig]);
+    })
+  }, [outperformingCoins, searchTerm, sortConfig])
 
-  return filteredAndSortedCoins;
-};
+  return filteredAndSortedCoins
+}
 
-export default useFilteredCoins;
+export default useFilteredCoins

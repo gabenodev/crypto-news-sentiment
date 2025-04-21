@@ -1,6 +1,4 @@
-// components/whales/WhaleTransactionsLoading.tsx
 import React from "react";
-
 const WhaleTransactionsLoading = () => {
   return (
     <div className="p-6">

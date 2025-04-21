@@ -1,8 +1,7 @@
 "use client";
-
+import React from "react";
 import { FiHelpCircle } from "react-icons/fi";
 import type { StatusCardProps } from "../types";
-import * as React from "react";
 
 const StatusCard = ({
   seasonStatus,
@@ -11,7 +10,7 @@ const StatusCard = ({
   setShowEnhancedInfo,
 }: StatusCardProps) => {
   return (
-    <div className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 p-6 border-b border-gray-200 dark:border-gray-700">
+    <div className="App bg-gray-50 dark:bg-dark-secondary p-6 border-b border-gray-200 dark:border-gray-700">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center">
           <div

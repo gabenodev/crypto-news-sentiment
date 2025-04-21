@@ -1,10 +1,10 @@
 "use client";
-
-import * as React from "react";
+import React from "react";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { fetchNews } from "../../utils/API/newsAPI";
 import type { NewsArticle } from "../../types";
+import type { JSX } from "react/jsx-runtime";
 
 function NewsCard(): JSX.Element {
   const [news, setNews] = useState<NewsArticle[]>([]);
@@ -152,7 +152,7 @@ function NewsCard(): JSX.Element {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-primary p-6">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-2">
           Crypto News
@@ -229,7 +229,7 @@ function NewsCard(): JSX.Element {
           {sortedNews.map((article, index) => (
             <motion.div
               key={index}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl overflow-hidden transition-shadow duration-300"
+              className="bg-white dark:bg-dark-secondary rounded-xl shadow-md hover:shadow-xl overflow-hidden transition-shadow duration-300"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
@@ -287,10 +287,10 @@ function NewsCard(): JSX.Element {
                   )}
                 </div>
 
-                <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-3 line-clamp-2">
+                <h2 className="text-xl font-bold text-gray-800 dark:text-dark-text-primary mb-3 line-clamp-2">
                   {article.title}
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
+                <p className="text-gray-600 dark:text-dark-text-secondary mb-4 line-clamp-3">
                   {article.description}
                 </p>
 

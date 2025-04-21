@@ -1,5 +1,5 @@
 "use client";
-import * as React from "react";
+import React from "react";
 import { useState } from "react";
 import AltcoinChart from "./AltcoinChart";
 import type { CoinData, SortConfigType } from "./types";
@@ -57,14 +57,14 @@ const AltcoinSeason = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br bg-gray-50 dark:bg-gray-900 p-4 lg:p-8">
+    <div className="min-h-screen bg-gradient-to-br bg-gray-50 dark:bg-dark-primary p-4 lg:p-8">
       <div className="max-w-8xl mx-auto">
         {/* Header */}
         <div className="text-center mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-green-500">
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-accent-secondary to-green-500">
             Altcoin Season Index
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 max-w-3xl mx-auto text-lg">
+          <p className="text-gray-600 dark:text-dark-text-primary max-w-3xl mx-auto text-lg">
             Track whether we're in an Altcoin Season or Bitcoin Season based on
             market performance
           </p>
@@ -76,7 +76,7 @@ const AltcoinSeason = () => {
         >
           {/* Left Card */}
           <div
-            className={`bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200/50 dark:border-gray-700/50 ${
+            className={`bg-white dark:bg-dark-secondary rounded-2xl shadow-xl overflow-hidden border border-gray-200/50 dark:border-gray-700/50 ${
               selectedCoin ? "lg:min-w-[500px] lg:w-[55%]" : "w-full"
             }`}
           >
@@ -136,7 +136,7 @@ const AltcoinSeason = () => {
               </div>
             </div>
           ) : (
-            <div className="hidden lg:block bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50 h-full">
+            <div className="hidden lg:block bg-white dark:bg-dark-secondary rounded-2xl shadow-xl p-6 border border-gray-200/50 dark:border-gray-700/50 h-full">
               <div className="flex flex-col items-center justify-center h-full text-center py-10">
                 <div className="w-20 h-20 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mb-4">
                   <FaChartLine className="text-teal-500 text-2xl" />

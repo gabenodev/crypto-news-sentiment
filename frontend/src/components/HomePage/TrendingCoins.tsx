@@ -1,6 +1,5 @@
 "use client";
-
-import * as React from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import useTrendingCoins from "../../hooks/homepage/useTrendingCoins";
 import { ClipLoader } from "react-spinners";
@@ -28,7 +27,7 @@ function TrendingCoins(): JSX.Element {
     >
       <div className="flex justify-center px-4">
         <div className="relative w-full max-w-lg h-full">
-          <div className="relative w-full bg-white/95 dark:bg-gray-800/95 p-5 rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm h-full">
+          <div className="relative w-full bg-white/95 dark:bg-dark-secondary/95 p-5 rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm h-full">
             <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200/50 dark:border-gray-700/50">
               <h3 className="text-xl font-bold">
                 <span className="mr-2">🔥</span>
@@ -56,7 +55,7 @@ function TrendingCoins(): JSX.Element {
                   >
                     <Link
                       to={`/currencies/${coin.item.id}`}
-                      className="flex items-center justify-between p-3 h-[62px] rounded-lg bg-gray-50/70 dark:bg-gray-700/70 border border-gray-200/50 dark:border-gray-600/50 hover:bg-teal-50/50 dark:hover:bg-teal-900/30 transition-colors group"
+                      className="flex items-center justify-between p-3 h-[62px] rounded-lg bg-gray-50/70 dark:bg-dark-tertiary/70 border border-gray-200/50 dark:border-gray-600/50 hover:bg-teal-50/50 dark:hover:bg-accent-secondary/10 transition-colors group"
                     >
                       <div className="flex items-center min-w-0 flex-1">
                         <div className="relative flex-shrink-0 mr-3">
@@ -77,7 +76,7 @@ function TrendingCoins(): JSX.Element {
                           </span>
                         </div>
                         <div className="min-w-0">
-                          <span className="block font-medium text-gray-800 dark:text-gray-100 truncate">
+                          <span className="block font-medium text-gray-800 dark:text-dark-text-primary truncate">
                             {coin.item.name}
                           </span>
                           <span className="block text-xs text-teal-500 dark:text-teal-400 font-medium">

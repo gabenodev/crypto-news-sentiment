@@ -1,6 +1,5 @@
 "use client";
-
-import * as React from "react";
+import React from "react";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ClipLoader } from "react-spinners";
@@ -34,7 +33,7 @@ function TopMovers(): JSX.Element {
     >
       <div className="flex justify-center px-4">
         <div className="relative w-full max-w-lg">
-          <div className="relative w-full bg-white/95 dark:bg-gray-800/95 p-5 rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm">
+          <div className="relative w-full bg-white/95 dark:bg-dark-secondary/95 p-5 rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm">
             <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200/50 dark:border-gray-700/50">
               <h3 className="text-xl font-bold">
                 <span className="mr-2">📊</span>
@@ -127,11 +126,11 @@ function TopMovers(): JSX.Element {
                               {index + 1}
                             </span>
                           </div>
-                          <div className="min-w-0">
-                            <span className="block font-medium text-gray-800 dark:text-gray-100 truncate">
+                          <div className="min-w-0 flex flex-col">
+                            <span className="font-medium text-gray-800 dark:text-dark-text-primary group-hover:text-accent-secondary dark:group-hover:text-accent-secondary transition-colors">
                               {coin.name}
                             </span>
-                            <span className="block text-xs text-gray-500 dark:text-gray-400 font-medium">
+                            <span className="text-xs text-gray-500 dark:text-dark-text-secondary font-medium">
                               {coin.symbol.toUpperCase()}
                             </span>
                           </div>

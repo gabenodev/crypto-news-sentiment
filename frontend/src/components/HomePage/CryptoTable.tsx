@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -442,9 +441,9 @@ function CryptoTable({ cryptoData, isLoading, error }: CryptoTableProps) {
         className="bg-transparent backdrop-blur-sm rounded-xl shadow-lg overflow-hidden border border-gray-200/30 dark:border-gray-700/30"
       >
         {/* Header with search and filters */}
-        <div className="p-8 border-b border-gray-200/30 dark:border-gray-700/30 bg-white/40 dark:bg-gray-800/40">
+        <div className="p-8 border-b border-gray-200/30 dark:border-gray-700/30 bg-white/40 dark:bg-dark-secondary/40">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-dark-text-primary flex items-center">
               <FiBarChart2 className="mr-2" />
               Cryptocurrency Market
               {filteredAndSortedData.length > 0 && (
@@ -666,7 +665,7 @@ function CryptoTable({ cryptoData, isLoading, error }: CryptoTableProps) {
           ) : (
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-white/30 dark:bg-gray-800/30 text-gray-600 dark:text-gray-300 text-base border-b border-gray-200/30 dark:border-gray-700/30">
+                <tr className="bg-white/30 dark:bg-dark-secondary/30 text-gray-600 dark:text-dark-text-primary text-base border-b border-gray-200/30 dark:border-gray-700/30">
                   <th
                     className="py-4 px-4 font-medium text-left cursor-pointer hover:text-teal-500 transition-colors"
                     onClick={() => requestSort("market_cap_rank")}
@@ -724,7 +723,7 @@ function CryptoTable({ cryptoData, isLoading, error }: CryptoTableProps) {
         </div>
 
         {/* Pagination */}
-        <div className="px-8 py-6 bg-white/30 dark:bg-gray-800/30 border-t border-gray-200/30 dark:border-gray-700/30 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="px-8 py-6 bg-white/30 dark:bg-dark-secondary/30 border-t border-gray-200/30 dark:border-gray-700/30 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center space-x-2 text-base text-gray-600 dark:text-gray-300">
             <span>Show</span>
             <select

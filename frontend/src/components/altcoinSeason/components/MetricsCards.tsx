@@ -1,6 +1,6 @@
+import React from "react";
 import { FaChartLine, FaBitcoin } from "react-icons/fa";
 import type { MetricsCardsProps } from "../types";
-import * as React from "react";
 const MetricsCards = ({
   outperformingCount,
   totalAltcoins,

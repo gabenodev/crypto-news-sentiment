@@ -1,6 +1,5 @@
 "use client";
-
-import * as React from "react";
+import React from "react";
 import { useState, useEffect } from "react";
 import { Sun, Moon } from "react-feather";
 import { motion } from "framer-motion";

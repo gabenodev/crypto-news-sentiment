@@ -1,5 +1,5 @@
 "use client";
-import * as React from "react";
+import React from "react";
 import { FiChevronUp, FiChevronDown, FiSearch } from "react-icons/fi";
 import type { CoinListProps } from "../types";
 

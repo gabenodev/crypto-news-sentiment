@@ -1,9 +1,9 @@
-// src/components/Footer.js
+import React from "react";
+import type { JSX } from "react";
 
-import * as React from "react";
 function Footer(): JSX.Element {
   return (
-    <footer className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-8 text-center">
+    <footer className="bg-gray-50 dark:bg-dark-secondary text-dark-text-primary py-8 text-center">
       <p className="text-lg">
         &copy; 2025 Crypto Sentiment. All rights reserved.
       </p>

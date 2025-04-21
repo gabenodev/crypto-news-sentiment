@@ -1,6 +1,5 @@
 "use client";
-
-import * as React from "react";
+import React from "react";
 import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
@@ -301,12 +300,12 @@ function PriceChart({ coinId }: PriceChartProps): JSX.Element {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700"
+        className="bg-white dark:bg-dark-secondary rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700"
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white dark:bg-dark-secondary">
           <div>
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white flex items-center">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-dark-text-primary flex items-center">
               Price Chart
               <span className="ml-2 text-sm font-medium bg-teal-100 dark:bg-teal-900/30 text-teal-800 dark:text-teal-300 px-2 py-0.5 rounded-full">
                 {timeframeOptions.find((option) => option.value === days)
@@ -404,7 +403,7 @@ function PriceChart({ coinId }: PriceChartProps): JSX.Element {
         </div>
 
         {/* Current Price Summary */}
-        <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800/80 border-b border-gray-200 dark:border-gray-700">
+        <div className="px-6 py-4 bg-gray-50 dark:bg-dark-tertiary border-b border-gray-200 dark:border-gray-700">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center">
               <div className="mr-4">
@@ -1030,7 +1029,7 @@ function PriceChart({ coinId }: PriceChartProps): JSX.Element {
         </Tab.Group>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 text-xs text-gray-500 dark:text-gray-400 flex justify-between items-center">
+        <div className="px-6 py-4 border-t border-gray-200 dark: bg-gray-50 dark:bg-dark-tertiary text-xs text-gray-500 dark:text-gray-400 flex justify-between items-center">
           <div>Data source: SentimentX API</div>
           <div>Chart rendered with Recharts</div>
         </div>

@@ -1,6 +1,5 @@
 "use client";
-
-import * as React from "react";
+import React from "react";
 import SentimentGauge from "./SentimentGauge";
 import { useEffect, useState } from "react";
 import { Line } from "react-chartjs-2";
@@ -183,7 +182,7 @@ function SentimentChart(): JSX.Element {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-200">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-primary p-4 md:p-8 transition-colors duration-200">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
@@ -199,9 +198,9 @@ function SentimentChart(): JSX.Element {
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Gauge */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 lg:col-span-1 transition-all duration-200 hover:shadow-lg">
+          <div className="bg-white dark:bg-dark-secondary rounded-xl shadow-md p-6 lg:col-span-1 transition-all duration-200 hover:shadow-lg">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-dark-text-primary">
                 Current Sentiment
               </h2>
             </div>
@@ -247,10 +246,10 @@ function SentimentChart(): JSX.Element {
                   }
                 />
                 <div className="mt-6 space-y-3">
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-dark-tertiary">
                     <div className="flex items-center">
                       <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                      <span className="text-sm text-gray-600 dark:text-dark-text-primary">
                         Extreme Fear
                       </span>
                     </div>
@@ -258,10 +257,10 @@ function SentimentChart(): JSX.Element {
                       0-25
                     </span>
                   </div>
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-dark-tertiary">
                     <div className="flex items-center">
                       <div className="w-3 h-3 rounded-full bg-amber-500 mr-2"></div>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                      <span className="text-sm text-gray-600 dark:text-dark-text-primary">
                         Fear
                       </span>
                     </div>
@@ -269,10 +268,10 @@ function SentimentChart(): JSX.Element {
                       26-50
                     </span>
                   </div>
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-dark-tertiary">
                     <div className="flex items-center">
                       <div className="w-3 h-3 rounded-full bg-yellow-400 mr-2"></div>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                      <span className="text-sm text-gray-600 dark:text-dark-text-primary">
                         Neutral
                       </span>
                     </div>
@@ -280,10 +279,10 @@ function SentimentChart(): JSX.Element {
                       51-75
                     </span>
                   </div>
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-dark-tertiary">
                     <div className="flex items-center">
                       <div className="w-3 h-3 rounded-full bg-emerald-500 mr-2"></div>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                      <span className="text-sm text-gray-600 dark:text-dark-text-primary">
                         Greed
                       </span>
                     </div>
@@ -297,9 +296,9 @@ function SentimentChart(): JSX.Element {
           </div>
 
           {/* Right Column - Chart */}
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 lg:col-span-2 transition-all duration-200 hover:shadow-lg">
+          <div className="bg-white dark:bg-dark-secondary rounded-xl shadow-md p-6 lg:col-span-2 transition-all duration-200 hover:shadow-lg">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 md:mb-0">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-dark-text-primary mb-4 md:mb-0">
                 Historical Trend
               </h2>
               <div className="inline-flex rounded-lg shadow-sm">
@@ -310,7 +309,7 @@ function SentimentChart(): JSX.Element {
                     className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
                       timeframe === tf.value
                         ? "bg-blue-600 text-white"
-                        : "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
+                        : "bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
                     } ${tf.value === "7" ? "rounded-l-lg" : ""} ${
                       tf.value === "max" ? "rounded-r-lg" : ""
                     }`}
@@ -361,12 +360,12 @@ function SentimentChart(): JSX.Element {
         </div>
 
         {/* Explanation Section */}
-        <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 transition-all duration-200 hover:shadow-lg">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="mt-8 bg-white dark:bg-dark-secondary rounded-xl shadow-md p-6 transition-all duration-200 hover:shadow-lg">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-dark-text-primary mb-4">
             Understanding the Fear & Greed Index
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+            <div className="bg-gray-50 dark:bg-dark-tertiary p-4 rounded-lg">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2 flex items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -389,7 +388,7 @@ function SentimentChart(): JSX.Element {
                 (extreme greed).
               </p>
             </div>
-            <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+            <div className="bg-gray-50 dark:bg-dark-tertiary p-4 rounded-lg">
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2 flex items-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

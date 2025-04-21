@@ -42,4 +42,4 @@ export const excludedCoins = new Set([
   "stargate-bridged-usdc-berachain",
   "true-usd",
   "usdt0",
-]);
+])

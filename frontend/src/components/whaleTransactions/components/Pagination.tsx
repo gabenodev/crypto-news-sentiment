@@ -1,3 +1,5 @@
+"use client";
+
 // Pagination.tsx
 
 import React from "react";
@@ -14,7 +16,7 @@ const Pagination: React.FC<PaginationProps> = ({
   setPage,
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+    <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-dark-secondary">
       <div className="text-sm text-gray-500 dark:text-gray-400 mb-2 sm:mb-0">
         Showing page {page} of {totalPages}
       </div>

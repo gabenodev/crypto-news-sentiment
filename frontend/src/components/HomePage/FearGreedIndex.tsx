@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import React from "react";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
@@ -69,9 +69,9 @@ const FearGreedIndexCard: React.FC = () => {
     >
       <div className="flex justify-center px-4">
         <div className="relative w-full max-w-lg h-full">
-          <div className="relative w-full bg-white/95 dark:bg-gray-800/95 p-5 rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm h-full">
+          <div className="relative w-full bg-white/95 dark:bg-dark-secondary/95 p-5 rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm h-full">
             <div className="flex justify-between items-center mb-3 pb-3 border-b border-gray-200/50 dark:border-gray-700/50">
-              <h3 className="text-xl font-bold">
+              <h3 className="text-xl font-bold dark:text-dark-text-primary">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-green-500">
                   Fear & Greed Index
                 </span>

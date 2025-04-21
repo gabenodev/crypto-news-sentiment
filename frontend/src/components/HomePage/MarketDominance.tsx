@@ -1,6 +1,5 @@
 "use client";
-
-import * as React from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import useMarketDominance from "../../hooks/homepage/useMarketDominance";
 import type { MarketDominanceItem } from "../../types";
@@ -16,7 +15,7 @@ const MarketDominanceCard = (): JSX.Element => {
     >
       <div className="flex justify-center px-4">
         <div className="relative w-full max-w-sm h-full">
-          <div className="relative w-full bg-white/95 dark:bg-gray-800/95 p-4 rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm h-full">
+          <div className="relative w-full bg-white/95 dark:bg-dark-secondary/95 p-4 rounded-2xl shadow-xl border border-gray-200/60 dark:border-gray-700/60 backdrop-blur-sm h-full">
             <div className="flex justify-between items-center mb-3 pb-2 border-b border-gray-200/50 dark:border-gray-700/50">
               <h3 className="text-lg font-semibold">
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-green-500">
@@ -74,7 +73,7 @@ const MarketDominanceCard = (): JSX.Element => {
                       transition={{ delay: i * 0.05, duration: 0.3 }}
                       whileHover={{ scale: 1.02 }}
                     >
-                      <div className="flex justify-between items-center px-3 py-2 rounded-lg bg-gray-50/70 dark:bg-gray-700/70 border border-gray-200/50 dark:border-gray-600/50 hover:bg-gray-100/70 dark:hover:bg-gray-600/70 transition-colors duration-200">
+                      <div className="flex justify-between items-center px-3 py-2 rounded-lg bg-gray-50/70 dark:bg-dark-tertiary/70 border border-gray-200/50 dark:border-gray-600/50 hover:bg-gray-100/70 dark:hover:bg-dark-tertiary/90 transition-colors duration-200">
                         {" "}
                         {/* Hover effect */}
                         <div className="flex items-center space-x-2">
@@ -91,7 +90,7 @@ const MarketDominanceCard = (): JSX.Element => {
                                   : "#A6B7D4",
                             }}
                           />
-                          <span className="font-medium text-gray-800 dark:text-gray-100 text-sm">
+                          <span className="font-medium text-gray-800 dark:text-dark-text-primary text-sm">
                             {item.name}
                           </span>
                         </div>

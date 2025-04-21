@@ -1,6 +1,5 @@
 "use client";
-
-import * as React from "react";
+import React from "react";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
@@ -66,7 +65,7 @@ function CurrencyStats(): JSX.Element {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 flex justify-center items-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-primary p-6 flex justify-center items-center">
         <div className="max-w-md w-full">
           <div className="flex flex-col items-center">
             <div className="w-16 h-16 border-4 border-t-teal-500 border-b-teal-500 border-l-transparent border-r-transparent rounded-full animate-spin mb-4"></div>
@@ -84,13 +83,13 @@ function CurrencyStats(): JSX.Element {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6 flex justify-center items-center">
-        <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-primary p-6 flex justify-center items-center">
+        <div className="max-w-md w-full bg-white dark:bg-dark-secondary rounded-xl shadow-lg p-8">
           <div className="flex flex-col items-center">
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
               <FaInfoCircle className="text-red-500 text-3xl" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white mb-2">
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-dark-text-primary mb-2">
               Error Loading Data
             </h2>
             <p className="text-gray-600 dark:text-gray-300 text-center mb-6">
@@ -162,11 +161,11 @@ function CurrencyStats(): JSX.Element {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-8 transition-colors duration-300">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-primary p-4 md:p-8 transition-colors duration-300">
       {/* Hero Section with Sticky Header */}
       <div className="max-w-7xl mx-auto">
         <motion.div
-          className="mb-8 bg-white dark:bg-gray-800 rounded-2xl shadow-md p-6 border border-gray-100 dark:border-gray-700"
+          className="mb-8 bg-white dark:bg-dark-secondary rounded-2xl shadow-md p-6 border border-gray-100 dark:border-gray-700"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}

@@ -1,3 +1,4 @@
+import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "./components/Layout/Header";
 import SentimentChart from "./components/sentimentTrend/SentimentChart";
@@ -8,13 +9,12 @@ import Footer from "./components/Layout/Footer";
 import Homepage from "./pages/HomePage";
 import CurrencyDetails from "./components/CurrencyDetails/CurrencyDetails";
 import ScrollToTop from "./utils/ScrollToTop";
-import React from "react";
 
 function App(): JSX.Element {
   return (
     <Router>
       <ScrollToTop />
-      <div className="App bg-gray-50 dark:bg-gray-900 min-h-screen flex flex-col">
+      <div className="App bg-gray-50 dark:bg-dark-primary min-h-screen flex flex-col">
         <Header />
         <main className="flex-grow w-full px-4 sm:px-6 lg:px-8 py-12">
           <Routes>

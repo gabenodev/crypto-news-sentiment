@@ -1,8 +1,7 @@
 "use client";
-
+import React from "react";
 import { FiSearch, FiX } from "react-icons/fi";
 import type { SearchFilterProps } from "../types";
-import * as React from "react";
 
 const SearchFilter = ({
   searchTerm,

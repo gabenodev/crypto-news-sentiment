@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import TopMovers from "../components/HomePage/TopMovers";
 import TrendingCoins from "../components/HomePage/TrendingCoins";
 import CryptoTable from "../components/HomePage/CryptoTable";

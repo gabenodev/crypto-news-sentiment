@@ -1,5 +1,5 @@
 "use client";
-
+import React from "react";
 import { useState, useEffect, useMemo } from "react";
 import {
   FaRocket,
@@ -10,7 +10,6 @@ import {
 import { excludedCoins } from "../../../utils/excludedCoins";
 import type { CoinData, MarketDominanceData, SeasonStatus } from "../types";
 import type { Cryptocurrency } from "../../../types";
-import * as React from "react";
 
 export const useAltcoinSeasonData = () => {
   // State management

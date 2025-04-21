@@ -1,8 +1,8 @@
 "use client";
-import * as React from "react";
+import React from "react";
 import { useState, useEffect } from "react";
 import useWhaleTransactions from "../../hooks/whaleTransactions/useEthScan";
-import { CryptoData } from "./types";
+import type { CryptoData } from "./types";
 import { Header } from "./components/Header";
 import { StatsBar } from "./components/StatsBar";
 import WhaleTransactionsLoading from "./components/Loading";
@@ -48,7 +48,7 @@ export default function WhaleTransactions(): JSX.Element {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+      <div className="bg-white dark:bg-dark-primary rounded-xl shadow-lg overflow-hidden border border-gray-200 dark:border-slate-700">
         <Header />
 
         {/* Stats Bar */}

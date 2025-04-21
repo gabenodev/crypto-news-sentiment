@@ -1,6 +1,5 @@
 "use client";
-
-import * as React from "react";
+import React from "react";
 import NavLinks from "./NavLinks";
 import SearchBar from "./SearchBar";
 import type { NavigateFunction } from "react-router-dom";

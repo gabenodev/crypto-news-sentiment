@@ -1,6 +1,5 @@
 "use client";
-
-import * as React from "react";
+import React from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Logo from "../Layout/Logo";
@@ -14,13 +13,13 @@ function Header(): JSX.Element {
   const navigate = useNavigate();
 
   return (
-    <header className="bg-white dark:bg-gray-900 text-gray-900 dark:text-white shadow-sm w-full sticky top-0 z-50 border-b border-gray-200 dark:border-gray-700">
+    <header className="bg-white dark:bg-dark-primary text-gray-900 dark:text-dark-text-primary shadow-sm w-full sticky top-0 z-50 border-b border-gray-200 dark:border-gray-700">
       <div className="w-full px-4 sm:px-6 py-3">
         <div className="flex items-center justify-between">
           {/* Logo and Mobile Menu Button */}
           <div className="flex items-center space-x-4">
             <button
-              className="lg:hidden text-gray-500 dark:text-gray-400 hover:text-teal-500 dark:hover:text-teal-400"
+              className="lg:hidden text-gray-500 dark:text-dark-text-secondary hover:text-accent-secondary dark:hover:text-accent-secondary"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <svg

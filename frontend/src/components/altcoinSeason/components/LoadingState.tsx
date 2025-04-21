@@ -1,6 +1,5 @@
 "use client";
-
-import * as React from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { FaRocket } from "react-icons/fa";
 import type { LoadingStateProps } from "../types";
@@ -9,7 +8,7 @@ const LoadingState = ({
   message = "Analyzing Market Data",
 }: LoadingStateProps) => {
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen flex justify-center items-center bg-primary dark:bg-gray-900">
       <div className="flex flex-col items-center justify-center p-8 rounded-xl bg-white dark:bg-gray-800 shadow-xl max-w-md mx-auto">
         <div className="relative w-24 h-24 mb-6">
           <motion.div

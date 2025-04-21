@@ -1,10 +1,9 @@
 import React from "react";
-
 export const Header = () => (
-  <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900">
+  <div className="p-6 border-b border-gray-200 dark:border-slate-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-dark-secondary dark:to-dark-primary">
     <div className="flex items-center justify-between">
       <div>
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-dark-text-primary">
           Whale Transactions
         </h2>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">

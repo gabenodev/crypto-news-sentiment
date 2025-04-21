@@ -2,16 +2,109 @@
 @tailwind components;
 @tailwind utilities;
 
-html.dark .bg-gray-100 {
-  background-color: rgb(28, 34, 43); /* Fundal în dark mode */
+/* Culori personalizate pentru Dark Mode */
+:root {
+  --bg-primary: #121212; /* Fundal principal (deep dark) */
+  --bg-secondary: #1e1e1e; /* Suprafețe (carduri, bare) */
+  --bg-tertiary: #2d2d2d; /* Elemente interactive (hover, focus) */
+  --text-primary: #e0e0e0; /* Text principal */
+  --text-secondary: #a0a0a0; /* Text secundar */
+  --accent-primary: #bb86fc; /* Violet deschis (accent principal) */
+  --accent-secondary: #03dac6; /* Turcoaz (accent secundar) */
+  --error: #cf6679; /* Roșu desaturat pentru erori */
 }
 
+/* Light Mode (implicit) */
 body {
-  background-color: #fefefe; /* Fundal clar */
+  background-color: #fefefe;
   font-family: "Inter", sans-serif;
+  color: #1e1e1e; /* Text întunecat pe fundal light */
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+/* Dark Mode */
+html.dark {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+html.dark body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* Chart colors for dark mode */
+html.dark {
+  --chart-1: 59 130 246; /* blue-500 */
+  --chart-2: 139 92 246; /* purple-500 */
+  --chart-3: 6 182 212; /* cyan-500 */
+  --chart-4: 245 158 11; /* amber-500 */
+  --chart-5: 239 68 68; /* red-500 */
+  --chart-6: 16 185 129; /* emerald-500 */
+}
+
+/* Fundaluri */
+html.dark .bg-gray-100 {
+  background-color: var(--bg-primary);
+}
+
+html.dark .dark\:bg-gray-900 {
+  background-color: var(--bg-primary) !important;
+}
+
+html.dark .dark\:bg-gray-800 {
+  background-color: var(--bg-secondary) !important;
+}
+
+html.dark .dark\:bg-gray-700 {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Text */
+html.dark .dark\:text-gray-100 {
+  color: var(--text-primary) !important;
+}
+
+html.dark .dark\:text-gray-400 {
+  color: var(--text-secondary) !important;
+}
+
+/* Accente (butoane, link-uri) */
+html.dark .dark\:text-accent {
+  color: var(--accent-primary) !important;
+}
+
+html.dark .dark\:bg-accent {
+  background-color: var(--accent-primary) !important;
+}
+
+/* Erori */
+html.dark .dark\:text-error {
+  color: var(--error) !important;
+}
+
+/* Accent colors for hover effects */
+.hover-accent-secondary:hover {
+  background-color: rgba(3, 218, 198, 0.1);
+}
+
+.hover-accent-primary:hover {
+  background-color: rgba(187, 134, 252, 0.1);
+}
+
+/* Gradient text utility */
+.gradient-text {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-accent-secondary to-accent-primary;
+}
+
+/* Card styles */
+.card {
+  @apply bg-white dark:bg-dark-secondary rounded-xl shadow-md border border-gray-200/50 dark:border-gray-700/50;
+}
+
+.card-hover {
+  @apply hover:shadow-lg transition-shadow duration-200;
 }

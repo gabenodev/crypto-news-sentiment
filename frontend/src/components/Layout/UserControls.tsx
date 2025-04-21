@@ -1,4 +1,4 @@
-import React from "react"; // Adaugă acest import
+import React from "react";
 import { FaUserCircle } from "react-icons/fa";
 import NightToggle from "../Layout/NightToggle";
 
