@@ -41,15 +41,15 @@ const formatNumber = (num: number | undefined): string => {
 const formatMarketCap = (marketCap: number | undefined): string => {
   if (!marketCap && marketCap !== 0) return "—";
   if (marketCap >= 1_000_000_000_000) {
-    return `$${(marketCap / 1_000_000_000_000).toFixed(2)}T`;
+    return `${(marketCap / 1_000_000_000_000).toFixed(2)}T`;
   }
   if (marketCap >= 1_000_000_000) {
-    return `$${(marketCap / 1_000_000_000).toFixed(2)}B`;
+    return `${(marketCap / 1_000_000_000).toFixed(2)}B`;
   }
   if (marketCap >= 1_000_000) {
-    return `$${(marketCap / 1_000_000).toFixed(2)}M`;
+    return `${(marketCap / 1_000_000).toFixed(2)}M`;
   }
-  return `$${formatNumber(marketCap)}`;
+  return `${formatNumber(marketCap)}`;
 };
 
 interface CryptoRowProps {
