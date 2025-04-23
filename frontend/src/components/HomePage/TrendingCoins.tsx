@@ -48,7 +48,7 @@ function TrendingCoins(): JSX.Element {
           </h3>
         </div>
 
-        <div className="flex-1 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+        <div className="flex-1 pr-1 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
           <div className="space-y-7">
             {loading ? (
               <div className="flex justify-center items-center py-8">

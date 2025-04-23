@@ -17,7 +17,7 @@ type Props = {
 
 const DesktopTable: React.FC<Props> = ({ transactions, cryptoData }) => {
   return (
-    <div className="hidden md:block overflow-x-auto">
+    <div className="hidden md:block overflow-x-auto overflow-hidden">
       <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
         <thead className="bg-gray-50 dark:bg-gray-800">
           <tr>
