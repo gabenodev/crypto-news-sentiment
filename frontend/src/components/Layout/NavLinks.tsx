@@ -17,6 +17,7 @@ const NavLinks = ({
     { to: "/altcoin-season-index", text: "Altcoin Index" },
     { to: "/sentiment-trend", text: "Sentiment" },
     { to: "/whale-transactions", text: "Whale Watch" },
+    { to: "/wallet-holdings", text: "Wallet Holdings" },
   ];
 
   return (

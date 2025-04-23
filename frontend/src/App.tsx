@@ -9,6 +9,7 @@ import Footer from "./components/Layout/Footer";
 import Homepage from "./pages/HomePage";
 import CurrencyDetails from "./components/CurrencyDetails/CurrencyDetails";
 import ScrollToTop from "./utils/ScrollToTop";
+import WalletHoldingsPage from "./pages/WalletHoldingsPage";
 
 function App(): JSX.Element {
   return (
@@ -24,6 +25,7 @@ function App(): JSX.Element {
             <Route path="/altcoin-season-index" element={<AltcoinSeason />} />
             <Route path="/whale-transactions" element={<WhaleTransactions />} />
             <Route path="/currencies/:coinId" element={<CurrencyDetails />} />
+            <Route path="/wallet-holdings" element={<WalletHoldingsPage />} />
           </Routes>
         </main>
         <Footer />
