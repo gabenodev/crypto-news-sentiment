@@ -9,15 +9,15 @@ interface SentimentGaugeProps {
 const SentimentGauge = ({ value }: SentimentGaugeProps): JSX.Element => {
   const getColor = (score: number): string => {
     if (score <= 25) return "#ef4444"; // Red for extreme fear
-    if (score <= 50) return "#f59e0b"; // Orange for fear
-    if (score <= 75) return "#facc15"; // Yellow for neutral
+    if (score <= 45) return "#f59e0b"; // Orange for fear
+    if (score <= 55) return "#facc15"; // Yellow for neutral
     return "#10b981"; // Green for greed
   };
 
   const getSentimentLabel = (score: number): string => {
     if (score <= 25) return "Extreme Fear";
-    if (score <= 50) return "Fear";
-    if (score <= 75) return "Neutral";
+    if (score <= 45) return "Fear";
+    if (score <= 55) return "Neutral";
     return "Greed";
   };
 

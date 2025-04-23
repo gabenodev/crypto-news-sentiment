@@ -55,8 +55,8 @@ function SentimentChart(): JSX.Element {
             pointBackgroundColor: (context) => {
               const value = context.dataset.data[context.dataIndex];
               if (value <= 25) return "#ef4444";
-              if (value <= 50) return "#f59e0b";
-              if (value <= 75) return "#facc15";
+              if (value <= 45) return "#f59e0b";
+              if (value <= 55) return "#facc15";
               return "#10b981";
             },
             pointBorderColor: "transparent",
@@ -129,8 +129,8 @@ function SentimentChart(): JSX.Element {
             const value = tooltipItems[0].parsed.y;
             let sentiment;
             if (value <= 25) sentiment = "Extreme Fear";
-            else if (value <= 50) sentiment = "Fear";
-            else if (value <= 75) sentiment = "Neutral";
+            else if (value <= 45) sentiment = "Fear";
+            else if (value <= 55) sentiment = "Neutral";
             else sentiment = "Greed";
             return `Sentiment: ${sentiment}`;
           },
