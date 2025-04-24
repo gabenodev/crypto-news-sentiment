@@ -1,0 +1,445 @@
+// Improved function to get icons from CoinGecko and optimize price fetching
+
+// Etherscan API Key
+const ETHERSCAN_API_KEY = "RP1AAGBP2YNUWFTAFP6KWT7GRRKC5BG5MM";
+
+// Interfaces for data types
+interface TokenBalance {
+  tokenAddress: string;
+  tokenName: string;
+  tokenSymbol: string;
+  tokenDecimal: string;
+  balance: string;
+}
+
+interface TokenTransaction {
+  contractAddress: string;
+  tokenName: string;
+  tokenSymbol: string;
+  tokenDecimal: string;
+  value: string;
+}
+
+// TokenInfo interface
+interface TokenInfo {
+  name: string;
+  symbol: string;
+  decimals: string;
+  price?: {
+    rate: number;
+  };
+  image?: string;
+  contractAddress?: string;
+}
+
+interface ProcessedToken {
+  tokenInfo: TokenInfo;
+  balance: string;
+}
+
+// Cache for token prices to reduce API requests
+const tokenPriceCache: Record<
+  string,
+  { price: number | null; timestamp: number }
+> = {};
+
+// Cache for token icons
+const tokenImageCache: Record<string, { url: string; timestamp: number }> = {};
+
+// Function to check if an address is valid
+export const isValidEthereumAddress = (address: string) => {
+  return /^0x[a-fA-F0-9]{40}$/.test(address);
+};
+
+// Predefined prices for popular tokens to avoid too many API requests
+const POPULAR_TOKEN_PRICES: Record<string, number> = {
+  // Popular tokens with their approximate prices
+  "0xdac17f958d2ee523a2206206994597c13d831ec7": 1, // USDT
+  "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48": 1, // USDC
+  "0x6b175474e89094c44da98b954eedeac495271d0f": 1, // DAI
+  "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599": 60000, // WBTC
+  "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0": 0.7, // MATIC
+  "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984": 8, // UNI
+  "0x514910771af9ca656af840dff83e8264ecf986ca": 15, // LINK
+  "0x0d8775f648430679a709e98d2b0cb6250d2887ef": 0.3, // BAT
+  "0x0f5d2fb29fb7d3cfee444a200298f468908cc942": 0.5, // MANA
+  "0xc944e90c64b2c07662a292be6244bdf05cda44a7": 0.4, // GRT
+  "0x4fabb145d64652a948d72533023f6e7a623c7c53": 1, // BUSD
+  "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce": 0.000008, // SHIB
+  "0x1a4b46696b2bb4794eb3d4c26f1c55f9170fa4c5": 0.2, // BIT
+  "0x0000000000085d4780b73119b644ae5ecd22b376": 1, // TUSD
+  "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e": 7000, // YFI
+  "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f": 1.5, // SNX
+  "0xd533a949740bb3306d119cc777fa900ba034cd52": 0.5, // CRV
+  "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2": 1000, // MKR
+  "0xba100000625a3754423978a60c9317c58a424e3d": 5, // BAL
+  "0xc00e94cb662c3520282e6f5717214004a7f26888": 50, // COMP
+};
+
+// Predefined icons for popular tokens
+const POPULAR_TOKEN_IMAGES: Record<string, string> = {
+  "0xdac17f958d2ee523a2206206994597c13d831ec7":
+    "https://assets.coingecko.com/coins/images/325/thumb/Tether.png", // USDT
+  "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48":
+    "https://assets.coingecko.com/coins/images/6319/thumb/USD_Coin_icon.png", // USDC
+  "0x6b175474e89094c44da98b954eedeac495271d0f":
+    "https://assets.coingecko.com/coins/images/9956/thumb/4943.png", // DAI
+  "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599":
+    "https://assets.coingecko.com/coins/images/7598/thumb/wrapped_bitcoin_wbtc.png", // WBTC
+  "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0":
+    "https://assets.coingecko.com/coins/images/4713/thumb/matic-token-icon.png", // MATIC
+  "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984":
+    "https://assets.coingecko.com/coins/images/12504/thumb/uniswap-uni.png", // UNI
+  "0x514910771af9ca656af840dff83e8264ecf986ca":
+    "https://assets.coingecko.com/coins/images/877/thumb/chainlink-new-logo.png", // LINK
+  "0x0d8775f648430679a709e98d2b0cb6250d2887ef":
+    "https://assets.coingecko.com/coins/images/677/thumb/basic-attention-token.png", // BAT
+  "0x0f5d2fb29fb7d3cfee444a200298f468908cc942":
+    "https://assets.coingecko.com/coins/images/878/thumb/decentraland-mana.png", // MANA
+  "0xc944e90c64b2c07662a292be6244bdf05cda44a7":
+    "https://assets.coingecko.com/coins/images/13397/thumb/Graph_Token.png", // GRT
+  "0x4fabb145d64652a948d72533023f6e7a623c7c53":
+    "https://assets.coingecko.com/coins/images/9576/thumb/BUSD.png", // BUSD
+  "0x95ad61b0a150d79219dcf64e1e6cc01f0b64c4ce":
+    "https://assets.coingecko.com/coins/images/11939/thumb/shiba.png", // SHIB
+  "0x0000000000085d4780b73119b644ae5ecd22b376":
+    "https://assets.coingecko.com/coins/images/9129/thumb/trueusd.jpg", // TUSD
+  "0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e":
+    "https://assets.coingecko.com/coins/images/11849/thumb/yfi-192x192.png", // YFI
+  "0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f":
+    "https://assets.coingecko.com/coins/images/3406/thumb/SNX.png", // SNX
+  "0xd533a949740bb3306d119cc777fa900ba034cd52":
+    "https://assets.coingecko.com/coins/images/12124/thumb/Curve.png", // CRV
+  "0x9f8f72aa9304c8b593d555f12ef6589cc3a579a2":
+    "https://assets.coingecko.com/coins/images/1364/thumb/Mark_Maker.png", // MKR
+  "0xba100000625a3754423978a60c9317c58a424e3d":
+    "https://assets.coingecko.com/coins/images/11683/thumb/Balancer.png", // BAL
+  "0xc00e94cb662c3520282e6f5717214004a7f26888":
+    "https://assets.coingecko.com/coins/images/10775/thumb/COMP.png", // COMP
+};
+
+// Function to get cryptocurrency prices from the backend API
+const fetchCryptoPrices = async (): Promise<Record<string, number>> => {
+  try {
+    // Check if we have prices in cache and if they haven't expired (5 minutes)
+    const cacheKey = "all_crypto_prices";
+    const cacheEntry = tokenPriceCache[cacheKey];
+    if (cacheEntry && Date.now() - cacheEntry.timestamp < 5 * 60 * 1000) {
+      return cacheEntry.price as unknown as Record<string, number>;
+    }
+
+    // Make the request to the backend API
+    const response = await fetch(
+      "https://sentimentxv2-project.vercel.app/api/all-cryptos"
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Build an object with symbols and prices
+    const prices: Record<string, number> = {};
+    data.forEach((coin: any) => {
+      if (coin.symbol && coin.current_price) {
+        prices[coin.symbol.toLowerCase()] = coin.current_price;
+      }
+    });
+
+    // Save to cache
+    tokenPriceCache[cacheKey] = {
+      price: prices as any,
+      timestamp: Date.now(),
+    };
+
+    return prices;
+  } catch (error) {
+    console.error("Error getting cryptocurrency prices:", error);
+    return {};
+  }
+};
+
+// Function to get a token's icon from CoinGecko
+const getTokenImage = async (
+  contractAddress: string,
+  symbol: string
+): Promise<string> => {
+  // Check if we have the icon in cache and if it hasn't expired (1 day)
+  const cacheKey = contractAddress.toLowerCase();
+  const cacheEntry = tokenImageCache[cacheKey];
+  if (cacheEntry && Date.now() - cacheEntry.timestamp < 24 * 60 * 60 * 1000) {
+    return cacheEntry.url;
+  }
+
+  // Check if we have the predefined icon
+  const predefinedImage = POPULAR_TOKEN_IMAGES[cacheKey];
+  if (predefinedImage) {
+    // Save to cache
+    tokenImageCache[cacheKey] = {
+      url: predefinedImage,
+      timestamp: Date.now(),
+    };
+    return predefinedImage;
+  }
+
+  try {
+    // Try to get the icon from CoinGecko
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/coins/ethereum/contract/${contractAddress}`
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const imageUrl = data.image?.thumb || data.image?.small || null;
+
+    if (imageUrl) {
+      // Save to cache
+      tokenImageCache[cacheKey] = {
+        url: imageUrl,
+        timestamp: Date.now(),
+      };
+      return imageUrl;
+    }
+
+    // If we can't find the icon, use a placeholder
+    return `/placeholder.svg?height=32&width=32&query=${symbol}`;
+  } catch (error) {
+    console.error("Error getting token icon:", error);
+    return `/placeholder.svg?height=32&width=32&query=${symbol}`;
+  }
+};
+
+// Function to get a token's price
+const getTokenPrice = async (
+  contractAddress: string,
+  symbol: string
+): Promise<number | null> => {
+  // Check if we have the price in cache and if it hasn't expired (5 minutes)
+  const cacheKey = contractAddress.toLowerCase();
+  const cacheEntry = tokenPriceCache[cacheKey];
+  if (cacheEntry && Date.now() - cacheEntry.timestamp < 5 * 60 * 1000) {
+    return cacheEntry.price;
+  }
+
+  // Check if we have the predefined price
+  const predefinedPrice = POPULAR_TOKEN_PRICES[cacheKey];
+  if (predefinedPrice) {
+    // Save to cache
+    tokenPriceCache[cacheKey] = {
+      price: predefinedPrice,
+      timestamp: Date.now(),
+    };
+    return predefinedPrice;
+  }
+
+  try {
+    // Get prices from the backend API
+    const prices = await fetchCryptoPrices();
+    const symbolLower = symbol.toLowerCase();
+
+    if (prices[symbolLower]) {
+      // Save to cache
+      tokenPriceCache[cacheKey] = {
+        price: prices[symbolLower],
+        timestamp: Date.now(),
+      };
+      return prices[symbolLower];
+    }
+
+    // If we don't find the price in the backend API, try with CoinGecko
+    const response = await fetch(
+      `https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=${contractAddress}&vs_currencies=usd`
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const price = data[cacheKey]?.usd || null;
+
+    // Save to cache
+    if (price !== null) {
+      tokenPriceCache[cacheKey] = {
+        price,
+        timestamp: Date.now(),
+      };
+    }
+
+    return price;
+  } catch (error) {
+    console.error("Error getting token price:", error);
+    return null;
+  }
+};
+
+// Function to get ETH price
+const getEthPrice = async (): Promise<number | null> => {
+  // Check if we have the price in cache and if it hasn't expired (5 minutes)
+  const cacheEntry = tokenPriceCache["ethereum"];
+  if (cacheEntry && Date.now() - cacheEntry.timestamp < 5 * 60 * 1000) {
+    return cacheEntry.price;
+  }
+
+  try {
+    // Try to get the price from the backend API
+    const prices = await fetchCryptoPrices();
+
+    if (prices["eth"]) {
+      // Save to cache
+      tokenPriceCache["ethereum"] = {
+        price: prices["eth"],
+        timestamp: Date.now(),
+      };
+      return prices["eth"];
+    }
+
+    // If we don't find the price in the backend API, try with CoinGecko
+    const response = await fetch(
+      "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
+    );
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const price = data.ethereum?.usd || null;
+
+    // Save to cache
+    if (price !== null) {
+      tokenPriceCache["ethereum"] = {
+        price,
+        timestamp: Date.now(),
+      };
+    }
+
+    return price;
+  } catch (error) {
+    console.error("Error getting ETH price:", error);
+    // Return an approximate price for ETH in case of error
+    return 3500;
+  }
+};
+
+// Function to get holdings
+export const fetchTokenBalances = async (address: string): Promise<any[]> => {
+  try {
+    // Check if the address is valid
+    if (!isValidEthereumAddress(address)) {
+      throw new Error("Invalid Ethereum address");
+    }
+
+    // Get ETH balance
+    const ethBalanceResponse = await fetch(
+      `https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=${ETHERSCAN_API_KEY}`
+    );
+    const ethBalanceData = await ethBalanceResponse.json();
+
+    // Use the tokentx endpoint to get transactions with ERC-20 tokens
+    // This endpoint will give us all tokens the address has interacted with
+    const response = await fetch(
+      `https://api.etherscan.io/api?module=account&action=tokentx&address=${address}&page=1&offset=100&sort=desc&apikey=${ETHERSCAN_API_KEY}`
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.status !== "1") {
+      throw new Error(
+        data.message || data.result || "Error getting transactions"
+      );
+    }
+
+    // Get ETH price
+    const ethPrice = await getEthPrice();
+
+    // Process tokens
+    const tokens: any[] = [];
+    const processedTokens = new Map<string, boolean>(); // To avoid duplicates
+
+    // Add ETH if there's a balance
+    if (ethBalanceData.status === "1" && Number(ethBalanceData.result) > 0) {
+      tokens.push({
+        tokenInfo: {
+          name: "Ethereum",
+          symbol: "ETH",
+          decimals: "18",
+          price: ethPrice ? { rate: ethPrice } : undefined,
+          image:
+            "https://assets.coingecko.com/coins/images/279/thumb/ethereum.png",
+        },
+        balance: ethBalanceData.result,
+      });
+    }
+
+    // Process transactions to extract unique tokens
+    // Limit to the first 20 tokens to avoid too many API requests
+    const uniqueTokens = new Map<string, any>();
+    for (const tx of data.result) {
+      const tokenAddress = tx.contractAddress.toLowerCase();
+
+      // If we've already processed this token, skip
+      if (uniqueTokens.has(tokenAddress)) continue;
+
+      uniqueTokens.set(tokenAddress, {
+        contractAddress: tokenAddress,
+        tokenName: tx.tokenName,
+        tokenSymbol: tx.tokenSymbol,
+        tokenDecimal: tx.tokenDecimal,
+      });
+
+      // Limit to 20 tokens to avoid too many API requests
+      if (uniqueTokens.size >= 20) break;
+    }
+
+    // Process each unique token
+    // Convert Map to Array to avoid iteration error
+    const uniqueTokensArray = Array.from(uniqueTokens.entries());
+
+    for (let i = 0; i < uniqueTokensArray.length; i++) {
+      const [tokenAddress, tokenData] = uniqueTokensArray[i];
+
+      // Get balance for this specific token
+      const tokenBalanceResponse = await fetch(
+        `https://api.etherscan.io/api?module=account&action=tokenbalance&contractaddress=${tokenAddress}&address=${address}&tag=latest&apikey=${ETHERSCAN_API_KEY}`
+      );
+      const tokenBalanceData = await tokenBalanceResponse.json();
+
+      // If balance is 0, skip
+      if (
+        tokenBalanceData.status !== "1" ||
+        Number(tokenBalanceData.result) === 0
+      )
+        continue;
+
+      // Get token price and icon in parallel
+      const [price, imageUrl] = await Promise.all([
+        getTokenPrice(tokenAddress, tokenData.tokenSymbol),
+        getTokenImage(tokenAddress, tokenData.tokenSymbol),
+      ]);
+
+      tokens.push({
+        tokenInfo: {
+          name: tokenData.tokenName,
+          symbol: tokenData.tokenSymbol,
+          decimals: tokenData.tokenDecimal,
+          price: price ? { rate: price } : undefined,
+          image: imageUrl,
+        },
+        balance: tokenBalanceData.result,
+      });
+
+      // Add a small pause between requests to avoid rate limiting
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+
+    return tokens;
+  } catch (error) {
+    console.error("Error getting data from Etherscan:", error);
+    throw error;
+  }
+};
