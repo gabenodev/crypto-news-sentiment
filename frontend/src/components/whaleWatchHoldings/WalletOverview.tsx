@@ -1,8 +1,7 @@
 "use client";
-
 import React from "react";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   fetchTokenBalances,
@@ -16,7 +15,6 @@ import {
   FiClock,
   FiTrendingUp,
   FiAlertCircle,
-  FiRefreshCw,
   FiPieChart,
   FiArrowUpRight,
   FiArrowDownLeft,
@@ -101,6 +99,55 @@ const COLORS = [
   "#22d3ee",
 ];
 
+// Helper functions
+const getTotalValueFontSize = (value: number): string => {
+  if (value > 1000000) {
+    return "text-xl";
+  } else if (value > 10000) {
+    return "text-2xl";
+  } else {
+    return "text-3xl";
+  }
+};
+
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(value);
+};
+
+const formatDate = (timestamp: number | null): string => {
+  if (!timestamp) return "N/A";
+  const date = new Date(timestamp * 1000);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-gray-800 text-white p-2 rounded-md shadow-md">
+        <p className="label">{`${label}`}</p>
+        {payload.map((item: any) => (
+          <p key={item.dataKey} className="intro-text">
+            {`${item.name}: ${formatCurrency(item.value)}`}
+          </p>
+        ))}
+      </div>
+    );
+  }
+
+  return null;
+};
+
 const WalletOverview: React.FC<WalletOverviewProps> = ({
   address,
   onLoadingChange,
@@ -131,6 +178,175 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   const previousAddressRef = useRef("");
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Prepare data functions - declared outside useEffect to avoid recreating them on every render
+  const prepareAssetDistributionData = useMemo(() => {
+    return () => {
+      if (!stats || stats.totalValue === 0) {
+        return [];
+      }
+
+      // Start with ETH
+      const ethValue = stats.ethBalance * stats.ethPrice;
+      const totalValue = stats.totalValue;
+
+      const data = [
+        {
+          name: "ETH",
+          value: ethValue,
+          percentage: (ethValue / totalValue) * 100,
+        },
+      ];
+
+      // Add top tokens
+      const topTokens = holdings.slice(0, 5);
+      topTokens.forEach((token) => {
+        if (token.value && token.value > 0) {
+          data.push({
+            name: token.tokenInfo.symbol,
+            value: token.value,
+            percentage: (token.value / totalValue) * 100,
+          });
+        }
+      });
+
+      // Add "Others" category for remaining tokens
+      const otherTokens = holdings.slice(5);
+      const otherValue = otherTokens.reduce(
+        (sum, token) => sum + (token.value || 0),
+        0
+      );
+
+      if (otherValue > 0) {
+        data.push({
+          name: "Others",
+          value: otherValue,
+          percentage: (otherValue / totalValue) * 100,
+        });
+      }
+
+      return data;
+    };
+  }, [stats, holdings]);
+
+  const prepareTransactionActivityData = useMemo(() => {
+    return () => {
+      if (!transactions || transactions.length === 0) {
+        return [];
+      }
+
+      // Filter transactions based on time range
+      const now = Date.now();
+      const msInDay = 24 * 60 * 60 * 1000;
+      const filteredTransactions = transactions.filter((tx) => {
+        if (activeTimeRange === "all") return true;
+        const txDate = tx.timestamp * 1000;
+        const daysDiff = (now - txDate) / msInDay;
+
+        if (activeTimeRange === "7d") return daysDiff <= 7;
+        if (activeTimeRange === "30d") return daysDiff <= 30;
+        if (activeTimeRange === "90d") return daysDiff <= 90;
+        return true;
+      });
+
+      // Group transactions by day
+      const txByDay = filteredTransactions.reduce(
+        (acc: Record<string, number>, tx) => {
+          if (!tx || !tx.timestamp) return acc;
+
+          const date = new Date(tx.timestamp * 1000)
+            .toISOString()
+            .split("T")[0];
+          acc[date] = (acc[date] || 0) + 1;
+          return acc;
+        },
+        {}
+      );
+
+      // Convert to array and sort by date
+      return Object.entries(txByDay)
+        .map(([date, count]) => ({ date, count }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+    };
+  }, [transactions, activeTimeRange]);
+
+  const prepareGasUsageData = useMemo(() => {
+    return () => {
+      if (!transactions || transactions.length === 0) {
+        return [];
+      }
+
+      // Filter transactions based on time range
+      const now = Date.now();
+      const msInDay = 24 * 60 * 60 * 1000;
+      const filteredTransactions = transactions.filter((tx) => {
+        if (activeTimeRange === "all") return true;
+        const txDate = tx.timestamp * 1000;
+        const daysDiff = (now - txDate) / msInDay;
+
+        if (activeTimeRange === "7d") return daysDiff <= 7;
+        if (activeTimeRange === "30d") return daysDiff <= 30;
+        if (activeTimeRange === "90d") return daysDiff <= 90;
+        return true;
+      });
+
+      // Group transactions by day and calculate gas used
+      const gasByDay: Record<string, { date: string; gas: number }> = {};
+
+      filteredTransactions.forEach((tx) => {
+        if (!tx.timestamp || !tx.gasUsed || !tx.gasPrice) return;
+
+        const date = new Date(tx.timestamp * 1000).toISOString().split("T")[0];
+        const gasUsed = (Number(tx.gasUsed) * Number(tx.gasPrice)) / 1e18;
+
+        if (!gasByDay[date]) {
+          gasByDay[date] = { date, gas: 0 };
+        }
+
+        gasByDay[date].gas += gasUsed;
+      });
+
+      // Convert to array and sort by date
+      return Object.values(gasByDay).sort((a, b) =>
+        a.date.localeCompare(b.date)
+      );
+    };
+  }, [transactions, activeTimeRange]);
+
+  const prepareValueOverTimeData = useMemo(() => {
+    return () => {
+      // In a real app, this would fetch historical value data
+      // For now, we'll generate simulated data
+      const dataPoints =
+        activeTimeRange === "7d"
+          ? 7
+          : activeTimeRange === "30d"
+          ? 30
+          : activeTimeRange === "90d"
+          ? 90
+          : 180;
+      const result = [];
+      const baseValue = stats.totalValue * 0.8;
+      const now = new Date();
+
+      for (let i = dataPoints; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().split("T")[0];
+
+        // Add some random variation to simulate price changes
+        const randomFactor = 0.8 + Math.random() * 0.4;
+        const value = baseValue * randomFactor;
+
+        result.push({
+          date: dateStr,
+          value: value,
+        });
+      }
+
+      return result;
+    };
+  }, [stats.totalValue, activeTimeRange]);
+
   // Fetch wallet data
   useEffect(() => {
     // Clear any existing retry timeout when component unmounts or address changes
@@ -152,6 +368,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     isLoadingRef.current = true;
     previousAddressRef.current = address;
 
+    // Modifică funcția loadWalletData pentru a afișa corect soldul ETH
     const loadWalletData = async () => {
       try {
         setLoading(true);
@@ -170,7 +387,11 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           throw new Error("API temporarily unavailable. Please try again.");
         }
 
+        // Convertim corect din wei în ETH
         const ethBalance = Number.parseFloat(ethData.result) / 1e18;
+        console.log("Raw ETH balance from API:", ethData.result);
+        console.log("Converted ETH balance:", ethBalance);
+
         const ethPrice = 3500; // Placeholder - in a real app, fetch the current ETH price
 
         setLoadingStatus("Fetching token balances...");
@@ -229,8 +450,25 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         setHoldings(tokensWithPercentages);
         setTransactions(txHistory);
 
+        // Calculăm valoarea ETH
+        const ethValue = ethBalance * ethPrice;
+        console.log("ETH Balance:", ethBalance);
+        console.log("ETH Price:", ethPrice);
+        console.log("ETH Value:", ethValue);
+        console.log("Total Token Value:", totalTokenValue);
+
+        // Calculăm valoarea totală a portofoliului
+        const totalPortfolioValue = totalTokenValue + ethValue;
+        console.log("Total Portfolio Value:", totalPortfolioValue);
+
+        // Verifică dacă există un token ETH în lista de tokenuri
+        const ethToken = processedTokens.find(
+          (token) => token.tokenInfo.symbol.toLowerCase() === "eth"
+        );
+        // Dacă există deja un token ETH, nu mai adăuga valoarea ETH separat
+        const ethValueToAdd = ethToken ? 0 : ethBalance * ethPrice;
         const updatedStats = {
-          totalValue: totalTokenValue + ethBalance * ethPrice,
+          totalValue: totalTokenValue + ethValueToAdd,
           ethBalance,
           ethPrice,
           tokenCount: tokensWithPercentages.length,
@@ -239,6 +477,15 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           incomingValue,
           outgoingValue,
         };
+
+        console.log("ETH Balance (ETH):", ethBalance);
+        console.log("ETH Price (USD):", ethPrice);
+        console.log("ETH Value (USD):", ethBalance * ethPrice);
+        console.log("Total Token Value (USD):", totalTokenValue);
+        console.log(
+          "Total Portfolio Value (USD):",
+          totalTokenValue + ethBalance * ethPrice
+        );
 
         setStats(updatedStats);
 
@@ -281,8 +528,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     loadWalletData();
   }, [address, onLoadingChange, retryCount, onStatsUpdate]);
 
-  // Prepare data for asset distribution chart
-  const prepareAssetDistributionData = () => {
+  // Memorarea datelor pentru graficul de distribuție a activelor
+  const assetDistributionData = useMemo(() => {
     if (!stats || stats.totalValue === 0) {
       return [];
     }
@@ -291,19 +538,24 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     const ethValue = stats.ethBalance * stats.ethPrice;
     const totalValue = stats.totalValue;
 
-    const data = [
-      {
-        name: "ETH",
-        value: ethValue,
-        percentage: (ethValue / totalValue) * 100,
-      },
-    ];
+    // Create a map to consolidate tokens with the same symbol
+    const tokenMap = new Map();
+
+    // Add ETH first
+    tokenMap.set("ETH", {
+      name: "ETH",
+      value: ethValue,
+      percentage: (ethValue / totalValue) * 100,
+    });
 
     // Add top tokens
     const topTokens = holdings.slice(0, 5);
     topTokens.forEach((token) => {
       if (token.value && token.value > 0) {
-        data.push({
+        // Skip if it's ETH (already added)
+        if (token.tokenInfo.symbol.toLowerCase() === "eth") return;
+
+        tokenMap.set(token.tokenInfo.symbol, {
           name: token.tokenInfo.symbol,
           value: token.value,
           percentage: (token.value / totalValue) * 100,
@@ -313,24 +565,25 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
     // Add "Others" category for remaining tokens
     const otherTokens = holdings.slice(5);
-    const otherValue = otherTokens.reduce(
-      (sum, token) => sum + (token.value || 0),
-      0
-    );
+    const otherValue = otherTokens.reduce((sum, token) => {
+      // Skip if it's ETH (already added)
+      if (token.tokenInfo.symbol.toLowerCase() === "eth") return sum;
+      return sum + (token.value || 0);
+    }, 0);
 
     if (otherValue > 0) {
-      data.push({
+      tokenMap.set("Others", {
         name: "Others",
         value: otherValue,
         percentage: (otherValue / totalValue) * 100,
       });
     }
 
-    return data;
-  };
+    return Array.from(tokenMap.values());
+  }, [stats, holdings]);
 
-  // Prepare data for transaction activity chart
-  const prepareTransactionActivityData = () => {
+  // Memorarea datelor pentru graficul de activitate a tranzacțiilor
+  const transactionActivityData = useMemo(() => {
     if (!transactions || transactions.length === 0) {
       return [];
     }
@@ -365,44 +618,10 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     return Object.entries(txByDay)
       .map(([date, count]) => ({ date, count }))
       .sort((a, b) => a.date.localeCompare(b.date));
-  };
+  }, [transactions, activeTimeRange]);
 
-  // Prepare data for value over time chart (simulated data)
-  const prepareValueOverTimeData = () => {
-    // In a real app, this would fetch historical value data
-    // For now, we'll generate simulated data
-    const dataPoints =
-      activeTimeRange === "7d"
-        ? 7
-        : activeTimeRange === "30d"
-        ? 30
-        : activeTimeRange === "90d"
-        ? 90
-        : 180;
-    const result = [];
-    const baseValue = stats.totalValue * 0.8;
-    const now = new Date();
-
-    for (let i = dataPoints; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split("T")[0];
-
-      // Add some random variation to simulate price changes
-      const randomFactor = 0.8 + Math.random() * 0.4;
-      const value = baseValue * randomFactor;
-
-      result.push({
-        date: dateStr,
-        value: value,
-      });
-    }
-
-    return result;
-  };
-
-  // Prepare data for gas usage chart (simulated data)
-  const prepareGasUsageData = () => {
+  // Memorarea datelor pentru graficul de utilizare a gazului
+  const gasUsageData = useMemo(() => {
     if (!transactions || transactions.length === 0) {
       return [];
     }
@@ -439,130 +658,41 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
     // Convert to array and sort by date
     return Object.values(gasByDay).sort((a, b) => a.date.localeCompare(b.date));
-  };
+  }, [transactions, activeTimeRange]);
 
-  // Format timestamp to readable date
-  const formatDate = (timestamp: number | null) => {
-    if (!timestamp) return "N/A";
-    return new Date(timestamp * 1000).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  // Memorarea datelor pentru graficul "Portfolio Value Over Time"
+  const valueOverTimeData = useMemo(() => {
+    // In a real app, this would fetch historical value data
+    // For now, we'll generate simulated data
+    const dataPoints =
+      activeTimeRange === "7d"
+        ? 7
+        : activeTimeRange === "30d"
+        ? 30
+        : activeTimeRange === "90d"
+        ? 90
+        : 180;
+    const result = [];
+    const baseValue = stats.totalValue * 0.8;
+    const now = new Date();
 
-  // Format currency values with full numbers and commas
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 2,
-    }).format(value);
-  };
+    for (let i = dataPoints; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
 
-  // Determine font size based on the length of the number
-  const getTotalValueFontSize = (value: number) => {
-    const valueStr = Math.floor(value).toString();
-    if (valueStr.length > 12) return "text-xl"; // Very large numbers (trillions+)
-    if (valueStr.length > 9) return "text-2xl"; // Billions
-    if (valueStr.length > 6) return "text-2xl"; // Millions
-    return "text-3xl"; // Default size
-  };
+      // Add some random variation to simulate price changes
+      const randomFactor = 0.8 + Math.random() * 0.4;
+      const value = baseValue * randomFactor;
 
-  // Retry loading data
-  const handleRetry = () => {
-    // Clear any existing retry timeout
-    if (retryTimeoutRef.current) {
-      clearTimeout(retryTimeoutRef.current);
-      retryTimeoutRef.current = null;
+      result.push({
+        date: dateStr,
+        value: value,
+      });
     }
 
-    setRetryCount(0);
-    setError(null);
-    isLoadingRef.current = false; // Reset loading ref to allow retry
-    previousAddressRef.current = ""; // Reset address ref to force reload
-    setLoading(true);
-  };
-
-  // Custom tooltip component for charts
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white dark:bg-dark-tertiary p-3 rounded-lg shadow-lg border border-gray-200 dark:border-dark-tertiary/50">
-          <p className="text-sm font-medium text-gray-900 dark:text-dark-text-primary">
-            {label}
-          </p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {entry.name}:{" "}
-              {entry.name.includes("Value")
-                ? formatCurrency(entry.value)
-                : entry.value}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
-
-  if (loading) {
-    return (
-      <div className="flex flex-col justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mb-4"></div>
-        <p className="text-dark-text-primary dark:text-dark-text-primary">
-          {loadingStatus}
-        </p>
-        <p className="text-xs text-dark-text-secondary dark:text-dark-text-secondary mt-2">
-          This may take a few moments as we connect to the blockchain
-        </p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div
-        className="bg-red-100/30 dark:bg-error/20 border border-error/50 text-error px-4 py-3 rounded-lg relative"
-        role="alert"
-      >
-        <strong className="font-bold">Error:</strong>
-        <span className="block sm:inline"> {error}</span>
-        <button
-          onClick={handleRetry}
-          className="mt-2 flex items-center px-4 py-2 bg-error/10 text-error rounded-md hover:bg-error/20 transition-colors"
-        >
-          <FiRefreshCw className="mr-2" /> Retry
-        </button>
-      </div>
-    );
-  }
-
-  // Safety check for empty data
-  if (!stats || stats.totalValue === 0) {
-    return (
-      <div className="text-center py-8 bg-white dark:bg-dark-secondary rounded-xl shadow border border-gray-100 dark:border-dark-tertiary">
-        <div className="bg-gray-100 dark:bg-dark-tertiary rounded-full p-6 inline-flex mb-4">
-          <FiAlertCircle className="h-12 w-12 text-dark-text-secondary" />
-        </div>
-        <h3 className="text-xl font-medium text-gray-800 dark:text-dark-text-primary mb-2">
-          No wallet data found
-        </h3>
-        <p className="text-gray-500 dark:text-dark-text-secondary max-w-md mx-auto">
-          We couldn't retrieve any data for this wallet. It may be empty or the
-          API might be temporarily unavailable.
-        </p>
-        <button
-          onClick={handleRetry}
-          className="mt-4 flex items-center px-4 py-2 bg-accent-primary/20 text-accent-primary rounded-md hover:bg-accent-primary/30 transition-colors mx-auto"
-        >
-          <FiRefreshCw className="mr-2" /> Try Again
-        </button>
-      </div>
-    );
-  }
+    return result;
+  }, [stats.totalValue, activeTimeRange]);
 
   return (
     <div>
@@ -711,7 +841,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
-              data={prepareValueOverTimeData()}
+              data={valueOverTimeData}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
               <defs>
@@ -770,11 +900,11 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           </div>
 
           <div className="h-[300px]">
-            {prepareAssetDistributionData().length > 0 ? (
+            {assetDistributionData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={prepareAssetDistributionData()}
+                    data={assetDistributionData}
                     cx="50%"
                     cy="50%"
                     labelLine={true}
@@ -786,7 +916,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                       `${name} (${percentage.toFixed(1)}%)`
                     }
                   >
-                    {prepareAssetDistributionData().map((entry, index) => (
+                    {assetDistributionData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
                         fill={COLORS[index % COLORS.length]}
@@ -798,7 +928,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                       formatCurrency(value),
                       "Value",
                     ]}
-                    labelFormatter={(name) => `Token: ${name}`}
+                    labelFormatter={(name: string) => `Token: ${name}`}
                     contentStyle={{
                       backgroundColor: "rgba(30, 30, 30, 0.8)",
                       borderRadius: "8px",
@@ -806,7 +936,13 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                       color: "#E0E0E0",
                     }}
                   />
-                  <Legend />
+                  <Legend
+                    layout="vertical"
+                    verticalAlign="middle"
+                    align="right"
+                    iconType="circle"
+                    iconSize={10}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -835,10 +971,10 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           </div>
 
           <div className="h-[300px]">
-            {prepareTransactionActivityData().length > 0 ? (
+            {transactionActivityData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={prepareTransactionActivityData()}
+                  data={transactionActivityData}
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid
@@ -997,10 +1133,10 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           </div>
 
           <div className="h-[150px]">
-            {prepareGasUsageData().length > 0 ? (
+            {gasUsageData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
-                  data={prepareGasUsageData()}
+                  data={gasUsageData}
                   margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
                 >
                   <XAxis

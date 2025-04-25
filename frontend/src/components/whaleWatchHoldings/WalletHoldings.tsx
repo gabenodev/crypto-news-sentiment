@@ -35,7 +35,7 @@ import { generateCryptoPlaceholder } from "../../utils/placeholderGenerator";
 
 // Update WalletHoldingsProps interface
 interface WalletHoldingsProps {
-  address: string;
+  address?: string;
   onLoadingChange?: (loading: boolean) => void;
   onStatsUpdate?: (stats: any) => void;
 }
@@ -103,15 +103,57 @@ const COLORS = [
   "#115e59", // teal-800
 ];
 
-// Function to get crypto logo placeholder
+// Modificăm funcția getCryptoLogoUrl pentru a folosi noul generator de placeholdere
 const getCryptoLogoUrl = (symbol: string): string => {
   if (!symbol) return generateCryptoPlaceholder("?");
-  // Returnează direct placeholderul, fără a încerca să încarce de la cryptoicons.org
+  // Returnează direct placeholderul generat
   return generateCryptoPlaceholder(symbol);
 };
 
+// Format currency values
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 2,
+  }).format(value);
+};
+
+// Improved CustomTooltip component with better styling
+const CustomTooltip = ({ active, payload }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+        <div className="flex items-center mb-2">
+          <div
+            className="w-4 h-4 rounded-full mr-2"
+            style={{ backgroundColor: payload[0].color }}
+          ></div>
+          <p className="font-medium text-gray-900 dark:text-white text-base">
+            {data.tokenInfo?.name || data.name}
+          </p>
+        </div>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+          <span className="font-medium">Symbol:</span>{" "}
+          {data.tokenInfo?.symbol || data.symbol}
+        </p>
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">
+          <span className="font-medium">Value:</span>{" "}
+          {formatCurrency(data.value || 0)}
+        </p>
+        <p className="text-sm text-gray-600 dark:text-gray-300">
+          <span className="font-medium">Percentage:</span>{" "}
+          {(data.percentage || 0).toFixed(2)}%
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 const WalletHoldings: React.FC<WalletHoldingsProps> = ({
-  address,
+  address = "",
   onLoadingChange,
   onStatsUpdate,
 }: WalletHoldingsProps) => {
@@ -198,6 +240,13 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   }, [address]);
 
   useEffect(() => {
+    // If address is empty, don't try to load holdings
+    if (!address) {
+      setLoading(false);
+      if (onLoadingChange) onLoadingChange(false);
+      return;
+    }
+
     // If it's the first mount, set the flag and continue
     if (isInitialMount.current) {
       isInitialMount.current = false;
@@ -245,7 +294,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
 
         // Process data to calculate values and percentages
         let totalValue = 0;
-        const processedData = data.map((token: TokenData) => {
+        const processedTokens = data.map((token: TokenData) => {
           const decimals = Number(token.tokenInfo.decimals) || 0;
           const formattedBalance =
             Number(token.balance) / Math.pow(10, decimals);
@@ -263,7 +312,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
         });
 
         // Calculate percentages and sort by value
-        const dataWithPercentages = processedData
+        const dataWithPercentages = processedTokens
           .map((token: TokenData) => ({
             ...token,
             percentage: token.value ? (token.value / totalValue) * 100 : 0,
@@ -289,7 +338,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
           topLoser: null,
         };
 
-        // Set data and statistics
         setHoldings(dataWithPercentages);
         setFilteredHoldings(dataWithPercentages);
         setStats(updatedStats);
@@ -347,45 +395,49 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
     return `$${value.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
   };
 
-  // Custom tooltip component
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      return (
-        <div className="bg-white dark:bg-dark-tertiary p-3 rounded-lg shadow-lg border border-gray-200 dark:border-dark-tertiary/50">
-          <p className="font-medium text-gray-900 dark:text-dark-text-primary">
-            {data.tokenInfo?.name || data.name} (
-            {data.tokenInfo?.symbol || data.symbol})
-          </p>
-          <p className="text-sm text-gray-600 dark:text-dark-text-secondary">
-            Value: $
-            {(data.value || 0).toLocaleString("en-US", {
-              maximumFractionDigits: 2,
-            })}
-          </p>
-          <p className="text-sm text-gray-600 dark:text-dark-text-secondary">
-            Percentage: {(data.percentage || 0).toFixed(2)}%
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
-
-  // Prepare data for the pie chart
-  const pieData = filteredHoldings
-    .filter((token) => (token.value || 0) > 0)
-    .map((token) => ({
-      ...token,
-      name: token.tokenInfo.symbol,
-    }));
-
-  // Group small tokens into a single "Others" category for the pie chart
+  // Fix the prepareChartData function to fix rendering issues and prevent duplicate tokens
   const prepareChartData = () => {
-    if (pieData.length <= 10) return pieData;
+    // First, consolidate tokens with the same symbol (fixes duplicate ETH issue)
+    const consolidatedMap = new Map<string, TokenData>();
 
-    const topTokens = pieData.slice(0, 9);
-    const otherTokens = pieData.slice(9);
+    filteredHoldings
+      .filter((token) => (token.value || 0) > 0)
+      .forEach((token) => {
+        const symbol = token.tokenInfo.symbol;
+        if (consolidatedMap.has(symbol)) {
+          // If we already have this symbol, add the values
+          const existing = consolidatedMap.get(symbol)!;
+          existing.value = (existing.value || 0) + (token.value || 0);
+          existing.formattedBalance =
+            (existing.formattedBalance || 0) + (token.formattedBalance || 0);
+        } else {
+          // Otherwise, add it to the map
+          consolidatedMap.set(symbol, { ...token });
+        }
+      });
+
+    // Convert map back to array and sort by value
+    const consolidatedData = Array.from(consolidatedMap.values())
+      .sort((a, b) => (b.value || 0) - (a.value || 0))
+      .map((token) => ({
+        ...token,
+        name: token.tokenInfo.symbol, // Ensure name is set for the chart
+      }));
+
+    // Recalculate percentages based on the consolidated total
+    const totalValue = consolidatedData.reduce(
+      (sum, token) => sum + (token.value || 0),
+      0
+    );
+    consolidatedData.forEach((token) => {
+      token.percentage = token.value ? (token.value / totalValue) * 100 : 0;
+    });
+
+    // Group small tokens into "Others" if we have more than 8 tokens
+    if (consolidatedData.length <= 8) return consolidatedData;
+
+    const topTokens = consolidatedData.slice(0, 7);
+    const otherTokens = consolidatedData.slice(7);
 
     const otherValue = otherTokens.reduce(
       (sum, token) => sum + (token.value || 0),
@@ -439,17 +491,15 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
       }));
   };
 
-  // Format currency values
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 2,
-    }).format(value);
-  };
-
-  // Handle token selection
+  // Fix the handleTokenSelect function to prevent re-rendering issues
   const handleTokenSelect = (token: TokenData) => {
+    if (!token || !token.tokenInfo) return;
+
+    // Check if the token is already selected to avoid re-rendering
+    if (selectedToken?.tokenInfo.symbol === token.tokenInfo.symbol) {
+      return;
+    }
+
     setSelectedToken(token);
   };
 
@@ -787,12 +837,19 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                     cy="50%"
                     outerRadius={120}
                     innerRadius={60}
-                    paddingAngle={1}
-                    label={({ name, percent }) =>
-                      `${name} (${(percent * 100).toFixed(0)}%)`
-                    }
+                    paddingAngle={2}
+                    label={({ name, percent }) => {
+                      // Only show label if percentage is significant enough
+                      return percent > 0.03
+                        ? `${name} (${(percent * 100).toFixed(0)}%)`
+                        : "";
+                    }}
                     labelLine={true}
-                    onClick={(data) => handleTokenSelect(data)}
+                    onClick={(data) => {
+                      if (data && data.tokenInfo) {
+                        handleTokenSelect(data);
+                      }
+                    }}
                   >
                     {prepareChartData().map((entry, index) => (
                       <Cell
@@ -801,7 +858,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                         stroke={
                           selectedToken?.tokenInfo.symbol ===
                           entry.tokenInfo.symbol
-                            ? "#fff"
+                            ? "#ffffff"
                             : "none"
                         }
                         strokeWidth={
@@ -813,8 +870,16 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                       />
                     ))}
                   </Pie>
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip
+                    content={<CustomTooltip />}
+                    wrapperStyle={{ outline: "none" }}
+                  />
                   <Legend
+                    layout="vertical"
+                    verticalAlign="middle"
+                    align="right"
+                    iconType="circle"
+                    iconSize={10}
                     onClick={(data) => {
                       const token = holdings.find(
                         (t) => t.tokenInfo.symbol === data.value
@@ -856,10 +921,9 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                   margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                   onClick={(data) => {
                     if (data && data.activePayload && data.activePayload[0]) {
+                      const symbol = data.activePayload[0].payload.name;
                       const token = holdings.find(
-                        (t) =>
-                          t.tokenInfo.symbol ===
-                          data.activePayload?.[0]?.payload?.name
+                        (t) => t.tokenInfo.symbol === symbol
                       );
                       if (token) handleTokenSelect(token);
                     }
@@ -888,17 +952,8 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                     axisLine={{ stroke: "rgba(160, 160, 160, 0.2)" }}
                   />
                   <Tooltip
-                    formatter={(value) => [
-                      formatCurrency(Number(value)),
-                      "Value",
-                    ]}
-                    labelFormatter={(name) => `Token: ${name}`}
-                    contentStyle={{
-                      backgroundColor: "rgba(255, 255, 255, 0.9)",
-                      borderRadius: "8px",
-                      border: "1px solid rgba(160, 160, 160, 0.2)",
-                      color: "#333",
-                    }}
+                    content={<CustomTooltip />}
+                    cursor={{ fill: "rgba(0, 0, 0, 0.1)" }}
                   />
                   <Bar dataKey="value" name="Value" radius={[4, 4, 0, 0]}>
                     {prepareBarChartData().map((entry, index) => (
@@ -960,7 +1015,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                     }
                   }}
                 >
-                  <Tooltip content={<CustomTooltip />} />
                   {prepareTreemapData().map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
@@ -979,6 +1033,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                       }
                     />
                   ))}
+                  <Tooltip content={<CustomTooltip />} />
                 </Treemap>
               </ResponsiveContainer>
             </div>
@@ -992,7 +1047,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-white dark:bg-dark-secondary rounded-xl shadow-lg border border-gray-100 dark:border-dark-tertiary hover:shadow-xl transition-shadow"
+          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary hover:shadow-xl transition-shadow"
         >
           {filteredHoldings.length === 0 ? (
             <div className="text-center py-8">
@@ -1057,7 +1112,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                         className={`hover:bg-gray-50 dark:hover:bg-dark-tertiary/50 transition-colors cursor-pointer ${
                           selectedToken?.tokenInfo.symbol ===
                           token.tokenInfo.symbol
-                            ? "bg-teal-50/10 dark:bg-teal-900/20"
+                            ? "bg-teal-50 dark:bg-teal-900/20"
                             : ""
                         }`}
                         onClick={() => handleTokenSelect(token)}
@@ -1135,7 +1190,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                             {percentage > 0 && (
                               <div className="w-16 h-2 bg-gray-200 dark:bg-dark-tertiary rounded-full ml-2">
                                 <div
-                                  className="h-2 bg-gradient-to-r from-teal-500 to-green-500 rounded-full"
+                                  className="bg-gradient-to-r from-teal-500 to-green-500 h-2 rounded-full"
                                   style={{
                                     width: `${Math.min(100, percentage)}%`,
                                   }}

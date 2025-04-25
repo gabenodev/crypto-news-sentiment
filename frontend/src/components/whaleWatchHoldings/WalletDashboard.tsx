@@ -16,41 +16,33 @@ import WalletOverview from "./WalletOverview";
 import WalletHoldings from "./WalletHoldings";
 import WalletTransactionHistory from "./WalletTransactionHistory";
 import { isValidEthereumAddress } from "../../utils/API/etherScanAPI";
+import { generateWalletPlaceholder } from "../../utils/placeholderGenerator";
 
 // Popular wallets with names
-const KNOWN_WALLETS: Record<
-  string,
-  { name: string; description: string; icon: string }
-> = {
+const KNOWN_WALLETS: Record<string, { name: string; description: string }> = {
   "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045": {
     name: "Vitalik Buterin",
     description: "Ethereum Co-founder",
-    icon: "👨‍💻",
   },
   "0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe": {
     name: "Ethereum Foundation",
     description: "Non-profit organization",
-    icon: "🏛️",
   },
   "0x28C6c06298d514Db089934071355E5743bf21d60": {
     name: "Binance",
     description: "Cryptocurrency exchange",
-    icon: "🔄",
   },
   "0x503828976D22510aad0201ac7EC88293211D23Da": {
     name: "Coinbase",
     description: "Popular exchange",
-    icon: "💱",
   },
   "0x2910543Af39abA0Cd09dBb2D50200b3E800A63D2": {
     name: "Kraken",
     description: "Top exchange",
-    icon: "🐙",
   },
   "0x9F4cda013E354b8fC285BF4b9A60460cEe7f7Ea9": {
     name: "US Government Seized",
     description: "Seized by US government",
-    icon: "🏛️",
   },
 };
 
@@ -156,18 +148,23 @@ const WalletDashboard: React.FC = () => {
             {/* Wallet info */}
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center mb-4">
-                <div className="text-3xl mr-4 bg-teal-100 dark:bg-teal-900/30 h-12 w-12 rounded-full flex items-center justify-center">
-                  {walletInfo ? walletInfo.icon : "👛"}
+                <div className="mr-4 h-12 w-12 rounded-full overflow-hidden">
+                  <img
+                    src={
+                      generateWalletPlaceholder(address, 48) ||
+                      "/placeholder.svg"
+                    }
+                    alt="Wallet"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <div>
                   <h1 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary">
-                    {walletInfo ? walletInfo.name : "Wallet"}
+                    {walletInfo ? walletInfo.name : "Anonymous Wallet"}
                   </h1>
-                  {walletInfo && (
-                    <p className="text-sm text-gray-500 dark:text-dark-text-secondary">
-                      {walletInfo.description}
-                    </p>
-                  )}
+                  <p className="text-sm text-gray-500 dark:text-dark-text-secondary">
+                    {walletInfo ? walletInfo.description : "Ethereum address"}
+                  </p>
                 </div>
               </div>
 
@@ -203,19 +200,25 @@ const WalletDashboard: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-gradient-to-r from-teal-500 to-green-500 rounded-lg p-4 text-white">
+              <div className="bg-white dark:bg-dark-secondary rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm text-white/80">Portfolio Value</span>
+                  <span className="text-sm text-gray-500 dark:text-dark-text-secondary">
+                    Portfolio Value
+                  </span>
                 </div>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold text-gray-900 dark:text-dark-text-primary">
                   $
                   {walletStats.totalValue.toLocaleString("en-US", {
                     maximumFractionDigits: 2,
                   })}
                 </p>
                 <div className="flex justify-between mt-2 text-sm">
-                  <span>{walletStats.ethBalance.toFixed(4)} ETH</span>
-                  <span>{walletStats.tokenCount} tokens</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    {walletStats.ethBalance.toFixed(4)} ETH
+                  </span>
+                  <span className="text-teal-600 dark:text-teal-400">
+                    {walletStats.tokenCount} tokens
+                  </span>
                 </div>
               </div>
             </div>
@@ -276,7 +279,17 @@ const WalletDashboard: React.FC = () => {
                     .filter((w) => w !== address)
                     .slice(0, 3)
                     .map((wallet) => (
-                      <li key={wallet}>
+                      <li key={wallet} className="flex items-center">
+                        <div className="w-6 h-6 rounded-full overflow-hidden mr-2">
+                          <img
+                            src={
+                              generateWalletPlaceholder(wallet, 24) ||
+                              "/placeholder.svg"
+                            }
+                            alt="Wallet"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
                         <Link
                           to={`/wallet-holdings/${wallet}`}
                           className="block text-xs text-gray-700 dark:text-dark-text-primary hover:text-teal-600 dark:hover:text-teal-400 truncate"
