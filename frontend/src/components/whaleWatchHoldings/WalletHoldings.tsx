@@ -19,21 +19,24 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
+  Treemap,
 } from "recharts";
 import {
-  FiDollarSign,
   FiPieChart,
   FiList,
-  FiArrowUp,
   FiSearch,
   FiBarChart2,
   FiRefreshCw,
+  FiGrid,
+  FiFilter,
+  FiExternalLink,
 } from "react-icons/fi";
 
 // Update WalletHoldingsProps interface
 interface WalletHoldingsProps {
   address: string;
   onLoadingChange?: (loading: boolean) => void;
+  onStatsUpdate?: (stats: any) => void;
 }
 
 // Interface for token data
@@ -126,14 +129,27 @@ const CRYPTO_SYMBOLS: Record<string, string> = {
 
 // Function to get crypto logo URL
 const getCryptoLogoUrl = (symbol: string): string => {
+  if (!symbol) return "https://via.placeholder.com/32/2dd4bf/ffffff?text=?";
+
   const normalizedSymbol = symbol.toUpperCase();
   const mappedSymbol = CRYPTO_SYMBOLS[normalizedSymbol] || symbol.toLowerCase();
+
+  // Try cryptoicons.org first
   return `https://cryptoicons.org/api/icon/${mappedSymbol}/32`;
+};
+
+// Function to generate a fallback image URL
+const getImageFallback = (symbol: string, size = 32): string => {
+  if (!symbol)
+    return `https://via.placeholder.com/${size}/2dd4bf/ffffff?text=?`;
+  const text = symbol.substring(0, 2).toUpperCase();
+  return `https://via.placeholder.com/${size}/2dd4bf/ffffff?text=${text}`;
 };
 
 const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   address,
   onLoadingChange,
+  onStatsUpdate,
 }: WalletHoldingsProps) => {
   const [holdings, setHoldings] = useState<TokenData[]>([]);
   const [filteredHoldings, setFilteredHoldings] = useState<TokenData[]>([]);
@@ -147,10 +163,15 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
     topLoser: null,
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [viewMode, setViewMode] = useState<"list" | "chart" | "bar">("chart");
+  const [viewMode, setViewMode] = useState<
+    "list" | "chart" | "bar" | "treemap"
+  >("chart");
   const [loadingStatus, setLoadingStatus] = useState<string>("Initializing...");
   const [selectedToken, setSelectedToken] = useState<TokenData | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [sortBy, setSortBy] = useState<"value" | "name" | "balance">("value");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   // Use useRef to prevent duplicate requests
   const previousAddressRef = useRef("");
@@ -175,6 +196,32 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
       }
     }
   }, [searchTerm, holdings]);
+
+  // Effect for sorting holdings
+  useEffect(() => {
+    if (filteredHoldings.length > 0) {
+      const sortedHoldings = [...filteredHoldings].sort((a, b) => {
+        if (sortBy === "value") {
+          const aValue = a.value || 0;
+          const bValue = b.value || 0;
+          return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
+        } else if (sortBy === "name") {
+          const aName = a.tokenInfo.name.toLowerCase();
+          const bName = b.tokenInfo.name.toLowerCase();
+          return sortOrder === "asc"
+            ? aName.localeCompare(bName)
+            : bName.localeCompare(aName);
+        } else {
+          const aBalance = a.formattedBalance || 0;
+          const bBalance = b.formattedBalance || 0;
+          return sortOrder === "asc"
+            ? aBalance - bBalance
+            : bBalance - aBalance;
+        }
+      });
+      setFilteredHoldings(sortedHoldings);
+    }
+  }, [sortBy, sortOrder]);
 
   // Cleanup effect
   useEffect(() => {
@@ -270,16 +317,28 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
               }
             : null;
 
-        // Set data and statistics
-        setHoldings(dataWithPercentages);
-        setFilteredHoldings(dataWithPercentages);
-        setStats({
+        const updatedStats = {
           totalValue,
           tokenCount: dataWithPercentages.length,
           topToken,
           topGainer: null, // We don't have historical price data to calculate gains
           topLoser: null,
-        });
+        };
+
+        // Set data and statistics
+        setHoldings(dataWithPercentages);
+        setFilteredHoldings(dataWithPercentages);
+        setStats(updatedStats);
+
+        // Update parent component with stats
+        if (onStatsUpdate) {
+          onStatsUpdate({
+            totalValue,
+            tokenCount: dataWithPercentages.length,
+            ethBalance: 0, // This will be updated by WalletOverview
+          });
+        }
+
         setError(null);
         setRetryCount(0);
 
@@ -317,7 +376,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
     };
 
     loadHoldings();
-  }, [address, onLoadingChange, retryCount]);
+  }, [address, onLoadingChange, retryCount, onStatsUpdate]);
 
   // Function to format values for tooltip
   const formatTooltipValue = (value: number) => {
@@ -329,16 +388,19 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-dark-secondary p-3 rounded-lg shadow-lg border border-dark-tertiary text-dark-text-primary">
-          <p className="font-medium">
-            {data.tokenInfo.name} ({data.tokenInfo.symbol})
+        <div className="bg-white dark:bg-dark-tertiary p-3 rounded-lg shadow-lg border border-gray-200 dark:border-dark-tertiary/50">
+          <p className="font-medium text-gray-900 dark:text-dark-text-primary">
+            {data.tokenInfo?.name || data.name} (
+            {data.tokenInfo?.symbol || data.symbol})
           </p>
-          <p className="text-sm text-dark-text-secondary">
+          <p className="text-sm text-gray-600 dark:text-dark-text-secondary">
             Value: $
-            {data.value?.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+            {(data.value || 0).toLocaleString("en-US", {
+              maximumFractionDigits: 2,
+            })}
           </p>
-          <p className="text-sm text-dark-text-secondary">
-            Percentage: {data.percentage?.toFixed(2)}%
+          <p className="text-sm text-gray-600 dark:text-dark-text-secondary">
+            Percentage: {(data.percentage || 0).toFixed(2)}%
           </p>
         </div>
       );
@@ -400,9 +462,47 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
       }));
   };
 
+  // Prepare data for the treemap
+  const prepareTreemapData = () => {
+    return filteredHoldings
+      .filter((token) => (token.value || 0) > 0)
+      .map((token) => ({
+        name: token.tokenInfo.symbol,
+        size: token.value || 0,
+        value: token.value || 0,
+        percentage: token.percentage || 0,
+        tokenInfo: token.tokenInfo,
+      }));
+  };
+
+  // Format currency values
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
   // Handle token selection
   const handleTokenSelect = (token: TokenData) => {
     setSelectedToken(token);
+  };
+
+  // Toggle sort order
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  };
+
+  // Set sort by field
+  const handleSortBy = (field: "value" | "name" | "balance") => {
+    if (sortBy === field) {
+      toggleSortOrder();
+    } else {
+      setSortBy(field);
+      setSortOrder("desc");
+    }
+    setShowFilterMenu(false);
   };
 
   // Retry loading data
@@ -432,7 +532,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   if (loading)
     return (
       <div className="flex flex-col justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-primary mb-4"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mb-4"></div>
         <p className="text-gray-600 dark:text-dark-text-primary">
           {loadingStatus}
         </p>
@@ -474,121 +574,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
 
   return (
     <div>
-      {/* Main statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="bg-dark-tertiary text-white rounded-xl p-6 shadow-lg"
-        >
-          <div className="flex items-center mb-2">
-            <FiDollarSign className="h-6 w-6 mr-2" />
-            <h3 className="text-lg font-medium">Total Value</h3>
-          </div>
-          <p
-            className={`${getTotalValueFontSize(
-              stats.totalValue
-            )} font-bold break-all`}
-          >
-            $
-            {stats.totalValue.toLocaleString("en-US", {
-              maximumFractionDigits: 2,
-            })}
-          </p>
-          <p className="text-white/80 mt-2 text-sm">
-            {stats.tokenCount} different tokens
-          </p>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
-          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow border border-gray-100 dark:border-dark-tertiary"
-        >
-          <div className="flex items-center mb-2">
-            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg mr-2">
-              <FiArrowUp className="h-4 w-4 text-green-600 dark:text-green-400" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
-              Top Token
-            </h3>
-          </div>
-          {stats.topToken ? (
-            <>
-              <p className="text-xl font-bold text-gray-900 dark:text-dark-text-primary">
-                {stats.topToken.name} ({stats.topToken.symbol})
-              </p>
-              <div className="flex justify-between mt-2 text-sm">
-                <span className="text-gray-500 dark:text-dark-text-secondary">
-                  $
-                  {stats.topToken.value.toLocaleString("en-US", {
-                    maximumFractionDigits: 2,
-                  })}
-                </span>
-                <span className="text-green-600 dark:text-green-400 font-medium">
-                  {stats.topToken.percentage.toFixed(2)}% of portfolio
-                </span>
-              </div>
-            </>
-          ) : (
-            <p className="text-gray-500 dark:text-dark-text-secondary">
-              No data available
-            </p>
-          )}
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
-          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow border border-gray-100 dark:border-dark-tertiary"
-        >
-          <div className="flex items-center mb-2">
-            <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg mr-2">
-              <FiPieChart className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
-              Distribution
-            </h3>
-          </div>
-          <p className="text-gray-500 dark:text-dark-text-secondary text-sm mb-2">
-            Top 3 tokens represent:
-          </p>
-          {holdings.length >= 3 ? (
-            <div className="flex items-center">
-              <div className="flex-1 bg-gray-200 dark:bg-dark-tertiary rounded-full h-2.5 mr-2">
-                <div
-                  className="bg-gradient-to-r from-teal-500 to-green-500 h-2.5 rounded-full"
-                  style={{
-                    width: `${Math.min(
-                      100,
-                      (holdings[0].percentage || 0) +
-                        (holdings[1].percentage || 0) +
-                        (holdings[2].percentage || 0)
-                    )}%`,
-                  }}
-                ></div>
-              </div>
-              <span className="text-sm font-medium text-teal-600 dark:text-teal-400">
-                {(
-                  (holdings[0].percentage || 0) +
-                  (holdings[1].percentage || 0) +
-                  (holdings[2].percentage || 0)
-                ).toFixed(0)}
-                %
-              </span>
-            </div>
-          ) : (
-            <p className="text-gray-500 dark:text-dark-text-secondary">
-              Insufficient data
-            </p>
-          )}
-        </motion.div>
-      </div>
-
-      {/* View controls */}
+      {/* View controls and search */}
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <div className="flex items-center space-x-2">
           <button
@@ -614,6 +600,17 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
             Bar Chart
           </button>
           <button
+            onClick={() => setViewMode("treemap")}
+            className={`px-4 py-2 rounded-lg flex items-center transition-colors ${
+              viewMode === "treemap"
+                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                : "bg-gray-100 text-gray-700 dark:bg-dark-tertiary dark:text-dark-text-secondary hover:bg-gray-200 dark:hover:bg-dark-tertiary/80"
+            }`}
+          >
+            <FiGrid className="mr-2" />
+            Treemap
+          </button>
+          <button
             onClick={() => setViewMode("list")}
             className={`px-4 py-2 rounded-lg flex items-center transition-colors ${
               viewMode === "list"
@@ -626,15 +623,69 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
           </button>
         </div>
 
-        <div className="relative w-full sm:w-64">
-          <input
-            type="text"
-            placeholder="Search token..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-dark-tertiary dark:border-dark-tertiary dark:text-dark-text-primary focus:ring-2 focus:ring-accent-primary focus:border-accent-primary"
-          />
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-dark-text-secondary" />
+        <div className="flex items-center space-x-2 w-full sm:w-auto">
+          <div className="relative flex-1 sm:flex-none">
+            <input
+              type="text"
+              placeholder="Search token..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full sm:w-64 pl-10 pr-4 py-2 border rounded-lg dark:bg-dark-tertiary dark:border-dark-tertiary dark:text-dark-text-primary focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+            />
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-dark-text-secondary" />
+          </div>
+
+          <div className="relative">
+            <button
+              onClick={() => setShowFilterMenu(!showFilterMenu)}
+              className="p-2 bg-gray-100 hover:bg-gray-200 dark:bg-dark-tertiary dark:hover:bg-dark-tertiary/80 text-gray-700 dark:text-dark-text-primary rounded-lg transition-colors"
+            >
+              <FiFilter />
+            </button>
+
+            {showFilterMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-dark-secondary rounded-lg shadow-lg border border-gray-100 dark:border-dark-tertiary z-10">
+                <div className="p-2">
+                  <p className="text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
+                    Sort by
+                  </p>
+                  <button
+                    onClick={() => handleSortBy("value")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm ${
+                      sortBy === "value"
+                        ? "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300"
+                        : "hover:bg-gray-100 dark:hover:bg-dark-tertiary"
+                    }`}
+                  >
+                    Value{" "}
+                    {sortBy === "value" && (sortOrder === "asc" ? "↑" : "↓")}
+                  </button>
+                  <button
+                    onClick={() => handleSortBy("name")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm ${
+                      sortBy === "name"
+                        ? "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300"
+                        : "hover:bg-gray-100 dark:hover:bg-dark-tertiary"
+                    }`}
+                  >
+                    Name{" "}
+                    {sortBy === "name" && (sortOrder === "asc" ? "↑" : "↓")}
+                  </button>
+                  <button
+                    onClick={() => handleSortBy("balance")}
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm ${
+                      sortBy === "balance"
+                        ? "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300"
+                        : "hover:bg-gray-100 dark:hover:bg-dark-tertiary"
+                    }`}
+                  >
+                    Balance{" "}
+                    {sortBy === "balance" && (sortOrder === "asc" ? "↑" : "↓")}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -644,7 +695,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow border border-gray-100 dark:border-dark-tertiary mb-6"
+          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary mb-6 hover:shadow-xl transition-shadow"
         >
           <div className="flex items-start">
             <img
@@ -656,7 +707,10 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
               className="w-16 h-16 rounded-full mr-4 bg-gray-100 dark:bg-dark-tertiary"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
-                target.src = `/placeholder.svg?height=64&width=64&query=${selectedToken.tokenInfo.symbol}`;
+                target.src = getImageFallback(
+                  selectedToken.tokenInfo.symbol,
+                  64
+                );
               }}
             />
             <div className="flex-1">
@@ -664,7 +718,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                 {selectedToken.tokenInfo.name} ({selectedToken.tokenInfo.symbol}
                 )
               </h3>
-              <div className="grid grid-cols-2 gap-4 mt-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                 <div>
                   <p className="text-sm text-gray-500 dark:text-dark-text-secondary">
                     Balance
@@ -680,10 +734,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                     Value
                   </p>
                   <p className="text-lg font-medium text-gray-900 dark:text-dark-text-primary">
-                    $
-                    {selectedToken.value?.toLocaleString("en-US", {
-                      maximumFractionDigits: 2,
-                    })}
+                    {formatCurrency(selectedToken.value || 0)}
                   </p>
                 </div>
                 <div>
@@ -692,12 +743,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                   </p>
                   <p className="text-lg font-medium text-gray-900 dark:text-dark-text-primary">
                     {selectedToken.tokenInfo.price?.rate
-                      ? `$${selectedToken.tokenInfo.price.rate.toLocaleString(
-                          "en-US",
-                          {
-                            maximumFractionDigits: 6,
-                          }
-                        )}`
+                      ? formatCurrency(selectedToken.tokenInfo.price.rate)
                       : "—"}
                   </p>
                 </div>
@@ -728,6 +774,24 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                   ></div>
                 </div>
               </div>
+
+              {/* Token actions */}
+              <div className="mt-4 flex space-x-2">
+                <a
+                  href={`https://etherscan.io/token/${selectedToken.tokenInfo.symbol}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-dark-tertiary dark:hover:bg-dark-tertiary/80 text-gray-700 dark:text-dark-text-primary rounded-lg transition-colors flex items-center"
+                >
+                  <FiExternalLink className="mr-1" /> View on Etherscan
+                </a>
+                <button
+                  onClick={() => setSelectedToken(null)}
+                  className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-dark-tertiary dark:hover:bg-dark-tertiary/80 text-gray-700 dark:text-dark-text-primary rounded-lg transition-colors"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -735,7 +799,12 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
 
       {/* Pie chart view */}
       {viewMode === "chart" && (
-        <div className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow border border-gray-100 dark:border-dark-tertiary mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary mb-8 hover:shadow-xl transition-shadow"
+        >
           <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary mb-4 flex items-center">
             <FiPieChart className="h-5 w-5 mr-2 text-teal-500" />
             Asset Distribution
@@ -798,12 +867,17 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
               </ResponsiveContainer>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* Bar chart view */}
       {viewMode === "bar" && (
-        <div className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow border border-gray-100 dark:border-dark-tertiary mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary mb-8 hover:shadow-xl transition-shadow"
+        >
           <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary mb-4 flex items-center">
             <FiBarChart2 className="h-5 w-5 mr-2 text-green-500" />
             Token Values
@@ -856,17 +930,15 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                   />
                   <Tooltip
                     formatter={(value) => [
-                      `$${Number(value).toLocaleString("en-US", {
-                        maximumFractionDigits: 2,
-                      })}`,
+                      formatCurrency(Number(value)),
                       "Value",
                     ]}
                     labelFormatter={(name) => `Token: ${name}`}
                     contentStyle={{
-                      backgroundColor: "rgba(30, 30, 30, 0.8)",
+                      backgroundColor: "rgba(255, 255, 255, 0.9)",
                       borderRadius: "8px",
-                      border: "none",
-                      color: "#E0E0E0",
+                      border: "1px solid rgba(160, 160, 160, 0.2)",
+                      color: "#333",
                     }}
                   />
                   <Bar dataKey="value" name="Value" radius={[4, 4, 0, 0]}>
@@ -889,12 +961,80 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
               </ResponsiveContainer>
             </div>
           )}
-        </div>
+        </motion.div>
+      )}
+
+      {/* Treemap view */}
+      {viewMode === "treemap" && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary mb-8 hover:shadow-xl transition-shadow"
+        >
+          <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary mb-4 flex items-center">
+            <FiGrid className="h-5 w-5 mr-2 text-blue-500" />
+            Token Distribution Treemap
+          </h3>
+
+          {filteredHoldings.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500 dark:text-dark-text-secondary">
+                No results found for search "{searchTerm}"
+              </p>
+            </div>
+          ) : (
+            <div className="h-[500px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <Treemap
+                  data={prepareTreemapData()}
+                  dataKey="size"
+                  aspectRatio={4 / 3}
+                  stroke="#fff"
+                  fill="#8884d8"
+                  onClick={(data) => {
+                    if (data && data.tokenInfo) {
+                      const token = holdings.find(
+                        (t) => t.tokenInfo.symbol === data.tokenInfo.symbol
+                      );
+                      if (token) handleTokenSelect(token);
+                    }
+                  }}
+                >
+                  <Tooltip content={<CustomTooltip />} />
+                  {prepareTreemapData().map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                      stroke={
+                        selectedToken?.tokenInfo.symbol ===
+                        entry.tokenInfo.symbol
+                          ? "#fff"
+                          : "rgba(255,255,255,0.3)"
+                      }
+                      strokeWidth={
+                        selectedToken?.tokenInfo.symbol ===
+                        entry.tokenInfo.symbol
+                          ? 2
+                          : 1
+                      }
+                    />
+                  ))}
+                </Treemap>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </motion.div>
       )}
 
       {/* List view */}
       {viewMode === "list" && (
-        <div className="bg-white dark:bg-dark-secondary rounded-xl shadow border border-gray-100 dark:border-dark-tertiary">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="bg-white dark:bg-dark-secondary rounded-xl shadow-lg border border-gray-100 dark:border-dark-tertiary hover:shadow-xl transition-shadow"
+        >
           {filteredHoldings.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500 dark:text-dark-text-secondary">
@@ -908,15 +1048,20 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                   <tr>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider cursor-pointer"
+                      onClick={() => handleSortBy("name")}
                     >
-                      Token
+                      Token{" "}
+                      {sortBy === "name" && (sortOrder === "asc" ? "↑" : "↓")}
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider"
+                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider cursor-pointer"
+                      onClick={() => handleSortBy("balance")}
                     >
-                      Balance
+                      Balance{" "}
+                      {sortBy === "balance" &&
+                        (sortOrder === "asc" ? "↑" : "↓")}
                     </th>
                     <th
                       scope="col"
@@ -926,9 +1071,11 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider"
+                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider cursor-pointer"
+                      onClick={() => handleSortBy("value")}
                     >
-                      Value
+                      Value{" "}
+                      {sortBy === "value" && (sortOrder === "asc" ? "↑" : "↓")}
                     </th>
                     <th
                       scope="col"
@@ -967,7 +1114,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                               className="w-8 h-8 rounded-full mr-3 bg-gray-100 dark:bg-dark-tertiary"
                               onError={(e) => {
                                 const target = e.target as HTMLImageElement;
-                                target.src = `/placeholder.svg?height=32&width=32&query=${tokenInfo.symbol}`;
+                                target.src = getImageFallback(tokenInfo.symbol);
                               }}
                             />
                             <div>
@@ -990,9 +1137,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className="text-sm font-medium text-gray-900 dark:text-dark-text-primary">
                             {tokenInfo.price?.rate ? (
-                              `$${tokenInfo.price.rate.toLocaleString("en-US", {
-                                maximumFractionDigits: 6,
-                              })}`
+                              formatCurrency(tokenInfo.price.rate)
                             ) : (
                               <span className="text-gray-400 dark:text-dark-text-secondary">
                                 —
@@ -1003,9 +1148,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className="text-sm font-medium text-gray-900 dark:text-dark-text-primary">
                             {value > 0 ? (
-                              `$${value.toLocaleString("en-US", {
-                                maximumFractionDigits: 2,
-                              })}`
+                              formatCurrency(value)
                             ) : (
                               <span className="text-gray-400 dark:text-dark-text-secondary">
                                 —
@@ -1051,7 +1194,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
               </table>
             </div>
           )}
-        </div>
+        </motion.div>
       )}
     </div>
   );

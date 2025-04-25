@@ -20,6 +20,9 @@ import {
   FiPieChart,
   FiArrowUpRight,
   FiArrowDownLeft,
+  FiInfo,
+  FiTrendingDown,
+  FiZap,
 } from "react-icons/fi";
 import {
   BarChart,
@@ -27,16 +30,22 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
+  Legend,
+  Area,
+  AreaChart,
 } from "recharts";
 
 interface WalletOverviewProps {
   address: string;
   onLoadingChange?: (loading: boolean) => void;
+  onStatsUpdate?: (stats: any) => void;
 }
 
 interface TokenData {
@@ -94,6 +103,7 @@ const COLORS = [
 const WalletOverview: React.FC<WalletOverviewProps> = ({
   address,
   onLoadingChange,
+  onStatsUpdate,
 }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -111,6 +121,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   });
   const [loadingStatus, setLoadingStatus] = useState("Initializing...");
   const [retryCount, setRetryCount] = useState(0);
+  const [activeTimeRange, setActiveTimeRange] = useState<
+    "7d" | "30d" | "90d" | "all"
+  >("30d");
 
   // Use refs to prevent duplicate requests and infinite loops
   const isLoadingRef = useRef(false);
@@ -214,7 +227,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         // Set data
         setHoldings(tokensWithPercentages);
         setTransactions(txHistory);
-        setStats({
+
+        const updatedStats = {
           totalValue: totalTokenValue + ethBalance * ethPrice,
           ethBalance,
           ethPrice,
@@ -223,7 +237,14 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           lastActivity: txHistory.length > 0 ? txHistory[0].timestamp : null,
           incomingValue,
           outgoingValue,
-        });
+        };
+
+        setStats(updatedStats);
+
+        // Update parent component with stats
+        if (onStatsUpdate) {
+          onStatsUpdate(updatedStats);
+        }
 
         setError(null);
         setRetryCount(0);
@@ -257,7 +278,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     };
 
     loadWalletData();
-  }, [address, onLoadingChange, retryCount]);
+  }, [address, onLoadingChange, retryCount, onStatsUpdate]);
 
   // Prepare data for asset distribution chart
   const prepareAssetDistributionData = () => {
@@ -313,20 +334,110 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       return [];
     }
 
-    // Group transactions by day
-    const txByDay = transactions.reduce((acc: Record<string, number>, tx) => {
-      if (!tx || !tx.timestamp) return acc;
+    // Filter transactions based on time range
+    const now = Date.now();
+    const msInDay = 24 * 60 * 60 * 1000;
+    const filteredTransactions = transactions.filter((tx) => {
+      if (activeTimeRange === "all") return true;
+      const txDate = tx.timestamp * 1000;
+      const daysDiff = (now - txDate) / msInDay;
 
-      const date = new Date(tx.timestamp * 1000).toISOString().split("T")[0];
-      acc[date] = (acc[date] || 0) + 1;
-      return acc;
-    }, {});
+      if (activeTimeRange === "7d") return daysDiff <= 7;
+      if (activeTimeRange === "30d") return daysDiff <= 30;
+      if (activeTimeRange === "90d") return daysDiff <= 90;
+      return true;
+    });
+
+    // Group transactions by day
+    const txByDay = filteredTransactions.reduce(
+      (acc: Record<string, number>, tx) => {
+        if (!tx || !tx.timestamp) return acc;
+
+        const date = new Date(tx.timestamp * 1000).toISOString().split("T")[0];
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
 
     // Convert to array and sort by date
     return Object.entries(txByDay)
       .map(([date, count]) => ({ date, count }))
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .slice(-30); // Last 30 days
+      .sort((a, b) => a.date.localeCompare(b.date));
+  };
+
+  // Prepare data for value over time chart (simulated data)
+  const prepareValueOverTimeData = () => {
+    // In a real app, this would fetch historical value data
+    // For now, we'll generate simulated data
+    const dataPoints =
+      activeTimeRange === "7d"
+        ? 7
+        : activeTimeRange === "30d"
+        ? 30
+        : activeTimeRange === "90d"
+        ? 90
+        : 180;
+    const result = [];
+    const baseValue = stats.totalValue * 0.8;
+    const now = new Date();
+
+    for (let i = dataPoints; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
+
+      // Add some random variation to simulate price changes
+      const randomFactor = 0.8 + Math.random() * 0.4;
+      const value = baseValue * randomFactor;
+
+      result.push({
+        date: dateStr,
+        value: value,
+      });
+    }
+
+    return result;
+  };
+
+  // Prepare data for gas usage chart (simulated data)
+  const prepareGasUsageData = () => {
+    if (!transactions || transactions.length === 0) {
+      return [];
+    }
+
+    // Filter transactions based on time range
+    const now = Date.now();
+    const msInDay = 24 * 60 * 60 * 1000;
+    const filteredTransactions = transactions.filter((tx) => {
+      if (activeTimeRange === "all") return true;
+      const txDate = tx.timestamp * 1000;
+      const daysDiff = (now - txDate) / msInDay;
+
+      if (activeTimeRange === "7d") return daysDiff <= 7;
+      if (activeTimeRange === "30d") return daysDiff <= 30;
+      if (activeTimeRange === "90d") return daysDiff <= 90;
+      return true;
+    });
+
+    // Group transactions by day and calculate gas used
+    const gasByDay: Record<string, { date: string; gas: number }> = {};
+
+    filteredTransactions.forEach((tx) => {
+      if (!tx.timestamp || !tx.gasUsed || !tx.gasPrice) return;
+
+      const date = new Date(tx.timestamp * 1000).toISOString().split("T")[0];
+      const gasUsed = (Number(tx.gasUsed) * Number(tx.gasPrice)) / 1e18;
+
+      if (!gasByDay[date]) {
+        gasByDay[date] = { date, gas: 0 };
+      }
+
+      gasByDay[date].gas += gasUsed;
+    });
+
+    // Convert to array and sort by date
+    return Object.values(gasByDay).sort((a, b) => a.date.localeCompare(b.date));
   };
 
   // Format timestamp to readable date
@@ -374,10 +485,32 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     setLoading(true);
   };
 
+  // Custom tooltip component for charts
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white dark:bg-dark-tertiary p-3 rounded-lg shadow-lg border border-gray-200 dark:border-dark-tertiary/50">
+          <p className="text-sm font-medium text-gray-900 dark:text-dark-text-primary">
+            {label}
+          </p>
+          {payload.map((entry: any, index: number) => (
+            <p key={index} className="text-sm" style={{ color: entry.color }}>
+              {entry.name}:{" "}
+              {entry.name.includes("Value")
+                ? formatCurrency(entry.value)
+                : entry.value}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-primary mb-4"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mb-4"></div>
         <p className="text-dark-text-primary dark:text-dark-text-primary">
           {loadingStatus}
         </p>
@@ -432,39 +565,67 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
   return (
     <div>
+      {/* Time range selector */}
+      <div className="flex justify-end mb-6">
+        <div className="inline-flex bg-gray-100 dark:bg-dark-tertiary rounded-lg p-1">
+          {["7d", "30d", "90d", "all"].map((range) => (
+            <button
+              key={range}
+              onClick={() => setActiveTimeRange(range as any)}
+              className={`px-3 py-1 text-sm rounded-md ${
+                activeTimeRange === range
+                  ? "bg-teal-500 text-white"
+                  : "text-gray-600 dark:text-dark-text-secondary hover:bg-gray-200 dark:hover:bg-dark-tertiary/80"
+              }`}
+            >
+              {range === "all" ? "All" : range}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Main statistics cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-dark-tertiary text-white rounded-xl p-6 shadow-lg"
+          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary hover:shadow-xl transition-shadow"
         >
           <div className="flex items-center mb-2">
-            <FiDollarSign className="h-6 w-6 mr-2" />
-            <h3 className="text-lg font-medium">Total Value</h3>
+            <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg mr-3">
+              <FiDollarSign className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
+              Portfolio Value
+            </h3>
           </div>
           <p
             className={`${getTotalValueFontSize(
               stats.totalValue
-            )} font-bold break-all`}
+            )} font-bold text-gray-900 dark:text-dark-text-primary break-all`}
           >
             {formatCurrency(stats.totalValue)}
           </p>
-          <p className="text-white/80 mt-2 text-sm">
-            {stats.ethBalance.toFixed(4)} ETH + {stats.tokenCount} tokens
-          </p>
+          <div className="flex justify-between mt-2 text-sm">
+            <span className="text-gray-500 dark:text-dark-text-secondary">
+              {stats.ethBalance.toFixed(4)} ETH
+            </span>
+            <span className="text-teal-600 dark:text-teal-400">
+              +{stats.tokenCount} tokens
+            </span>
+          </div>
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
-          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow border border-gray-100 dark:border-dark-tertiary"
+          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary hover:shadow-xl transition-shadow"
         >
           <div className="flex items-center mb-2">
-            <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg mr-2">
-              <FiActivity className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg mr-3">
+              <FiActivity className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
             <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
               Transactions
@@ -475,11 +636,11 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           </p>
           <div className="flex justify-between mt-2 text-sm">
             <span className="text-green-600 dark:text-green-400 flex items-center">
-              <FiArrowDownLeft className="mr-1" />{" "}
+              <FiArrowDownLeft className="mr-1" /> In:{" "}
               {formatCurrency(stats.incomingValue)}
             </span>
             <span className="text-red-600 dark:text-red-400 flex items-center">
-              <FiArrowUpRight className="mr-1" />{" "}
+              <FiArrowUpRight className="mr-1" /> Out:{" "}
               {formatCurrency(stats.outgoingValue)}
             </span>
           </div>
@@ -489,11 +650,11 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.2 }}
-          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow border border-gray-100 dark:border-dark-tertiary"
+          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary hover:shadow-xl transition-shadow"
         >
           <div className="flex items-center mb-2">
-            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg mr-2">
-              <FiTrendingUp className="h-4 w-4 text-green-600 dark:text-green-400" />
+            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg mr-3">
+              <FiTrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
               Ethereum
@@ -511,11 +672,11 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.3 }}
-          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow border border-gray-100 dark:border-dark-tertiary"
+          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary hover:shadow-xl transition-shadow"
         >
           <div className="flex items-center mb-2">
-            <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg mr-2">
-              <FiClock className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+            <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg mr-3">
+              <FiClock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
             <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
               Last Activity
@@ -532,14 +693,73 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         </motion.div>
       </div>
 
+      {/* Portfolio value over time chart */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.4 }}
+        className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary mb-8"
+      >
+        <div className="flex items-center mb-4">
+          <FiTrendingUp className="h-5 w-5 text-teal-500 mr-2" />
+          <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
+            Portfolio Value Over Time
+          </h3>
+        </div>
+
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={prepareValueOverTimeData()}
+              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.8} />
+                  <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="date"
+                tick={{ fill: "#A0A0A0" }}
+                axisLine={{ stroke: "rgba(160, 160, 160, 0.2)" }}
+                tickFormatter={(value) => {
+                  const date = new Date(value);
+                  return `${date.getMonth() + 1}/${date.getDate()}`;
+                }}
+              />
+              <YAxis
+                tick={{ fill: "#A0A0A0" }}
+                axisLine={{ stroke: "rgba(160, 160, 160, 0.2)" }}
+                tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+              />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="rgba(160, 160, 160, 0.2)"
+              />
+              <RechartsTooltip content={<CustomTooltip />} />
+              <Area
+                type="monotone"
+                dataKey="value"
+                name="Portfolio Value"
+                stroke="#14b8a6"
+                fillOpacity={1}
+                fill="url(#colorValue)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </motion.div>
+
       {/* Charts section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Asset Distribution Chart */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.4 }}
-          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow border border-gray-100 dark:border-dark-tertiary"
+          transition={{ duration: 0.3, delay: 0.5 }}
+          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary"
         >
           <div className="flex items-center mb-4">
             <FiPieChart className="h-5 w-5 text-teal-500 mr-2" />
@@ -558,6 +778,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                     cy="50%"
                     labelLine={true}
                     outerRadius={100}
+                    innerRadius={60}
                     fill="#8884d8"
                     dataKey="value"
                     label={({ name, percentage }) =>
@@ -571,7 +792,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                       />
                     ))}
                   </Pie>
-                  <Tooltip
+                  <RechartsTooltip
                     formatter={(value: number) => [
                       formatCurrency(value),
                       "Value",
@@ -584,6 +805,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                       color: "#E0E0E0",
                     }}
                   />
+                  <Legend />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
@@ -601,8 +823,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.5 }}
-          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow border border-gray-100 dark:border-dark-tertiary"
+          transition={{ duration: 0.3, delay: 0.6 }}
+          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary"
         >
           <div className="flex items-center mb-4">
             <FiActivity className="h-5 w-5 text-green-500 mr-2" />
@@ -627,12 +849,16 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                     dataKey="date"
                     tick={{ fill: "#A0A0A0" }}
                     axisLine={{ stroke: "rgba(160, 160, 160, 0.2)" }}
+                    tickFormatter={(value) => {
+                      const date = new Date(value);
+                      return `${date.getMonth() + 1}/${date.getDate()}`;
+                    }}
                   />
                   <YAxis
                     tick={{ fill: "#A0A0A0" }}
                     axisLine={{ stroke: "rgba(160, 160, 160, 0.2)" }}
                   />
-                  <Tooltip
+                  <RechartsTooltip
                     formatter={(value: number) => [
                       `${value} transactions`,
                       "Count",
@@ -665,12 +891,227 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         </motion.div>
       </div>
 
+      {/* Additional insights */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.7 }}
+          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary"
+        >
+          <div className="flex items-center mb-4">
+            <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg mr-3">
+              <FiInfo className="h-5 w-5 text-teal-600 dark:text-teal-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
+              Portfolio Insights
+            </h3>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-500 dark:text-dark-text-secondary">
+                  Diversification Score
+                </span>
+                <span className="font-medium text-teal-600 dark:text-teal-400">
+                  {Math.min(100, Math.round(stats.tokenCount * 10))}%
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-dark-tertiary rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-teal-500 to-green-500 h-2 rounded-full"
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      Math.round(stats.tokenCount * 10)
+                    )}%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-500 dark:text-dark-text-secondary">
+                  ETH Dominance
+                </span>
+                <span className="font-medium text-blue-600 dark:text-blue-400">
+                  {Math.round(
+                    ((stats.ethBalance * stats.ethPrice) / stats.totalValue) *
+                      100
+                  )}
+                  %
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-dark-tertiary rounded-full h-2">
+                <div
+                  className="bg-blue-500 h-2 rounded-full"
+                  style={{
+                    width: `${Math.round(
+                      ((stats.ethBalance * stats.ethPrice) / stats.totalValue) *
+                        100
+                    )}%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-500 dark:text-dark-text-secondary">
+                  Activity Level
+                </span>
+                <span className="font-medium text-purple-600 dark:text-purple-400">
+                  {stats.transactionCount > 100
+                    ? "High"
+                    : stats.transactionCount > 20
+                    ? "Medium"
+                    : "Low"}
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-dark-tertiary rounded-full h-2">
+                <div
+                  className="bg-purple-500 h-2 rounded-full"
+                  style={{ width: `${Math.min(100, stats.transactionCount)}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.8 }}
+          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary"
+        >
+          <div className="flex items-center mb-4">
+            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg mr-3">
+              <FiTrendingDown className="h-5 w-5 text-green-600 dark:text-green-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
+              Gas Usage
+            </h3>
+          </div>
+
+          <div className="h-[150px]">
+            {prepareGasUsageData().length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={prepareGasUsageData()}
+                  margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                >
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fill: "#A0A0A0", fontSize: 10 }}
+                    axisLine={{ stroke: "rgba(160, 160, 160, 0.2)" }}
+                    tickFormatter={(value) => {
+                      const date = new Date(value);
+                      return `${date.getMonth() + 1}/${date.getDate()}`;
+                    }}
+                  />
+                  <YAxis
+                    tick={{ fill: "#A0A0A0", fontSize: 10 }}
+                    axisLine={{ stroke: "rgba(160, 160, 160, 0.2)" }}
+                    tickFormatter={(value) => `${value.toFixed(2)} ETH`}
+                  />
+                  <RechartsTooltip content={<CustomTooltip />} />
+                  <Line
+                    type="monotone"
+                    dataKey="gas"
+                    name="Gas Used"
+                    stroke="#10b981"
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full">
+                <p className="text-sm text-gray-500 dark:text-dark-text-secondary">
+                  No gas data available
+                </p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.9 }}
+          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary"
+        >
+          <div className="flex items-center mb-4">
+            <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg mr-3">
+              <FiZap className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
+              Activity Summary
+            </h3>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600 dark:text-dark-text-secondary">
+                Total Transactions
+              </span>
+              <span className="font-medium text-gray-900 dark:text-dark-text-primary">
+                {stats.transactionCount}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600 dark:text-dark-text-secondary">
+                Incoming
+              </span>
+              <span className="font-medium text-green-600 dark:text-green-400">
+                {Math.round(
+                  (transactions.filter(
+                    (tx) => tx.to?.toLowerCase() === address.toLowerCase()
+                  ).length /
+                    stats.transactionCount) *
+                    100
+                )}
+                %
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600 dark:text-dark-text-secondary">
+                Outgoing
+              </span>
+              <span className="font-medium text-red-600 dark:text-red-400">
+                {Math.round(
+                  (transactions.filter(
+                    (tx) => tx.from?.toLowerCase() === address.toLowerCase()
+                  ).length /
+                    stats.transactionCount) *
+                    100
+                )}
+                %
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600 dark:text-dark-text-secondary">
+                First Transaction
+              </span>
+              <span className="font-medium text-gray-900 dark:text-dark-text-primary">
+                {transactions.length > 0
+                  ? new Date(
+                      Math.min(...transactions.map((tx) => tx.timestamp * 1000))
+                    ).toLocaleDateString()
+                  : "N/A"}
+              </span>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
       {/* Top tokens section */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.6 }}
-        className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow border border-gray-100 dark:border-dark-tertiary mb-8"
+        transition={{ duration: 0.3, delay: 1.0 }}
+        className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary mb-8"
       >
         <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary mb-4 flex items-center">
           <FiDollarSign className="h-5 w-5 mr-2 text-teal-500" />
