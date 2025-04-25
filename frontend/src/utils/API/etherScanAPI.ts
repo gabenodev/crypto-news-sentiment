@@ -437,41 +437,50 @@ export const fetchTokenBalances = async (address: string) => {
     const ethBalanceUrl = `https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=${ETHERSCAN_API_KEY}`;
     const ethBalanceData = await cachedApiCall(ethBalanceUrl, 30000);
 
-    // Use the tokentx endpoint to get transactions with ERC-20 tokens
-    // This endpoint will give us all tokens the address has interacted with
-    const tokenTxUrl = `https://api.etherscan.io/api?module=account&action=tokentx&address=${address}&page=1&offset=100&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
-    const data = await cachedApiCall(tokenTxUrl, 30000);
+    // Get ETH price - using a more accurate price now
+    const ethPrice = (await getEthPrice()) || 3500; // Fallback to 3500 if API fails
 
-    if (data.status !== "1") {
-      throw new Error(
-        data.message || data.result || "Error getting transactions"
-      );
-    }
-
-    // Get ETH price
-    const ethPrice = await getEthPrice();
-
-    // Process tokens
+    // Add ETH as the first token with correct balance and value
     const tokens: any[] = [];
-    const processedTokens = new Map<string, boolean>(); // To avoid duplicates
 
-    // Add ETH if there's a balance
     if (ethBalanceData.status === "1" && Number(ethBalanceData.result) > 0) {
+      const ethBalanceInEth = Number(ethBalanceData.result) / 1e18; // Convert wei to ETH
+      console.log("ETH Balance in ETH:", ethBalanceInEth);
+      console.log("ETH Price:", ethPrice);
+
       tokens.push({
         tokenInfo: {
           name: "Ethereum",
           symbol: "ETH",
           decimals: "18",
-          price: ethPrice ? { rate: ethPrice } : undefined,
+          price: { rate: ethPrice },
           image:
             "https://assets.coingecko.com/coins/images/279/thumb/ethereum.png",
+          contractAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", // Standard placeholder for ETH
         },
         balance: ethBalanceData.result,
       });
     }
 
+    // Use the tokentx endpoint to get transactions with ERC-20 tokens
+    const tokenTxUrl = `https://api.etherscan.io/api?module=account&action=tokentx&address=${address}&page=1&offset=100&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
+    const data = await cachedApiCall(tokenTxUrl, 30000);
+
+    if (data.status !== "1") {
+      // If we can't get token transactions but have ETH, return just ETH
+      if (tokens.length > 0) {
+        return tokens;
+      }
+      throw new Error(
+        data.message || data.result || "Error getting transactions"
+      );
+    }
+
+    // Process tokens
+    const processedTokens = new Map<string, boolean>(); // To avoid duplicates
+
     // Process transactions to extract unique tokens
-    // Limit to the first 20 tokens to avoid too many API requests
+    // Limit to the first 30 tokens to avoid too many API requests
     const uniqueTokens = new Map<string, any>();
     for (const tx of data.result) {
       const tokenAddress = tx.contractAddress.toLowerCase();
@@ -486,8 +495,8 @@ export const fetchTokenBalances = async (address: string) => {
         tokenDecimal: tx.tokenDecimal,
       });
 
-      // Limit to 20 tokens to avoid too many API requests
-      if (uniqueTokens.size >= 20) break;
+      // Limit to 30 tokens to avoid too many API requests
+      if (uniqueTokens.size >= 30) break;
     }
 
     // Process each unique token
@@ -521,6 +530,7 @@ export const fetchTokenBalances = async (address: string) => {
           decimals: tokenData.tokenDecimal,
           price: price ? { rate: price } : undefined,
           image: imageUrl,
+          contractAddress: tokenAddress,
         },
         balance: tokenBalanceData.result,
       });
