@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   fetchTransactionHistory,
@@ -54,8 +54,32 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
   const [loadingStatus, setLoadingStatus] = useState("Initializing...");
   const transactionsPerPage = 10;
 
+  // Use refs to prevent duplicate requests and infinite loops
+  const isLoadingRef = useRef(false);
+  const previousAddressRef = useRef("");
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Cleanup effect
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
+      }
+    };
+  }, [address]);
+
   // Fetch transaction history
   useEffect(() => {
+    // If we're already loading or the address hasn't changed, don't start a new load
+    if (isLoadingRef.current || previousAddressRef.current === address) {
+      return;
+    }
+
+    // Update refs
+    isLoadingRef.current = true;
+    previousAddressRef.current = address;
+
     const loadTransactions = async () => {
       try {
         setLoading(true);
@@ -79,26 +103,34 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
         setTransactions(sortedTransactions);
         setFilteredTransactions(sortedTransactions);
         setError(null);
+        setRetryCount(0);
       } catch (err: any) {
         console.error("Error loading transactions:", err);
 
         // If we get an error and haven't retried too many times, retry
         if (retryCount < 3) {
-          setRetryCount(retryCount + 1);
-          setError(`API error. Retrying... (${retryCount + 1}/3)`);
-          setLoadingStatus(`Retrying... (Attempt ${retryCount + 1}/3)`);
+          const nextRetryCount = retryCount + 1;
+          setRetryCount(nextRetryCount);
+          setError(`API error. Retrying... (${nextRetryCount}/3)`);
+          setLoadingStatus(`Retrying... (Attempt ${nextRetryCount}/3)`);
 
           // Wait 2 seconds before retrying
-          setTimeout(() => {
+          retryTimeoutRef.current = setTimeout(() => {
+            retryTimeoutRef.current = null;
+            isLoadingRef.current = false; // Reset loading ref to allow retry
             loadTransactions();
           }, 2000);
           return;
         }
 
-        setError(err.message);
+        setError(err.message || "Failed to load transaction data");
       } finally {
-        setLoading(false);
-        if (onLoadingChange) onLoadingChange(false);
+        // Only set loading to false if we're not in a retry cycle
+        if (!retryTimeoutRef.current) {
+          setLoading(false);
+          if (onLoadingChange) onLoadingChange(false);
+          isLoadingRef.current = false;
+        }
       }
     };
 
@@ -112,11 +144,11 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
     // Apply type filter
     if (filter === "incoming") {
       filtered = filtered.filter(
-        (tx) => tx.to.toLowerCase() === address.toLowerCase()
+        (tx) => tx.to && tx.to.toLowerCase() === address.toLowerCase()
       );
     } else if (filter === "outgoing") {
       filtered = filtered.filter(
-        (tx) => tx.from.toLowerCase() === address.toLowerCase()
+        (tx) => tx.from && tx.from.toLowerCase() === address.toLowerCase()
       );
     }
 
@@ -126,8 +158,8 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
       filtered = filtered.filter(
         (tx) =>
           tx.transactionHash.toLowerCase().includes(term) ||
-          tx.from.toLowerCase().includes(term) ||
-          tx.to.toLowerCase().includes(term) ||
+          (tx.from && tx.from.toLowerCase().includes(term)) ||
+          (tx.to && tx.to.toLowerCase().includes(term)) ||
           (tx.tokenSymbol && tx.tokenSymbol.toLowerCase().includes(term))
       );
     }
@@ -169,7 +201,7 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
 
   // Get transaction direction
   const getTransactionDirection = (tx: TransactionData) => {
-    if (tx.to.toLowerCase() === address.toLowerCase()) {
+    if (tx.to && tx.to.toLowerCase() === address.toLowerCase()) {
       return "incoming";
     }
     return "outgoing";
@@ -187,17 +219,27 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
 
   // Retry loading transactions
   const handleRetry = () => {
+    // Clear any existing retry timeout
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+
     setRetryCount(0);
     setError(null);
+    isLoadingRef.current = false; // Reset loading ref to allow retry
+    previousAddressRef.current = ""; // Reset address ref to force reload
     setLoading(true);
   };
 
   if (loading) {
     return (
       <div className="flex flex-col justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-        <p className="text-gray-600 dark:text-gray-300">{loadingStatus}</p>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-primary mb-4"></div>
+        <p className="text-gray-600 dark:text-dark-text-primary">
+          {loadingStatus}
+        </p>
+        <p className="text-xs text-gray-500 dark:text-dark-text-secondary mt-2">
           This may take a few moments as we connect to the blockchain
         </p>
       </div>
@@ -207,14 +249,14 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
   if (error) {
     return (
       <div
-        className="bg-red-100 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg relative"
+        className="bg-red-100/30 dark:bg-error/20 border border-error/50 text-error px-4 py-3 rounded-lg relative"
         role="alert"
       >
         <strong className="font-bold">Error:</strong>
         <span className="block sm:inline"> {error}</span>
         <button
           onClick={handleRetry}
-          className="mt-2 flex items-center px-4 py-2 bg-red-200 dark:bg-red-800 text-red-700 dark:text-red-300 rounded-md hover:bg-red-300 dark:hover:bg-red-700"
+          className="mt-2 flex items-center px-4 py-2 bg-error/10 text-error rounded-md hover:bg-error/20 transition-colors"
         >
           <FiRefreshCw className="mr-2" /> Retry
         </button>
@@ -224,14 +266,14 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
 
   if (transactions.length === 0) {
     return (
-      <div className="text-center py-8 bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700">
-        <div className="bg-gray-100 dark:bg-gray-700 rounded-full p-6 inline-flex mb-4">
-          <FiClock className="h-12 w-12 text-gray-400" />
+      <div className="text-center py-8 bg-white dark:bg-dark-secondary rounded-xl shadow border border-gray-100 dark:border-dark-tertiary">
+        <div className="bg-gray-100 dark:bg-dark-tertiary rounded-full p-6 inline-flex mb-4">
+          <FiClock className="h-12 w-12 text-dark-text-secondary" />
         </div>
-        <h3 className="text-xl font-medium text-gray-800 dark:text-gray-200 mb-2">
+        <h3 className="text-xl font-medium text-gray-800 dark:text-dark-text-primary mb-2">
           No transactions found
         </h3>
-        <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+        <p className="text-gray-500 dark:text-dark-text-secondary max-w-md mx-auto">
           This wallet has no transactions or we couldn't retrieve the data.
           Check the address and try again.
         </p>
@@ -246,10 +288,10 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
         <div className="flex items-center space-x-2 w-full md:w-auto">
           <button
             onClick={() => setFilter("all")}
-            className={`px-4 py-2 rounded-lg flex items-center ${
+            className={`px-4 py-2 rounded-lg flex items-center transition-colors ${
               filter === "all"
-                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300"
-                : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
+                : "bg-gray-100 text-gray-700 dark:bg-dark-tertiary dark:text-dark-text-secondary hover:bg-gray-200 dark:hover:bg-dark-tertiary/80"
             }`}
           >
             <FiFilter className="mr-2" />
@@ -257,10 +299,10 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
           </button>
           <button
             onClick={() => setFilter("incoming")}
-            className={`px-4 py-2 rounded-lg flex items-center ${
+            className={`px-4 py-2 rounded-lg flex items-center transition-colors ${
               filter === "incoming"
-                ? "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300"
-                : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                : "bg-gray-100 text-gray-700 dark:bg-dark-tertiary dark:text-dark-text-secondary hover:bg-gray-200 dark:hover:bg-dark-tertiary/80"
             }`}
           >
             <FiArrowDown className="mr-2" />
@@ -268,10 +310,10 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
           </button>
           <button
             onClick={() => setFilter("outgoing")}
-            className={`px-4 py-2 rounded-lg flex items-center ${
+            className={`px-4 py-2 rounded-lg flex items-center transition-colors ${
               filter === "outgoing"
-                ? "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300"
-                : "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                : "bg-gray-100 text-gray-700 dark:bg-dark-tertiary dark:text-dark-text-secondary hover:bg-gray-200 dark:hover:bg-dark-tertiary/80"
             }`}
           >
             <FiArrowUp className="mr-2" />
@@ -285,9 +327,9 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
             placeholder="Search transactions..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full pl-10 pr-4 py-2 border rounded-lg dark:bg-dark-tertiary dark:border-dark-tertiary dark:text-dark-text-primary focus:ring-2 focus:ring-accent-primary focus:border-accent-primary"
           />
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-dark-text-secondary" />
         </div>
       </div>
 
@@ -296,59 +338,59 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="bg-white dark:bg-gray-800 rounded-xl shadow border border-gray-100 dark:border-gray-700 mb-6"
+        className="bg-white dark:bg-dark-secondary rounded-xl shadow border border-gray-100 dark:border-dark-tertiary mb-6"
       >
         {filteredTransactions.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-700">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-dark-tertiary">
+              <thead className="bg-gray-50 dark:bg-dark-tertiary">
                 <tr>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider"
                   >
                     Transaction
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider"
                   >
                     Date
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider"
                   >
                     From
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider"
                   >
                     To
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider"
                   >
                     Value
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider"
                   >
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="bg-white dark:bg-dark-secondary divide-y divide-gray-200 dark:divide-dark-tertiary">
                 {getCurrentTransactions().map((tx, idx) => {
                   const direction = getTransactionDirection(tx);
 
                   return (
                     <tr
                       key={idx}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                      className="hover:bg-gray-50 dark:hover:bg-dark-tertiary/50 transition-colors"
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -370,10 +412,10 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
                             )}
                           </div>
                           <div>
-                            <div className="font-medium text-gray-900 dark:text-white">
+                            <div className="font-medium text-gray-900 dark:text-dark-text-primary">
                               {direction === "incoming" ? "Received" : "Sent"}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                            <div className="text-xs text-gray-500 dark:text-dark-text-secondary">
                               {`${tx.transactionHash.substring(
                                 0,
                                 8
@@ -385,12 +427,12 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-white">
+                        <div className="text-sm text-gray-900 dark:text-dark-text-primary">
                           {formatDate(tx.timestamp)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-white">
+                        <div className="text-sm text-gray-900 dark:text-dark-text-primary">
                           {formatAddress(
                             tx.from,
                             tx.from.toLowerCase() === address.toLowerCase()
@@ -398,7 +440,7 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-white">
+                        <div className="text-sm text-gray-900 dark:text-dark-text-primary">
                           {formatAddress(
                             tx.to,
                             tx.to.toLowerCase() === address.toLowerCase()
@@ -422,7 +464,7 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
                           href={`https://etherscan.io/tx/${tx.transactionHash}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                          className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 transition-colors"
                         >
                           <FiExternalLink className="inline h-5 w-5" />
                         </a>
@@ -435,7 +477,7 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-500 dark:text-gray-400">
+            <p className="text-gray-500 dark:text-dark-text-secondary">
               No transactions found matching your filters
             </p>
           </div>
@@ -449,10 +491,10 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
             <button
               onClick={() => paginate(currentPage > 1 ? currentPage - 1 : 1)}
               disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 ${
+              className={`px-4 py-2 rounded-l-md border border-gray-300 dark:border-dark-tertiary ${
                 currentPage === 1
-                  ? "bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed"
-                  : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  ? "bg-gray-100 text-gray-400 dark:bg-dark-tertiary dark:text-dark-text-secondary cursor-not-allowed"
+                  : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-dark-secondary dark:text-dark-text-primary dark:hover:bg-dark-tertiary/80 transition-colors"
               }`}
             >
               Previous
@@ -475,10 +517,10 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
                   <button
                     key={index}
                     onClick={() => paginate(index + 1)}
-                    className={`px-4 py-2 border-t border-b border-gray-300 dark:border-gray-600 ${
+                    className={`px-4 py-2 border-t border-b border-gray-300 dark:border-dark-tertiary ${
                       currentPage === index + 1
-                        ? "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 font-medium"
-                        : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                        ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300 font-medium"
+                        : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-dark-secondary dark:text-dark-text-primary dark:hover:bg-dark-tertiary/80 transition-colors"
                     }`}
                   >
                     {index + 1}
@@ -496,7 +538,7 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
                 return (
                   <button
                     key={index}
-                    className="px-4 py-2 border-t border-b border-gray-300 dark:border-gray-600 bg-white text-gray-700 dark:bg-gray-800 dark:text-gray-300"
+                    className="px-4 py-2 border-t border-b border-gray-300 dark:border-dark-tertiary bg-white text-gray-700 dark:bg-dark-secondary dark:text-dark-text-secondary"
                     disabled
                   >
                     ...
@@ -519,11 +561,11 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
                 currentPage ===
                 Math.ceil(filteredTransactions.length / transactionsPerPage)
               }
-              className={`px-4 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 ${
+              className={`px-4 py-2 rounded-r-md border border-gray-300 dark:border-dark-tertiary ${
                 currentPage ===
                 Math.ceil(filteredTransactions.length / transactionsPerPage)
-                  ? "bg-gray-100 text-gray-400 dark:bg-gray-700 dark:text-gray-500 cursor-not-allowed"
-                  : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+                  ? "bg-gray-100 text-gray-400 dark:bg-dark-tertiary dark:text-dark-text-secondary cursor-not-allowed"
+                  : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-dark-secondary dark:text-dark-text-primary dark:hover:bg-dark-tertiary/80 transition-colors"
               }`}
             >
               Next

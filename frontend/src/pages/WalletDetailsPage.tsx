@@ -78,14 +78,16 @@ const WalletDetailsPage = () => {
   // Add current wallet to recent wallets
   useEffect(() => {
     if (address && isValidAddress) {
-      const updatedWallets = [
-        address,
-        ...recentWallets.filter((w) => w !== address),
-      ].slice(0, 5);
-      setRecentWallets(updatedWallets);
-      localStorage.setItem("recentWallets", JSON.stringify(updatedWallets));
+      setRecentWallets((prevWallets) => {
+        const updatedWallets = [
+          address,
+          ...prevWallets.filter((w) => w !== address),
+        ].slice(0, 5);
+        localStorage.setItem("recentWallets", JSON.stringify(updatedWallets));
+        return updatedWallets;
+      });
     }
-  }, [address, isValidAddress, recentWallets]);
+  }, [address, isValidAddress]);
 
   // Validate the address
   useEffect(() => {
@@ -110,18 +112,18 @@ const WalletDetailsPage = () => {
   if (!isValidAddress) {
     return (
       <div className="max-w-4xl mx-auto">
-        <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl p-6 text-center">
-          <div className="text-red-600 dark:text-red-400 text-5xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-red-700 dark:text-red-400 mb-2">
+        <div className="bg-red-50 dark:bg-error/20 border border-red-200 dark:border-error/50 rounded-xl p-6 text-center">
+          <div className="text-error text-5xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-error mb-2">
             Invalid Ethereum Address
           </h2>
-          <p className="text-red-600 dark:text-red-300 mb-6">
+          <p className="text-error/90 mb-6">
             The address "{address}" is not a valid Ethereum address. Please
             check the address and try again.
           </p>
           <Link
             to="/wallet-holdings"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600 text-white rounded-lg transition-colors"
           >
             <FiArrowLeft className="mr-2" />
             Back to Wallet Search
@@ -137,7 +139,7 @@ const WalletDetailsPage = () => {
       <div className="mb-6">
         <Link
           to="/wallet-holdings"
-          className="inline-flex items-center text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 mb-4"
+          className="inline-flex items-center text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 mb-4 transition-colors"
         >
           <FiArrowLeft className="mr-1" />
           <span>Back to Wallet Search</span>
@@ -147,25 +149,25 @@ const WalletDetailsPage = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
+          className="bg-white dark:bg-dark-secondary rounded-xl shadow-lg p-6"
         >
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center">
               {walletInfo && (
-                <div className="text-3xl mr-4 bg-blue-100 dark:bg-blue-900/30 h-12 w-12 rounded-full flex items-center justify-center">
+                <div className="text-3xl mr-4 bg-teal-100 dark:bg-teal-900/30 h-12 w-12 rounded-full flex items-center justify-center">
                   {walletInfo.icon}
                 </div>
               )}
               <div>
-                <h1 className="text-2xl font-bold mb-1">
+                <h1 className="text-2xl font-bold mb-1 text-gray-900 dark:text-dark-text-primary">
                   {walletInfo ? walletInfo.name : "Wallet"}{" "}
                   {walletInfo && (
-                    <span className="text-gray-500 dark:text-gray-400 text-sm">
+                    <span className="text-gray-500 dark:text-dark-text-secondary text-sm">
                       ({walletInfo.description})
                     </span>
                   )}
                 </h1>
-                <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 break-all">
+                <div className="flex items-center text-sm text-gray-500 dark:text-dark-text-secondary break-all">
                   <span className="hidden md:inline mr-2">{address}</span>
                   <span className="md:hidden mr-2">{`${address.substring(
                     0,
@@ -173,7 +175,7 @@ const WalletDetailsPage = () => {
                   )}...${address.substring(address.length - 4)}`}</span>
                   <button
                     onClick={copyToClipboard}
-                    className="text-blue-500 hover:text-blue-600 p-1"
+                    className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 p-1 transition-colors"
                     title="Copy address"
                   >
                     <FiCopy size={14} />
@@ -182,7 +184,7 @@ const WalletDetailsPage = () => {
                     href={`https://etherscan.io/address/${address}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-500 hover:text-blue-600 p-1 ml-1"
+                    className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 p-1 ml-1 transition-colors"
                     title="View on Etherscan"
                   >
                     <FiExternalLink size={14} />
@@ -199,7 +201,7 @@ const WalletDetailsPage = () => {
                 href={`https://etherscan.io/address/${address}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center"
+                className="px-4 py-2 bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600 text-white rounded-lg transition-colors flex items-center"
               >
                 <FiExternalLink className="mr-2" />
                 View on Etherscan
@@ -211,14 +213,14 @@ const WalletDetailsPage = () => {
 
       {/* Tabs navigation */}
       <div className="mb-6">
-        <div className="border-b border-gray-200 dark:border-gray-700">
+        <div className="border-b border-gray-200 dark:border-dark-tertiary">
           <nav className="flex space-x-8">
             <button
               onClick={() => setActiveTab("overview")}
-              className={`py-4 px-1 inline-flex items-center border-b-2 font-medium text-sm ${
+              className={`py-4 px-1 inline-flex items-center border-b-2 font-medium text-sm transition-colors ${
                 activeTab === "overview"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  ? "border-teal-500 text-teal-600 dark:text-teal-400"
+                  : "border-transparent text-gray-500 hover:text-gray-700 dark:text-dark-text-secondary dark:hover:text-dark-text-primary"
               }`}
             >
               <FiInfo className="mr-2" />
@@ -226,10 +228,10 @@ const WalletDetailsPage = () => {
             </button>
             <button
               onClick={() => setActiveTab("holdings")}
-              className={`py-4 px-1 inline-flex items-center border-b-2 font-medium text-sm ${
+              className={`py-4 px-1 inline-flex items-center border-b-2 font-medium text-sm transition-colors ${
                 activeTab === "holdings"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  ? "border-teal-500 text-teal-600 dark:text-teal-400"
+                  : "border-transparent text-gray-500 hover:text-gray-700 dark:text-dark-text-secondary dark:hover:text-dark-text-primary"
               }`}
             >
               <FiPieChart className="mr-2" />
@@ -237,10 +239,10 @@ const WalletDetailsPage = () => {
             </button>
             <button
               onClick={() => setActiveTab("transactions")}
-              className={`py-4 px-1 inline-flex items-center border-b-2 font-medium text-sm ${
+              className={`py-4 px-1 inline-flex items-center border-b-2 font-medium text-sm transition-colors ${
                 activeTab === "transactions"
-                  ? "border-blue-500 text-blue-600 dark:text-blue-400"
-                  : "border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  ? "border-teal-500 text-teal-600 dark:text-teal-400"
+                  : "border-transparent text-gray-500 hover:text-gray-700 dark:text-dark-text-secondary dark:hover:text-dark-text-primary"
               }`}
             >
               <FiActivity className="mr-2" />
