@@ -1,4 +1,4 @@
-// Improved function to get icons from CoinGecko and optimize price fetching
+// Improved API functions for Ethereum wallet data
 
 // Etherscan API Key
 const ETHERSCAN_API_KEY = "RP1AAGBP2YNUWFTAFP6KWT7GRRKC5BG5MM";
@@ -37,6 +37,28 @@ interface ProcessedToken {
   balance: string;
 }
 
+interface TransactionData {
+  blockNumber: string;
+  timeStamp: string;
+  hash: string;
+  nonce: string;
+  blockHash: string;
+  from: string;
+  to: string;
+  value: string;
+  gas: string;
+  gasPrice: string;
+  isError: string;
+  txreceipt_status: string;
+  input: string;
+  contractAddress: string;
+  cumulativeGasUsed: string;
+  gasUsed: string;
+  confirmations: string;
+  methodId: string;
+  functionName: string;
+}
+
 // Cache for token prices to reduce API requests
 const tokenPriceCache: Record<
   string,
@@ -46,8 +68,11 @@ const tokenPriceCache: Record<
 // Cache for token icons
 const tokenImageCache: Record<string, { url: string; timestamp: number }> = {};
 
+// Cache for API responses to prevent duplicate requests
+const apiResponseCache: Record<string, { data: any; timestamp: number }> = {};
+
 // Function to check if an address is valid
-export const isValidEthereumAddress = (address: string) => {
+export const isValidEthereumAddress = (address: string): boolean => {
   return /^0x[a-fA-F0-9]{40}$/.test(address);
 };
 
@@ -322,8 +347,86 @@ const getEthPrice = async (): Promise<number | null> => {
   }
 };
 
-// Function to get holdings
-export const fetchTokenBalances = async (address: string): Promise<any[]> => {
+// Helper function to cache API responses
+const cachedApiCall = async (url: string, cacheTime = 60000): Promise<any> => {
+  // Check if we have a cached response
+  const cacheEntry = apiResponseCache[url];
+  if (cacheEntry && Date.now() - cacheEntry.timestamp < cacheTime) {
+    return cacheEntry.data;
+  }
+
+  try {
+    // Make the API call
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    // Cache the response
+    apiResponseCache[url] = {
+      data,
+      timestamp: Date.now(),
+    };
+
+    return data;
+  } catch (error) {
+    console.error(`Error fetching from ${url}:`, error);
+    throw error;
+  }
+};
+
+// Function to fetch ETH balance
+export const fetchEthBalance = async (address: string) => {
+  try {
+    const url = `https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=${ETHERSCAN_API_KEY}`;
+
+    // Use cached API call with 30 second cache time
+    const data = await cachedApiCall(url, 30000);
+
+    if (data.status !== "1") {
+      throw new Error(data.message || "Error fetching ETH balance");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error fetching ETH balance:", error);
+    throw error;
+  }
+};
+
+// Function to fetch transaction history
+export const fetchTransactionHistory = async (address: string) => {
+  try {
+    const url = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=100&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
+
+    // Use cached API call with 30 second cache time
+    const data = await cachedApiCall(url, 30000);
+
+    if (data.status !== "1") {
+      throw new Error(data.message || "Error fetching transaction history");
+    }
+
+    // Process the transactions to match our expected format
+    return data.result.map((tx: TransactionData) => ({
+      timestamp: Number.parseInt(tx.timeStamp),
+      transactionHash: tx.hash,
+      value: Number.parseFloat(tx.value) / 1e18, // Convert wei to ETH
+      from: tx.from,
+      to: tx.to,
+      isError: tx.isError,
+      gasUsed: tx.gasUsed,
+      gasPrice: tx.gasPrice,
+    }));
+  } catch (error) {
+    console.error("Error fetching transaction history:", error);
+    return [];
+  }
+};
+
+// Function to get token holdings
+export const fetchTokenBalances = async (address: string) => {
   try {
     // Check if the address is valid
     if (!isValidEthereumAddress(address)) {
@@ -331,22 +434,13 @@ export const fetchTokenBalances = async (address: string): Promise<any[]> => {
     }
 
     // Get ETH balance
-    const ethBalanceResponse = await fetch(
-      `https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=${ETHERSCAN_API_KEY}`
-    );
-    const ethBalanceData = await ethBalanceResponse.json();
+    const ethBalanceUrl = `https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=${ETHERSCAN_API_KEY}`;
+    const ethBalanceData = await cachedApiCall(ethBalanceUrl, 30000);
 
     // Use the tokentx endpoint to get transactions with ERC-20 tokens
     // This endpoint will give us all tokens the address has interacted with
-    const response = await fetch(
-      `https://api.etherscan.io/api?module=account&action=tokentx&address=${address}&page=1&offset=100&sort=desc&apikey=${ETHERSCAN_API_KEY}`
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
+    const tokenTxUrl = `https://api.etherscan.io/api?module=account&action=tokentx&address=${address}&page=1&offset=100&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
+    const data = await cachedApiCall(tokenTxUrl, 30000);
 
     if (data.status !== "1") {
       throw new Error(
@@ -404,10 +498,8 @@ export const fetchTokenBalances = async (address: string): Promise<any[]> => {
       const [tokenAddress, tokenData] = uniqueTokensArray[i];
 
       // Get balance for this specific token
-      const tokenBalanceResponse = await fetch(
-        `https://api.etherscan.io/api?module=account&action=tokenbalance&contractaddress=${tokenAddress}&address=${address}&tag=latest&apikey=${ETHERSCAN_API_KEY}`
-      );
-      const tokenBalanceData = await tokenBalanceResponse.json();
+      const tokenBalanceUrl = `https://api.etherscan.io/api?module=account&action=tokenbalance&contractaddress=${tokenAddress}&address=${address}&tag=latest&apikey=${ETHERSCAN_API_KEY}`;
+      const tokenBalanceData = await cachedApiCall(tokenBalanceUrl, 30000);
 
       // If balance is 0, skip
       if (

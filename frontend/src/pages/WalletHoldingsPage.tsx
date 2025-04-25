@@ -3,13 +3,14 @@
 import React from "react";
 import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
-import WalletHoldings from "../components/whaleWatchHoldings/WalletHoldings";
+import { useNavigate } from "react-router-dom";
 import {
   FiSearch,
-  FiCopy,
-  FiExternalLink,
   FiStar,
   FiInfo,
+  FiArrowRight,
+  FiPieChart,
+  FiActivity,
 } from "react-icons/fi";
 
 // Popular wallets with descriptions
@@ -58,6 +59,7 @@ const WalletHoldingsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [recentWallets, setRecentWallets] = useState<string[]>([]);
   const [copySuccess, setCopySuccess] = useState(false);
+  const navigate = useNavigate();
 
   // Load recent wallets from localStorage on component mount
   useEffect(() => {
@@ -85,19 +87,16 @@ const WalletHoldingsPage: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (address.trim() && address.trim() !== submittedAddress) {
+    if (address.trim()) {
       const formattedAddress = address.trim();
-      setSubmittedAddress(formattedAddress);
-      addToRecentWallets(formattedAddress);
+      // Navigate to the wallet details page
+      navigate(`/wallet-holdings/${formattedAddress}`);
     }
   };
 
   const selectWallet = (walletAddress: string) => {
-    if (walletAddress !== submittedAddress) {
-      setAddress(walletAddress);
-      setSubmittedAddress(walletAddress);
-      addToRecentWallets(walletAddress);
-    }
+    // Navigate to the wallet details page
+    navigate(`/wallet-holdings/${walletAddress}`);
   };
 
   const copyToClipboard = (text: string) => {
@@ -118,8 +117,8 @@ const WalletHoldingsPage: React.FC = () => {
           Wallet Holdings Explorer
         </h1>
         <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-          Explore any Ethereum wallet's holdings and analyze asset distribution
-          in real-time
+          Explore any Ethereum wallet and analyze asset distribution in
+          real-time
         </p>
       </motion.div>
 
@@ -153,15 +152,9 @@ const WalletHoldingsPage: React.FC = () => {
 
                 <button
                   type="submit"
-                  disabled={
-                    !address.trim() ||
-                    isLoading ||
-                    address.trim() === submittedAddress
-                  }
+                  disabled={!address.trim() || isLoading}
                   className={`absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors ${
-                    isLoading ||
-                    !address.trim() ||
-                    address.trim() === submittedAddress
+                    isLoading || !address.trim()
                       ? "opacity-50 cursor-not-allowed"
                       : ""
                   }`}
@@ -174,7 +167,7 @@ const WalletHoldingsPage: React.FC = () => {
             {recentWallets.length > 0 && (
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
-                  Recent wallets
+                  Recent Wallets
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {recentWallets.map((wallet) => (
@@ -195,8 +188,8 @@ const WalletHoldingsPage: React.FC = () => {
                 <FiInfo className="text-blue-500 mt-1 mr-3 flex-shrink-0" />
                 <div>
                   <p className="text-sm text-blue-800 dark:text-blue-300">
-                    Enter a valid Ethereum address to view all ERC-20 tokens
-                    held by that wallet.
+                    Enter a valid Ethereum address to see all ERC-20 tokens held
+                    by that wallet.
                   </p>
                   <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                     Data is fetched in real-time from Etherscan and CoinGecko.
@@ -224,78 +217,75 @@ const WalletHoldingsPage: React.FC = () => {
                 key={wallet.address}
                 onClick={() => selectWallet(wallet.address)}
                 disabled={isLoading}
-                className={`w-full p-3 rounded-lg border transition-colors flex items-center ${
-                  submittedAddress === wallet.address
-                    ? "bg-blue-50 border-blue-300 dark:bg-blue-900/30 dark:border-blue-500"
+                className={`w-full p-3 rounded-lg border transition-colors flex items-center justify-between ${
+                  isLoading
+                    ? "opacity-50 cursor-not-allowed"
                     : "hover:bg-gray-50 dark:hover:bg-gray-700 border-gray-200 dark:border-gray-700"
-                } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                }`}
               >
-                <div className="text-2xl mr-3">{wallet.icon}</div>
-                <div className="text-left">
-                  <div className="font-medium">{wallet.name}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {wallet.description}
+                <div className="flex items-center">
+                  <div className="text-2xl mr-3">{wallet.icon}</div>
+                  <div className="text-left">
+                    <div className="font-medium">{wallet.name}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {wallet.description}
+                    </div>
                   </div>
                 </div>
+                <FiArrowRight className="text-blue-500" />
               </button>
             ))}
           </div>
         </motion.div>
       </div>
 
-      {submittedAddress && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8"
-        >
-          <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-            <div>
-              <h2 className="text-2xl font-bold mb-1">
-                {POPULAR_WALLETS.find((w) => w.address === submittedAddress)
-                  ?.name || "Wallet"}{" "}
-                Holdings
-              </h2>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 break-all">
-                <span className="hidden md:inline mr-2">
-                  {submittedAddress}
-                </span>
-                <span className="md:hidden mr-2">{`${submittedAddress.substring(
-                  0,
-                  6
-                )}...${submittedAddress.substring(
-                  submittedAddress.length - 4
-                )}`}</span>
-                <button
-                  onClick={() => copyToClipboard(submittedAddress)}
-                  className="text-blue-500 hover:text-blue-600 p-1"
-                  title="Copy address"
-                >
-                  <FiCopy size={14} />
-                </button>
-                <a
-                  href={`https://etherscan.io/address/${submittedAddress}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:text-blue-600 p-1 ml-1"
-                  title="View on Etherscan"
-                >
-                  <FiExternalLink size={14} />
-                </a>
-                {copySuccess && (
-                  <span className="text-xs text-green-500 ml-2">Copied!</span>
-                )}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.3 }}
+        className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8"
+      >
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">How It Works</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
+            Enter an Ethereum address to see all wallet details, including held
+            assets, transactions, and analytics.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="bg-blue-100 dark:bg-blue-900/30 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FiSearch className="text-blue-600 dark:text-blue-400 text-xl" />
               </div>
+              <h3 className="font-medium text-lg mb-2">Search a Wallet</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                Enter an Ethereum address or choose a popular wallet to get
+                started.
+              </p>
+            </div>
+
+            <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="bg-green-100 dark:bg-green-900/30 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FiPieChart className="text-green-600 dark:text-green-400 text-xl" />
+              </div>
+              <h3 className="font-medium text-lg mb-2">View Assets</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                See all tokens held, their value, and portfolio distribution.
+              </p>
+            </div>
+
+            <div className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg">
+              <div className="bg-purple-100 dark:bg-purple-900/30 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FiActivity className="text-purple-600 dark:text-purple-400 text-xl" />
+              </div>
+              <h3 className="font-medium text-lg mb-2">Analyze Transactions</h3>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
+                Explore transaction history and wallet activity over time.
+              </p>
             </div>
           </div>
-
-          <WalletHoldings
-            address={submittedAddress}
-            onLoadingChange={handleLoadingChange}
-          />
-        </motion.div>
-      )}
+        </div>
+      </motion.div>
     </div>
   );
 };

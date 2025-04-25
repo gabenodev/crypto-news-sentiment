@@ -255,11 +255,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
     };
   }, [address, onLoadingChange]);
 
-  // Function to format values for tooltip
-  const formatTooltipValue = (value: number) => {
-    return `$${value.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
-  };
-
   // Custom tooltip component
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
