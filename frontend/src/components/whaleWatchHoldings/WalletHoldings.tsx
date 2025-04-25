@@ -31,6 +31,7 @@ import {
   FiFilter,
   FiExternalLink,
 } from "react-icons/fi";
+import { generateCryptoPlaceholder } from "../../utils/placeholderGenerator";
 
 // Update WalletHoldingsProps interface
 interface WalletHoldingsProps {
@@ -102,67 +103,11 @@ const COLORS = [
   "#115e59", // teal-800
 ];
 
-// Common crypto symbols for logo mapping
-const CRYPTO_SYMBOLS: Record<string, string> = {
-  BTC: "bitcoin",
-  ETH: "ethereum",
-  USDT: "tether",
-  USDC: "usd-coin",
-  BNB: "binance-coin",
-  XRP: "ripple",
-  ADA: "cardano",
-  SOL: "solana",
-  DOGE: "dogecoin",
-  DOT: "polkadot",
-  AVAX: "avalanche",
-  SHIB: "shiba-inu",
-  MATIC: "polygon",
-  LTC: "litecoin",
-  UNI: "uniswap",
-  LINK: "chainlink",
-  XLM: "stellar",
-  ATOM: "cosmos",
-  ALGO: "algorand",
-  FIL: "filecoin",
-  // Add more mappings as needed
-};
-
-// Function to get crypto logo URL
+// Function to get crypto logo placeholder
 const getCryptoLogoUrl = (symbol: string): string => {
-  if (!symbol) return "https://via.placeholder.com/32/2dd4bf/ffffff?text=?";
-
-  const normalizedSymbol = symbol.toUpperCase();
-  const mappedSymbol = CRYPTO_SYMBOLS[normalizedSymbol] || symbol.toLowerCase();
-
-  // Try cryptoicons.org first
-  return `https://cryptoicons.org/api/icon/${mappedSymbol}/32`;
-};
-
-// Function to generate a fallback image URL
-const getImageFallback = (symbol: string, size = 32): string => {
-  // Generăm un hash simplu din simbol pentru a obține o culoare consistentă
-  let hash = 0;
-  for (let i = 0; i < symbol.length; i++) {
-    hash = symbol.charCodeAt(i) + ((hash << 5) - hash);
-  }
-
-  // Convertim hash-ul în culoare hex
-  let color = "#";
-  for (let i = 0; i < 3; i++) {
-    const value = (hash >> (i * 8)) & 0xff;
-    color += ("00" + value.toString(16)).substr(-2);
-  }
-
-  // Folosim o imagine SVG inline codificată în base64
-  const text = symbol.substring(0, 2).toUpperCase();
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-    <rect width="${size}" height="${size}" fill="${color}" rx="${size / 4}" />
-    <text x="50%" y="50%" fontFamily="Arial" fontSize="${
-      size / 2
-    }" fill="white" textAnchor="middle" dominantBaseline="middle">${text}</text>
-  </svg>`;
-
-  return `data:image/svg+xml;base64,${btoa(svg)}`;
+  if (!symbol) return generateCryptoPlaceholder("?");
+  // Returnează direct placeholderul, fără a încerca să încarce de la cryptoicons.org
+  return generateCryptoPlaceholder(symbol);
 };
 
 const WalletHoldings: React.FC<WalletHoldingsProps> = ({
@@ -458,7 +403,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
           name: "Others",
           symbol: "OTHERS",
           decimals: "0",
-          image: "/Abstract-Geometric-Shapes.png",
+          image: generateCryptoPlaceholder("OTH"),
         },
         balance: "0",
         formattedBalance: 0,
@@ -725,14 +670,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                 }
                 alt={selectedToken.tokenInfo.name}
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = getImageFallback(
-                    selectedToken.tokenInfo.symbol,
-                    64
-                  );
-                  target.onerror = null; // Previne bucle infinite de erori
-                }}
               />
             </div>
             <div className="flex-1">
@@ -1135,13 +1072,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                                 }
                                 alt={tokenInfo.name || tokenInfo.symbol}
                                 className="w-full h-full object-cover"
-                                onError={(e) => {
-                                  const target = e.target as HTMLImageElement;
-                                  target.src = getImageFallback(
-                                    tokenInfo.symbol
-                                  );
-                                  target.onerror = null; // Previne bucle infinite de erori
-                                }}
                               />
                             </div>
                             <div>

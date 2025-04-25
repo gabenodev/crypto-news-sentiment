@@ -41,6 +41,7 @@ import {
   Area,
   AreaChart,
 } from "recharts";
+import { generateCryptoPlaceholder } from "../../utils/placeholderGenerator";
 
 interface WalletOverviewProps {
   address: string;
@@ -1158,15 +1159,12 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <img
-                          src={`https://cryptoicons.org/api/icon/${token.tokenInfo.symbol.toLowerCase()}/32`}
+                          src={
+                            generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg"
+                          }
                           alt={token.tokenInfo.name || "Token"}
                           className="w-8 h-8 rounded-full mr-3 bg-gray-100 dark:bg-dark-tertiary"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.src = `/placeholder.svg?height=32&width=32&query=${
-                              token.tokenInfo.symbol || "token"
-                            }`;
-                          }}
                         />
                         <div>
                           <div className="font-medium text-gray-900 dark:text-dark-text-primary">

@@ -12,6 +12,7 @@ import {
   FiPieChart,
   FiActivity,
 } from "react-icons/fi";
+import { generateWalletPlaceholder } from "../utils/placeholderGenerator";
 
 // Popular wallets with descriptions
 const POPULAR_WALLETS = [
@@ -19,37 +20,31 @@ const POPULAR_WALLETS = [
     name: "Vitalik Buterin",
     address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
     description: "Ethereum Co-founder",
-    icon: "👨‍💻",
   },
   {
     name: "Ethereum Foundation",
     address: "0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe",
     description: "Non-profit organization",
-    icon: "🏛️",
   },
   {
     name: "Binance",
     address: "0x28C6c06298d514Db089934071355E5743bf21d60",
     description: "Cryptocurrency exchange",
-    icon: "🔄",
   },
   {
     name: "Coinbase",
     address: "0x503828976D22510aad0201ac7EC88293211D23Da",
     description: "Popular exchange",
-    icon: "💱",
   },
   {
     name: "Kraken",
     address: "0x2910543Af39abA0Cd09dBb2D50200b3E800A63D2",
     description: "Top exchange",
-    icon: "🐙",
   },
   {
     name: "US Government Seized",
     address: "0x9F4cda013E354b8fC285BF4b9A60460cEe7f7Ea9",
     description: "Seized by US government",
-    icon: "🏛️",
   },
 ];
 
@@ -171,13 +166,24 @@ const WalletHoldingsPage: React.FC = () => {
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {recentWallets.map((wallet) => (
-                    <button
-                      key={wallet}
-                      onClick={() => selectWallet(wallet)}
-                      className="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg px-3 py-1 transition-colors truncate max-w-[200px]"
-                    >
-                      {wallet}
-                    </button>
+                    <div key={wallet} className="flex items-center">
+                      <div className="w-6 h-6 rounded-full overflow-hidden mr-2">
+                        <img
+                          src={
+                            generateWalletPlaceholder(wallet, 24) ||
+                            "/placeholder.svg"
+                          }
+                          alt="Wallet"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <button
+                        onClick={() => selectWallet(wallet)}
+                        className="text-xs bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg px-3 py-1 transition-colors truncate max-w-[200px]"
+                      >
+                        {wallet}
+                      </button>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -224,7 +230,16 @@ const WalletHoldingsPage: React.FC = () => {
                 }`}
               >
                 <div className="flex items-center">
-                  <div className="text-2xl mr-3">{wallet.icon}</div>
+                  <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
+                    <img
+                      src={
+                        generateWalletPlaceholder(wallet.address, 40) ||
+                        "/placeholder.svg"
+                      }
+                      alt={wallet.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                   <div className="text-left">
                     <div className="font-medium">{wallet.name}</div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
