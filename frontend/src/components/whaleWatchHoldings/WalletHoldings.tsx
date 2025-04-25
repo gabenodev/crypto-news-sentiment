@@ -140,10 +140,29 @@ const getCryptoLogoUrl = (symbol: string): string => {
 
 // Function to generate a fallback image URL
 const getImageFallback = (symbol: string, size = 32): string => {
-  if (!symbol)
-    return `https://via.placeholder.com/${size}/2dd4bf/ffffff?text=?`;
+  // Generăm un hash simplu din simbol pentru a obține o culoare consistentă
+  let hash = 0;
+  for (let i = 0; i < symbol.length; i++) {
+    hash = symbol.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  // Convertim hash-ul în culoare hex
+  let color = "#";
+  for (let i = 0; i < 3; i++) {
+    const value = (hash >> (i * 8)) & 0xff;
+    color += ("00" + value.toString(16)).substr(-2);
+  }
+
+  // Folosim o imagine SVG inline codificată în base64
   const text = symbol.substring(0, 2).toUpperCase();
-  return `https://via.placeholder.com/${size}/2dd4bf/ffffff?text=${text}`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <rect width="${size}" height="${size}" fill="${color}" rx="${size / 4}" />
+    <text x="50%" y="50%" fontFamily="Arial" fontSize="${
+      size / 2
+    }" fill="white" textAnchor="middle" dominantBaseline="middle">${text}</text>
+  </svg>`;
+
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
 };
 
 const WalletHoldings: React.FC<WalletHoldingsProps> = ({
@@ -698,21 +717,24 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
           className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary mb-6 hover:shadow-xl transition-shadow"
         >
           <div className="flex items-start">
-            <img
-              src={
-                getCryptoLogoUrl(selectedToken.tokenInfo.symbol) ||
-                "/placeholder.svg"
-              }
-              alt={selectedToken.tokenInfo.name}
-              className="w-16 h-16 rounded-full mr-4 bg-gray-100 dark:bg-dark-tertiary"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.src = getImageFallback(
-                  selectedToken.tokenInfo.symbol,
-                  64
-                );
-              }}
-            />
+            <div className="w-16 h-16 rounded-full mr-4 bg-gray-100 dark:bg-dark-tertiary overflow-hidden flex-shrink-0">
+              <img
+                src={
+                  getCryptoLogoUrl(selectedToken.tokenInfo.symbol) ||
+                  "/placeholder.svg"
+                }
+                alt={selectedToken.tokenInfo.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = getImageFallback(
+                    selectedToken.tokenInfo.symbol,
+                    64
+                  );
+                  target.onerror = null; // Previne bucle infinite de erori
+                }}
+              />
+            </div>
             <div className="flex-1">
               <h3 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary">
                 {selectedToken.tokenInfo.name} ({selectedToken.tokenInfo.symbol}
@@ -1105,18 +1127,23 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                       >
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <img
-                              src={
-                                getCryptoLogoUrl(tokenInfo.symbol) ||
-                                "/placeholder.svg"
-                              }
-                              alt={tokenInfo.name || tokenInfo.symbol}
-                              className="w-8 h-8 rounded-full mr-3 bg-gray-100 dark:bg-dark-tertiary"
-                              onError={(e) => {
-                                const target = e.target as HTMLImageElement;
-                                target.src = getImageFallback(tokenInfo.symbol);
-                              }}
-                            />
+                            <div className="w-8 h-8 rounded-full mr-3 bg-gray-100 dark:bg-dark-tertiary overflow-hidden flex-shrink-0">
+                              <img
+                                src={
+                                  getCryptoLogoUrl(tokenInfo.symbol) ||
+                                  "/placeholder.svg"
+                                }
+                                alt={tokenInfo.name || tokenInfo.symbol}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.src = getImageFallback(
+                                    tokenInfo.symbol
+                                  );
+                                  target.onerror = null; // Previne bucle infinite de erori
+                                }}
+                              />
+                            </div>
                             <div>
                               <div className="font-medium text-gray-900 dark:text-dark-text-primary">
                                 {tokenInfo.name || "Unknown Token"}

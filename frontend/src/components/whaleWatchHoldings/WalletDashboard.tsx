@@ -148,167 +148,166 @@ const WalletDashboard: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-dark-primary">
-      {/* Back button */}
-      <div className="px-4 py-4 bg-white dark:bg-dark-secondary border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto">
-          <Link
-            to="/wallet-holdings"
-            className="inline-flex items-center text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 transition-colors"
-          >
-            <FiArrowLeft className="mr-1" />
-            <span>Back to Wallet Search</span>
-          </Link>
-        </div>
-      </div>
-
       {/* Main content */}
       <div className="flex-grow flex flex-col md:flex-row">
-        {/* Sidebar */}
-        <div className="w-full md:w-80 bg-white dark:bg-dark-secondary border-r border-gray-200 dark:border-gray-700 md:min-h-screen">
-          {/* Wallet info */}
-          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center mb-4">
-              <div className="text-3xl mr-4 bg-teal-100 dark:bg-teal-900/30 h-12 w-12 rounded-full flex items-center justify-center">
-                {walletInfo ? walletInfo.icon : "👛"}
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary">
-                  {walletInfo ? walletInfo.name : "Wallet"}
-                </h1>
-                {walletInfo && (
-                  <p className="text-sm text-gray-500 dark:text-dark-text-secondary">
-                    {walletInfo.description}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-gray-50 dark:bg-dark-tertiary rounded-lg p-4 mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-500 dark:text-dark-text-secondary">
-                  Address
-                </span>
-                <div className="flex items-center">
-                  <button
-                    onClick={copyToClipboard}
-                    className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 p-1 transition-colors"
-                    title="Copy address"
-                  >
-                    <FiCopy size={14} />
-                  </button>
-                  <a
-                    href={`https://etherscan.io/address/${address}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 p-1 ml-1 transition-colors"
-                    title="View on Etherscan"
-                  >
-                    <FiExternalLink size={14} />
-                  </a>
+        {/* Sidebar - now with auto height instead of fixed height */}
+        <div className="hidden lg:block lg:w-80 bg-white dark:bg-dark-primary shadow-lg fixed left-0 top-[57px] z-40 overflow-y-auto">
+          <div className="flex flex-col">
+            {/* Wallet info */}
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <div className="flex items-center mb-4">
+                <div className="text-3xl mr-4 bg-teal-100 dark:bg-teal-900/30 h-12 w-12 rounded-full flex items-center justify-center">
+                  {walletInfo ? walletInfo.icon : "👛"}
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary">
+                    {walletInfo ? walletInfo.name : "Wallet"}
+                  </h1>
+                  {walletInfo && (
+                    <p className="text-sm text-gray-500 dark:text-dark-text-secondary">
+                      {walletInfo.description}
+                    </p>
+                  )}
                 </div>
               </div>
-              <p className="text-xs text-gray-700 dark:text-dark-text-primary font-mono break-all">
-                {address}
-                {copySuccess && (
-                  <span className="text-xs text-green-500 ml-2">Copied!</span>
-                )}
-              </p>
+
+              <div className="bg-gray-50 dark:bg-dark-tertiary rounded-lg p-4 mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm text-gray-500 dark:text-dark-text-secondary">
+                    Address
+                  </span>
+                  <div className="flex items-center">
+                    <button
+                      onClick={copyToClipboard}
+                      className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 p-1 transition-colors"
+                      title="Copy address"
+                    >
+                      <FiCopy size={14} />
+                    </button>
+                    <a
+                      href={`https://etherscan.io/address/${address}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 p-1 ml-1 transition-colors"
+                      title="View on Etherscan"
+                    >
+                      <FiExternalLink size={14} />
+                    </a>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-700 dark:text-dark-text-primary font-mono break-all">
+                  {address}
+                  {copySuccess && (
+                    <span className="text-xs text-green-500 ml-2">Copied!</span>
+                  )}
+                </p>
+              </div>
+
+              <div className="bg-gradient-to-r from-teal-500 to-green-500 rounded-lg p-4 text-white">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm text-white/80">Portfolio Value</span>
+                </div>
+                <p className="text-2xl font-bold">
+                  $
+                  {walletStats.totalValue.toLocaleString("en-US", {
+                    maximumFractionDigits: 2,
+                  })}
+                </p>
+                <div className="flex justify-between mt-2 text-sm">
+                  <span>{walletStats.ethBalance.toFixed(4)} ETH</span>
+                  <span>{walletStats.tokenCount} tokens</span>
+                </div>
+              </div>
             </div>
 
-            <div className="bg-gradient-to-r from-teal-500 to-green-500 rounded-lg p-4 text-white">
-              <div className="flex justify-between items-center mb-1">
-                <span className="text-sm text-white/80">Portfolio Value</span>
-              </div>
-              <p className="text-2xl font-bold">
-                $
-                {walletStats.totalValue.toLocaleString("en-US", {
-                  maximumFractionDigits: 2,
-                })}
-              </p>
-              <div className="flex justify-between mt-2 text-sm">
-                <span>{walletStats.ethBalance.toFixed(4)} ETH</span>
-                <span>{walletStats.tokenCount} tokens</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="p-4">
-            <ul className="space-y-2">
-              <li>
-                <button
-                  onClick={() => setActiveTab("overview")}
-                  className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
-                    activeTab === "overview"
-                      ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
-                      : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary"
-                  }`}
-                >
-                  <FiHome className="mr-3" />
-                  Overview
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setActiveTab("holdings")}
-                  className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
-                    activeTab === "holdings"
-                      ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
-                      : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary"
-                  }`}
-                >
-                  <FiPieChart className="mr-3" />
-                  Holdings
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setActiveTab("transactions")}
-                  className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
-                    activeTab === "transactions"
-                      ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
-                      : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary"
-                  }`}
-                >
-                  <FiActivity className="mr-3" />
-                  Transactions
-                </button>
-              </li>
-            </ul>
-          </nav>
-
-          {/* Recent wallets */}
-          {recentWallets.length > 0 && (
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-              <h3 className="text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-3">
-                Recent Wallets
-              </h3>
+            {/* Navigation */}
+            <nav className="p-4">
               <ul className="space-y-2">
-                {recentWallets
-                  .filter((w) => w !== address)
-                  .slice(0, 3)
-                  .map((wallet) => (
-                    <li key={wallet}>
-                      <Link
-                        to={`/wallet-holdings/${wallet}`}
-                        className="block text-xs text-gray-700 dark:text-dark-text-primary hover:text-teal-600 dark:hover:text-teal-400 truncate"
-                      >
-                        {wallet}
-                      </Link>
-                    </li>
-                  ))}
+                <li>
+                  <button
+                    onClick={() => setActiveTab("overview")}
+                    className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
+                      activeTab === "overview"
+                        ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
+                        : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary"
+                    }`}
+                  >
+                    <FiHome className="mr-3" />
+                    Overview
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setActiveTab("holdings")}
+                    className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
+                      activeTab === "holdings"
+                        ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
+                        : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary"
+                    }`}
+                  >
+                    <FiPieChart className="mr-3" />
+                    Holdings
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setActiveTab("transactions")}
+                    className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
+                      activeTab === "transactions"
+                        ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
+                        : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary"
+                    }`}
+                  >
+                    <FiActivity className="mr-3" />
+                    Transactions
+                  </button>
+                </li>
               </ul>
-            </div>
-          )}
+            </nav>
+
+            {/* Recent wallets */}
+            {recentWallets.length > 0 && (
+              <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                <h3 className="text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-3">
+                  Recent Wallets
+                </h3>
+                <ul className="space-y-2">
+                  {recentWallets
+                    .filter((w) => w !== address)
+                    .slice(0, 3)
+                    .map((wallet) => (
+                      <li key={wallet}>
+                        <Link
+                          to={`/wallet-holdings/${wallet}`}
+                          className="block text-xs text-gray-700 dark:text-dark-text-primary hover:text-teal-600 dark:hover:text-teal-400 truncate"
+                        >
+                          {wallet}
+                        </Link>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Main content area */}
-        <div className="flex-grow p-6 overflow-auto">
+        <div className="w-full lg:ml-80 flex-1 p-4 pt-4 mt-0">
+          <div className="mb-4">
+            <Link
+              to="/wallet-holdings"
+              className="inline-flex items-center text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 transition-colors"
+            >
+              <FiArrowLeft className="mr-2" />
+              <span>Back to Wallet Search</span>
+            </Link>
+          </div>
           <motion.div
             key={activeTab}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
+            className="mb-20" // Add bottom margin to ensure content doesn't overlap with footer
           >
             {activeTab === "overview" && (
               <WalletOverview
