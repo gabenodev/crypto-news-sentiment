@@ -458,17 +458,15 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         console.log("Total Token Value:", totalTokenValue);
 
         // Calculăm valoarea totală a portofoliului
-        const totalPortfolioValue = totalTokenValue + ethValue;
-        console.log("Total Portfolio Value:", totalPortfolioValue);
-
-        // Verifică dacă există un token ETH în lista de tokenuri
+        // Check if there's already an ETH token in the tokens list to avoid double counting
         const ethToken = processedTokens.find(
           (token) => token.tokenInfo.symbol.toLowerCase() === "eth"
         );
-        // Dacă există deja un token ETH, nu mai adăuga valoarea ETH separat
-        const ethValueToAdd = ethToken ? 0 : ethBalance * ethPrice;
+        const totalPortfolioValue = totalTokenValue + (ethToken ? 0 : ethValue);
+
+        // Update the stats with the correct total value
         const updatedStats = {
-          totalValue: totalTokenValue + ethValueToAdd,
+          totalValue: totalPortfolioValue,
           ethBalance,
           ethPrice,
           tokenCount: tokensWithPercentages.length,
@@ -535,18 +533,24 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     }
 
     // Start with ETH
+    const ethToken = holdings.find(
+      (token) => token.tokenInfo.symbol.toLowerCase() === "eth"
+    );
     const ethValue = stats.ethBalance * stats.ethPrice;
+    const ethValueToAdd = ethToken ? 0 : ethValue; // Only add ETH separately if it's not already in the tokens list
     const totalValue = stats.totalValue;
 
     // Create a map to consolidate tokens with the same symbol
     const tokenMap = new Map();
 
-    // Add ETH first
-    tokenMap.set("ETH", {
-      name: "ETH",
-      value: ethValue,
-      percentage: (ethValue / totalValue) * 100,
-    });
+    // Add ETH first (only if it's not already in the tokens list)
+    if (!ethToken && ethValueToAdd > 0) {
+      tokenMap.set("ETH", {
+        name: "ETH",
+        value: ethValueToAdd,
+        percentage: (ethValueToAdd / totalValue) * 100,
+      });
+    }
 
     // Add top tokens
     const topTokens = holdings.slice(0, 5);

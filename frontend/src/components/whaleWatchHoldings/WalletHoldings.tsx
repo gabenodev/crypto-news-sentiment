@@ -8,26 +8,20 @@ import {
   isValidEthereumAddress,
 } from "../../utils/API/etherScanAPI";
 import {
-  PieChart,
-  Pie,
   Cell,
   ResponsiveContainer,
   Tooltip,
-  Legend,
   BarChart,
   Bar,
   XAxis,
   YAxis,
   CartesianGrid,
-  Treemap,
 } from "recharts";
 import {
-  FiPieChart,
   FiList,
   FiSearch,
   FiBarChart2,
   FiRefreshCw,
-  FiGrid,
   FiFilter,
   FiExternalLink,
 } from "react-icons/fi";
@@ -169,9 +163,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
     topLoser: null,
   });
   const [searchTerm, setSearchTerm] = useState("");
-  const [viewMode, setViewMode] = useState<
-    "list" | "chart" | "bar" | "treemap"
-  >("chart");
+  const [viewMode, setViewMode] = useState<"list" | "bar">("list");
   const [loadingStatus, setLoadingStatus] = useState<string>("Initializing...");
   const [selectedToken, setSelectedToken] = useState<TokenData | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -592,15 +584,15 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <div className="flex items-center space-x-2">
           <button
-            onClick={() => setViewMode("chart")}
+            onClick={() => setViewMode("list")}
             className={`px-4 py-2 rounded-lg flex items-center transition-colors ${
-              viewMode === "chart"
+              viewMode === "list"
                 ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
                 : "bg-gray-100 text-gray-700 dark:bg-dark-tertiary dark:text-dark-text-secondary hover:bg-gray-200 dark:hover:bg-dark-tertiary/80"
             }`}
           >
-            <FiPieChart className="mr-2" />
-            Pie Chart
+            <FiList className="mr-2" />
+            List
           </button>
           <button
             onClick={() => setViewMode("bar")}
@@ -612,28 +604,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
           >
             <FiBarChart2 className="mr-2" />
             Bar Chart
-          </button>
-          <button
-            onClick={() => setViewMode("treemap")}
-            className={`px-4 py-2 rounded-lg flex items-center transition-colors ${
-              viewMode === "treemap"
-                ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
-                : "bg-gray-100 text-gray-700 dark:bg-dark-tertiary dark:text-dark-text-secondary hover:bg-gray-200 dark:hover:bg-dark-tertiary/80"
-            }`}
-          >
-            <FiGrid className="mr-2" />
-            Treemap
-          </button>
-          <button
-            onClick={() => setViewMode("list")}
-            className={`px-4 py-2 rounded-lg flex items-center transition-colors ${
-              viewMode === "list"
-                ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
-                : "bg-gray-100 text-gray-700 dark:bg-dark-tertiary dark:text-dark-text-secondary hover:bg-gray-200 dark:hover:bg-dark-tertiary/80"
-            }`}
-          >
-            <FiList className="mr-2" />
-            List
           </button>
         </div>
 
@@ -806,94 +776,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
         </motion.div>
       )}
 
-      {/* Pie chart view */}
-      {viewMode === "chart" && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary mb-8 hover:shadow-xl transition-shadow"
-        >
-          <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary mb-4 flex items-center">
-            <FiPieChart className="h-5 w-5 mr-2 text-teal-500" />
-            Asset Distribution
-          </h3>
-
-          {filteredHoldings.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500 dark:text-dark-text-secondary">
-                No results found for search "{searchTerm}"
-              </p>
-            </div>
-          ) : (
-            <div className="h-[400px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={prepareChartData()}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={120}
-                    innerRadius={60}
-                    paddingAngle={2}
-                    label={({ name, percent }) => {
-                      // Only show label if percentage is significant enough
-                      return percent > 0.03
-                        ? `${name} (${(percent * 100).toFixed(0)}%)`
-                        : "";
-                    }}
-                    labelLine={true}
-                    onClick={(data) => {
-                      if (data && data.tokenInfo) {
-                        handleTokenSelect(data);
-                      }
-                    }}
-                  >
-                    {prepareChartData().map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                        stroke={
-                          selectedToken?.tokenInfo.symbol ===
-                          entry.tokenInfo.symbol
-                            ? "#ffffff"
-                            : "none"
-                        }
-                        strokeWidth={
-                          selectedToken?.tokenInfo.symbol ===
-                          entry.tokenInfo.symbol
-                            ? 2
-                            : 0
-                        }
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    content={<CustomTooltip />}
-                    wrapperStyle={{ outline: "none" }}
-                  />
-                  <Legend
-                    layout="vertical"
-                    verticalAlign="middle"
-                    align="right"
-                    iconType="circle"
-                    iconSize={10}
-                    onClick={(data) => {
-                      const token = holdings.find(
-                        (t) => t.tokenInfo.symbol === data.value
-                      );
-                      if (token) handleTokenSelect(token);
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </motion.div>
-      )}
-
       {/* Bar chart view */}
       {viewMode === "bar" && (
         <motion.div
@@ -972,69 +854,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                     ))}
                   </Bar>
                 </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </motion.div>
-      )}
-
-      {/* Treemap view */}
-      {viewMode === "treemap" && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary mb-8 hover:shadow-xl transition-shadow"
-        >
-          <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary mb-4 flex items-center">
-            <FiGrid className="h-5 w-5 mr-2 text-blue-500" />
-            Token Distribution Treemap
-          </h3>
-
-          {filteredHoldings.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500 dark:text-dark-text-secondary">
-                No results found for search "{searchTerm}"
-              </p>
-            </div>
-          ) : (
-            <div className="h-[500px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <Treemap
-                  data={prepareTreemapData()}
-                  dataKey="size"
-                  aspectRatio={4 / 3}
-                  stroke="#fff"
-                  fill="#8884d8"
-                  onClick={(data) => {
-                    if (data && data.tokenInfo) {
-                      const token = holdings.find(
-                        (t) => t.tokenInfo.symbol === data.tokenInfo.symbol
-                      );
-                      if (token) handleTokenSelect(token);
-                    }
-                  }}
-                >
-                  {prepareTreemapData().map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                      stroke={
-                        selectedToken?.tokenInfo.symbol ===
-                        entry.tokenInfo.symbol
-                          ? "#fff"
-                          : "rgba(255,255,255,0.3)"
-                      }
-                      strokeWidth={
-                        selectedToken?.tokenInfo.symbol ===
-                        entry.tokenInfo.symbol
-                          ? 2
-                          : 1
-                      }
-                    />
-                  ))}
-                  <Tooltip content={<CustomTooltip />} />
-                </Treemap>
               </ResponsiveContainer>
             </div>
           )}
