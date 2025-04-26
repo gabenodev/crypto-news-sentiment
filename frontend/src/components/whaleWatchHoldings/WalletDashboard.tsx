@@ -120,33 +120,43 @@ const WalletDashboard: React.FC = () => {
     const fetchAllData = async () => {
       setIsLoading(true);
       setLoadingStatus("Încărcare date portofel...");
+      setError(null); // Reset any previous errors
 
       try {
         // Fetch ETH balance
         const ethData = await fetchEthBalance(address);
-        if (ethData.status === "0" || ethData.message === "NOTOK") {
-          throw new Error("API temporar indisponibil. Încercați din nou.");
-        }
 
-        const ethBalanceValue = Number.parseFloat(ethData.result) / 1e18;
-        setEthBalance(ethBalanceValue);
+        // Even if we get a status "0", we can still use the result if it exists
+        if (ethData.result) {
+          const ethBalanceValue = Number.parseFloat(ethData.result) / 1e18;
+          setEthBalance(ethBalanceValue);
+        } else {
+          setEthBalance(0);
+        }
 
         // Fetch token balances
         setLoadingStatus("Încărcare token-uri...");
         const tokenData = await fetchTokenBalances(address);
-        setHoldings(tokenData);
+        setHoldings(tokenData || []);
 
         // Fetch transaction history
         setLoadingStatus("Încărcare istoric tranzacții...");
         const txHistory = await fetchTransactionHistory(address);
-        setTransactions(txHistory);
-
-        setError(null);
+        setTransactions(txHistory || []);
       } catch (err: any) {
         console.error("Eroare la încărcarea datelor portofelului:", err);
-        setError(err.message || "Eroare la încărcarea datelor");
+        setError(
+          err.message ||
+            "Eroare la încărcarea datelor. Etherscan API poate fi temporar indisponibil."
+        );
+
+        // Set empty data in case of error
+        setHoldings([]);
+        setTransactions([]);
+        setEthBalance(0);
       } finally {
         setIsLoading(false);
+        setLoadingStatus("");
       }
     };
 
@@ -375,6 +385,36 @@ const WalletDashboard: React.FC = () => {
               <span>Back to Wallet Search</span>
             </Link>
           </div>
+          {error && (
+            <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg">
+              <p className="text-red-700 dark:text-red-400 flex items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {error}
+              </p>
+              <p className="mt-2 text-sm text-red-600 dark:text-red-300">
+                Etherscan API poate fi temporar indisponibil sau a atins limita
+                de rate. Încercați din nou mai târziu sau verificați un alt
+                portofel.
+              </p>
+              <button
+                onClick={refreshData}
+                className="mt-3 px-4 py-2 bg-red-100 dark:bg-red-800/30 text-red-700 dark:text-red-300 rounded-md hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors"
+              >
+                Încearcă din nou
+              </button>
+            </div>
+          )}
           <motion.div
             key={activeTab}
             initial={{ opacity: 0, y: 10 }}
