@@ -11,6 +11,7 @@ import {
   FiArrowLeft,
   FiCopy,
   FiExternalLink,
+  FiClock,
 } from "react-icons/fi";
 import WalletOverview from "./WalletOverview";
 import WalletHoldings from "./WalletHoldings";
@@ -74,6 +75,7 @@ const WalletDashboard: React.FC = () => {
   const [loadingStatus, setLoadingStatus] = useState("Loading...");
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [hideFooter, setHideFooter] = useState(true); // State pentru a ascunde footer-ul
 
   // Get wallet info if it's a known wallet
   const walletInfo = KNOWN_WALLETS[address] || null;
@@ -90,7 +92,21 @@ const WalletDashboard: React.FC = () => {
     if (savedWallets) {
       setRecentWallets(JSON.parse(savedWallets));
     }
-  }, []);
+
+    // Ascundem footer-ul când suntem pe pagina de wallet holdings
+    const footerElement = document.querySelector("footer");
+    if (footerElement && hideFooter) {
+      footerElement.style.display = "none";
+    }
+
+    // Cleanup function to restore footer when component unmounts
+    return () => {
+      const footerElement = document.querySelector("footer");
+      if (footerElement) {
+        footerElement.style.display = "block";
+      }
+    };
+  }, [hideFooter]);
 
   // Add current wallet to recent wallets
   useEffect(() => {
@@ -308,40 +324,76 @@ const WalletDashboard: React.FC = () => {
     );
   }
 
+  // Function to truncate address for display
+  const truncateAddress = (addr: string) => {
+    if (!addr) return "";
+    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-dark-primary">
       {/* Main content */}
       <div className="flex-grow flex flex-col md:flex-row relative">
-        {/* Sidebar - now with dynamic positioning and rounded corners */}
+        {/* Sidebar - cu border pe toată lungimea și componente centrate */}
         <div
-          className="hidden lg:block lg:w-96 bg-white dark:bg-dark-primary shadow-lg fixed left-0 top-[57px] z-40 overflow-y-auto border-r border-teal-500/30 dark:border-teal-400/20 shadow-[0_0_15px_rgba(20,184,166,0.15)] dark:shadow-[0_0_15px_rgba(45,212,191,0.1)] rounded-tr-xl rounded-br-xl"
-          style={{ height: "calc(100vh - 57px - 175px)" }} // Adjusted height to leave space for footer
+          className="hidden lg:block lg:w-96 bg-white dark:bg-dark-primary shadow-lg fixed left-0 top-[57px] z-40 overflow-y-auto border-r border-gray-200 dark:border-gray-700"
+          style={{ height: "calc(100vh - 57px)" }}
         >
           <div className="flex flex-col h-full pb-8">
-            {/* Wallet info */}
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <div className="flex items-center mb-4">
-                <div className="mr-4 h-12 w-12 rounded-full overflow-hidden">
+            {/* Spațiu gol pentru a muta conținutul în jos */}
+            <div className="h-8"></div>
+
+            {/* Wallet header - centrat și mutat mai jos */}
+            <div className="px-5 pb-6 flex justify-center border-b border-gray-200 dark:border-gray-700">
+              <div className="flex flex-col items-center">
+                <div className="h-16 w-16 rounded-full overflow-hidden bg-gradient-to-br from-teal-400/30 to-teal-600/30 p-0.5 mb-3">
                   <img
                     src={
-                      generateWalletPlaceholder(address, 48) ||
+                      generateWalletPlaceholder(address, 64) ||
                       "/placeholder.svg"
                     }
                     alt="Wallet"
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover rounded-full"
                   />
                 </div>
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-dark-text-primary">
-                    {walletInfo ? walletInfo.name : "Anonymous Wallet"}
-                  </h1>
-                  <p className="text-sm text-gray-500 dark:text-dark-text-secondary">
-                    {walletInfo ? walletInfo.description : "Ethereum address"}
-                  </p>
+                <h1 className="text-lg font-bold text-gray-900 dark:text-dark-text-primary text-center">
+                  {walletInfo ? walletInfo.name : "Anonymous Wallet"}
+                </h1>
+                <p className="text-xs text-gray-500 dark:text-dark-text-secondary text-center">
+                  {walletInfo ? walletInfo.description : "Ethereum address"}
+                </p>
+              </div>
+            </div>
+
+            {/* Portfolio value card - centrat */}
+            <div className="p-5 flex justify-center">
+              <div className="bg-gray-50 dark:bg-dark-secondary rounded-lg p-4 mb-5 border border-gray-200 dark:border-gray-700 shadow-inner w-full">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm text-gray-500 dark:text-dark-text-secondary">
+                    Portfolio Value
+                  </span>
+                </div>
+                <p className="text-2xl font-bold text-gray-900 dark:text-dark-text-primary mb-1">
+                  $
+                  {walletStats.totalValue.toLocaleString("en-US", {
+                    maximumFractionDigits: 2,
+                  })}
+                </p>
+                <div className="flex justify-between mt-2 text-sm">
+                  <span className="text-gray-600 dark:text-dark-text-primary flex items-center">
+                    <span className="inline-block w-2 h-2 rounded-full bg-teal-400 mr-2"></span>
+                    {walletStats.ethBalance.toFixed(4)} ETH
+                  </span>
+                  <span className="text-teal-600 dark:text-teal-400">
+                    {walletStats.tokenCount} tokens
+                  </span>
                 </div>
               </div>
+            </div>
 
-              <div className="bg-gray-50 dark:bg-dark-tertiary rounded-lg p-4 mb-4">
+            {/* Address card - centrat */}
+            <div className="px-5 flex justify-center">
+              <div className="bg-gray-50 dark:bg-dark-tertiary rounded-lg p-4 mb-5 border border-gray-200 dark:border-gray-700 w-full">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm text-gray-500 dark:text-dark-text-secondary">
                     Address
@@ -365,84 +417,91 @@ const WalletDashboard: React.FC = () => {
                     </a>
                   </div>
                 </div>
-                <p className="text-xs text-gray-700 dark:text-dark-text-primary font-mono break-all">
+                <div className="bg-white dark:bg-dark-secondary rounded-lg px-3 py-2 font-mono text-xs text-gray-700 dark:text-dark-text-primary break-all">
                   {address}
                   {copySuccess && (
-                    <span className="text-xs text-green-500 ml-2">Copied!</span>
+                    <span className="text-xs text-teal-500 dark:text-teal-400 ml-2">
+                      Copied!
+                    </span>
                   )}
-                </p>
-              </div>
-
-              <div className="bg-white dark:bg-dark-secondary rounded-lg p-4 border border-gray-200 dark:border-gray-700">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm text-gray-500 dark:text-dark-text-secondary">
-                    Portfolio Value
-                  </span>
-                </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-dark-text-primary">
-                  $
-                  {walletStats.totalValue.toLocaleString("en-US", {
-                    maximumFractionDigits: 2,
-                  })}
-                </p>
-                <div className="flex justify-between mt-2 text-sm">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    {walletStats.ethBalance.toFixed(4)} ETH
-                  </span>
-                  <span className="text-teal-600 dark:text-teal-400">
-                    {walletStats.tokenCount} tokens
-                  </span>
                 </div>
               </div>
             </div>
-            {/* Navigation */}
-            <nav className="p-4">
-              <ul className="space-y-2">
+
+            {/* Navigation - centrat */}
+            <nav className="px-5 mb-6">
+              <ul className="space-y-1">
                 <li>
                   <button
                     onClick={() => setActiveTab("overview")}
-                    className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
+                    className={`w-full flex items-center px-4 py-3 rounded-lg transition-all ${
                       activeTab === "overview"
-                        ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
-                        : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary"
+                        ? "bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border-l-2 border-teal-500 dark:border-teal-400"
+                        : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary hover:text-gray-900 dark:hover:text-dark-text-primary"
                     }`}
                   >
-                    <FiHome className="mr-3" />
+                    <FiHome
+                      className={`mr-3 ${
+                        activeTab === "overview"
+                          ? "text-teal-600 dark:text-teal-400"
+                          : ""
+                      }`}
+                      size={18}
+                    />
                     Overview
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => setActiveTab("holdings")}
-                    className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
+                    className={`w-full flex items-center px-4 py-3 rounded-lg transition-all ${
                       activeTab === "holdings"
-                        ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
-                        : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary"
+                        ? "bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border-l-2 border-teal-500 dark:border-teal-400"
+                        : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary hover:text-gray-900 dark:hover:text-dark-text-primary"
                     }`}
                   >
-                    <FiPieChart className="mr-3" />
+                    <FiPieChart
+                      className={`mr-3 ${
+                        activeTab === "holdings"
+                          ? "text-teal-600 dark:text-teal-400"
+                          : ""
+                      }`}
+                      size={18}
+                    />
                     Holdings
                   </button>
                 </li>
                 <li>
                   <button
                     onClick={() => setActiveTab("transactions")}
-                    className={`w-full flex items-center px-4 py-2 rounded-lg transition-colors ${
+                    className={`w-full flex items-center px-4 py-3 rounded-lg transition-all ${
                       activeTab === "transactions"
-                        ? "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300"
-                        : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary"
+                        ? "bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border-l-2 border-teal-500 dark:border-teal-400"
+                        : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary hover:text-gray-900 dark:hover:text-dark-text-primary"
                     }`}
                   >
-                    <FiActivity className="mr-3" />
+                    <FiActivity
+                      className={`mr-3 ${
+                        activeTab === "transactions"
+                          ? "text-teal-600 dark:text-teal-400"
+                          : ""
+                      }`}
+                      size={18}
+                    />
                     Transactions
                   </button>
                 </li>
               </ul>
             </nav>
-            {/* Recent wallets */}
+
+            {/* Recent wallets - centrat */}
             {recentWallets.length > 0 && (
-              <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-                <h3 className="text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-3">
+              <div className="px-5 mt-auto">
+                <h3 className="text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-3 flex items-center">
+                  <FiClock
+                    className="mr-2 text-teal-500 dark:text-teal-400"
+                    size={14}
+                  />
                   Recent Wallets
                 </h3>
                 <ul className="space-y-2">
@@ -450,22 +509,26 @@ const WalletDashboard: React.FC = () => {
                     .filter((w) => w !== address)
                     .slice(0, 3)
                     .map((wallet) => (
-                      <li key={wallet} className="flex items-center">
-                        <div className="w-6 h-6 rounded-full overflow-hidden mr-2">
-                          <img
-                            src={
-                              generateWalletPlaceholder(wallet, 24) ||
-                              "/placeholder.svg"
-                            }
-                            alt="Wallet"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                      <li key={wallet} className="group">
                         <Link
                           to={`/wallet-holdings/${wallet}`}
-                          className="block text-xs text-gray-700 dark:text-dark-text-primary hover:text-teal-600 dark:hover:text-teal-400 truncate"
+                          className="flex items-center p-2 rounded-lg bg-gray-50 dark:bg-dark-tertiary hover:bg-gray-100 dark:hover:bg-dark-secondary transition-all group-hover:border-l border-teal-500 dark:border-teal-400"
                         >
-                          {wallet}
+                          <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-dark-tertiary dark:to-dark-secondary p-0.5 mr-3">
+                            <img
+                              src={
+                                generateWalletPlaceholder(wallet, 28) ||
+                                "/placeholder.svg"
+                              }
+                              alt="Wallet"
+                              className="w-full h-full object-cover rounded-full"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-gray-700 dark:text-dark-text-primary truncate group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                              {truncateAddress(wallet)}
+                            </p>
+                          </div>
                         </Link>
                       </li>
                     ))}
