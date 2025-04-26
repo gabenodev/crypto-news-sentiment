@@ -177,6 +177,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   const [sortBy, setSortBy] = useState<"value" | "name" | "balance">("value");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [barChartData, setBarChartData] = useState<any[]>([]);
 
   // Use useRef to prevent duplicate requests
   const previousAddressRef = useRef("");
@@ -321,6 +322,10 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
         });
       }
 
+      // Pregătim datele pentru bar chart
+      const chartData = prepareBarChartData(dataWithPercentages);
+      setBarChartData(chartData);
+
       // Gestionăm selecția tokenului
       if (dataWithPercentages.length > 0) {
         if (selectedTokenRef.current) {
@@ -400,29 +405,64 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
     }
   }, [holdings, ethBalance, ethPrice, isLoading, onStatsUpdate]);
 
-  // Prepare data for the bar chart
-  const prepareBarChartData = (): Array<{
-    name: string;
-    value: number;
-    percentage: number;
-    tokenInfo: {
-      name: string;
-      symbol: string;
-      decimals: string;
-      price?: { rate: number };
-      image?: string;
-    };
-  }> => {
-    return filteredHoldings
-      .filter((token: TokenData) => (token.value || 0) > 0)
-      .slice(0, 10)
-      .map((token: TokenData) => ({
-        name: token.tokenInfo.symbol,
-        value: token.value || 0,
-        percentage: token.percentage || 0,
-        tokenInfo: token.tokenInfo,
-      }));
+  // Modificăm funcția prepareBarChartData pentru a ne asigura că datele sunt procesate corect
+  // Înlocuim funcția existentă cu această versiune îmbunătățită
+
+  // Înlocuim funcția prepareBarChartData cu această versiune:
+  const prepareBarChartData = (
+    tokens: TokenData[] = processedHoldings
+  ): any[] => {
+    console.log("Preparing bar chart data from tokens:", tokens.length);
+
+    // Verificăm dacă avem token-uri cu valoare
+    const tokensWithValue = tokens.filter((token: TokenData) => {
+      const hasValue = token.value !== undefined && token.value > 0;
+      console.log(
+        `Token ${token.tokenInfo.symbol}: value=${token.value}, hasValue=${hasValue}`
+      );
+      return hasValue;
+    });
+
+    console.log("Tokens with value:", tokensWithValue.length);
+
+    // Luăm primele 10 token-uri cu valoare și le formatăm pentru grafic
+    const chartData = tokensWithValue.slice(0, 10).map((token: TokenData) => ({
+      name: token.tokenInfo.symbol,
+      value: token.value || 0,
+      percentage: token.percentage || 0,
+      tokenInfo: {
+        name: token.tokenInfo.name,
+        symbol: token.tokenInfo.symbol,
+        decimals: token.tokenInfo.decimals,
+        price: token.tokenInfo.price,
+        image: token.tokenInfo.image,
+      },
+    }));
+
+    console.log("Final bar chart data:", chartData);
+    return chartData;
   };
+
+  // Actualizăm datele pentru bar chart când se schimbă filteredHoldings
+  useEffect(() => {
+    if (filteredHoldings.length > 0) {
+      const chartData = prepareBarChartData(filteredHoldings);
+      setBarChartData(chartData);
+    }
+  }, [filteredHoldings]);
+
+  // Adăugăm un useEffect separat pentru a actualiza barChartData când se schimbă processedHoldings
+  // Adăugăm acest useEffect după celelalte useEffect-uri existente:
+  useEffect(() => {
+    if (processedHoldings.length > 0) {
+      console.log(
+        "Updating bar chart data from processedHoldings:",
+        processedHoldings.length
+      );
+      const chartData = prepareBarChartData(processedHoldings);
+      setBarChartData(chartData);
+    }
+  }, [processedHoldings]);
 
   // Fix the handleTokenSelect function to prevent re-rendering issues
   const handleTokenSelect = (token: TokenData) => {
@@ -733,22 +773,38 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
             Token Values
           </h3>
 
-          {filteredHoldings.length === 0 ? (
+          {barChartData.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500 dark:text-dark-text-secondary">
-                No results found for search "{searchTerm}"
+                {searchTerm
+                  ? `No results found for search "${searchTerm}"`
+                  : "No tokens with value found"}
               </p>
+              <div className="flex justify-center items-center py-8">
+                <FiBarChart2 className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-2" />
+              </div>
+              <p className="text-sm text-gray-400 dark:text-gray-500">
+                {processedHoldings.length > 0
+                  ? "Tokens exist but none have a calculated value. Try refreshing the data."
+                  : "No tokens found in this wallet."}
+              </p>
+              <button
+                onClick={refreshData}
+                className="mt-4 px-4 py-2 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-md hover:bg-teal-200 dark:hover:bg-teal-800/50 transition-colors"
+              >
+                <FiRefreshCw className="inline mr-2" /> Refresh Data
+              </button>
             </div>
           ) : (
             <div className="h-[400px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={prepareBarChartData()}
+                  data={barChartData}
                   margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                   onClick={(data) => {
                     if (data && data.activePayload && data.activePayload[0]) {
                       const symbol = data.activePayload[0].payload.name;
-                      // Căutăm tokenul în processedHoldings în loc de holdings pentru a avea toate datele calculate
+                      // Căutăm tokenul în processedHoldings pentru a avea toate datele calculate
                       const token = processedHoldings.find(
                         (t) => t.tokenInfo.symbol === symbol
                       );
@@ -783,38 +839,20 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                     cursor={{ fill: "rgba(0, 0, 0, 0.1)" }}
                   />
                   <Bar dataKey="value" name="Value" radius={[4, 4, 0, 0]}>
-                    {prepareBarChartData().map(
-                      (
-                        entry: {
-                          name: string;
-                          value: number;
-                          percentage: number;
-                          tokenInfo: {
-                            name: string;
-                            symbol: string;
-                            decimals: string;
-                            price?: { rate: number };
-                            image?: string;
-                          };
-                        },
-                        index: number
-                      ) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={COLORS[index % COLORS.length]}
-                          stroke={
-                            selectedToken?.tokenInfo.symbol === entry.name
-                              ? "#fff"
-                              : "none"
-                          }
-                          strokeWidth={
-                            selectedToken?.tokenInfo.symbol === entry.name
-                              ? 2
-                              : 0
-                          }
-                        />
-                      )
-                    )}
+                    {barChartData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                        stroke={
+                          selectedToken?.tokenInfo.symbol === entry.name
+                            ? "#fff"
+                            : "none"
+                        }
+                        strokeWidth={
+                          selectedToken?.tokenInfo.symbol === entry.name ? 2 : 0
+                        }
+                      />
+                    ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
