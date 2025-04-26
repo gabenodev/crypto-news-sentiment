@@ -539,6 +539,20 @@ export const fetchTokenBalances = async (address: string) => {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
+    // Adaugă acest cod înainte de return tokens în funcția fetchTokenBalances
+    console.log(
+      "Tokenuri procesate pentru portofel:",
+      tokens.map((t) => ({
+        name: t.tokenInfo.name,
+        symbol: t.tokenInfo.symbol,
+        balance: t.balance,
+        value: t.tokenInfo.price?.rate
+          ? (Number(t.balance) / Math.pow(10, Number(t.tokenInfo.decimals))) *
+            t.tokenInfo.price.rate
+          : 0,
+      }))
+    );
+
     return tokens;
   } catch (error) {
     console.error("Error getting data from Etherscan:", error);

@@ -21,6 +21,7 @@ import {
   FiInfo,
   FiTrendingDown,
   FiZap,
+  FiRefreshCw,
 } from "react-icons/fi";
 import {
   BarChart,
@@ -56,6 +57,7 @@ interface TokenData {
       rate: number;
     };
     image?: string;
+    contractAddress?: string;
   };
   balance: string;
   formattedBalance?: number;
@@ -172,6 +174,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   const [activeTimeRange, setActiveTimeRange] = useState<
     "7d" | "30d" | "90d" | "all"
   >("30d");
+  const [refreshKey, setRefreshKey] = useState(0); // Adăugat pentru a forța reîmprospătarea
 
   // Use refs to prevent duplicate requests and infinite loops
   const isLoadingRef = useRef(false);
@@ -179,60 +182,6 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Prepare data functions - declared outside useEffect to avoid recreating them on every render
-  const prepareAssetDistributionData = useMemo(() => {
-    return () => {
-      if (!stats || stats.totalValue === 0) {
-        return [];
-      }
-
-      // Calculate ETH value
-      const ethValue = stats.ethBalance * stats.ethPrice;
-      const totalValue = stats.totalValue;
-
-      // Create a map to consolidate tokens with the same symbol
-      const tokenMap = new Map<string, any>();
-
-      // Add ETH first
-      tokenMap.set("ETH", {
-        name: "ETH",
-        value: ethValue,
-        percentage: (ethValue / totalValue) * 100,
-      });
-
-      // Add top tokens (excluding ETH if it's already in the tokens list)
-      holdings.slice(0, 5).forEach((token) => {
-        if (token.value && token.value > 0) {
-          // Skip if it's ETH (already added)
-          if (token.tokenInfo.symbol.toLowerCase() === "eth") return;
-
-          tokenMap.set(token.tokenInfo.symbol, {
-            name: token.tokenInfo.symbol,
-            value: token.value,
-            percentage: (token.value / totalValue) * 100,
-          });
-        }
-      });
-
-      // Add "Others" category for remaining tokens
-      const otherTokens = holdings.slice(5);
-      const otherValue = otherTokens.reduce((sum, token) => {
-        // Skip if it's ETH (already added)
-        if (token.tokenInfo.symbol.toLowerCase() === "eth") return sum;
-        return sum + (token.value || 0);
-      }, 0);
-
-      if (otherValue > 0) {
-        tokenMap.set("Others", {
-          name: "Others",
-          value: otherValue,
-          percentage: (otherValue / totalValue) * 100,
-        });
-      }
-
-      return Array.from(tokenMap.values());
-    };
-  }, [stats, holdings]);
-
   const prepareTransactionActivityData = useMemo(() => {
     return () => {
       if (!transactions || transactions.length === 0) {
@@ -365,7 +314,10 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
   useEffect(() => {
     // If we're already loading or the address hasn't changed, don't start a new load
-    if (isLoadingRef.current || previousAddressRef.current === address) {
+    if (
+      isLoadingRef.current ||
+      (previousAddressRef.current === address && refreshKey === 0)
+    ) {
       return;
     }
 
@@ -404,6 +356,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         // Fetch token balances
         const tokenData = await fetchTokenBalances(address);
 
+        // Afișăm datele brute pentru debugging
+        console.log("Date brute primite de la API:", tokenData);
+
         // Process token data
         let totalTokenValue = 0;
         const processedTokens = tokenData.map((token: TokenData) => {
@@ -430,6 +385,18 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
             percentage: token.value ? (token.value / totalTokenValue) * 100 : 0,
           }))
           .sort((a, b) => (b.value || 0) - (a.value || 0));
+
+        // Afișăm datele procesate pentru debugging
+        console.log(
+          "Date procesate pentru holdings:",
+          tokensWithPercentages.map((t) => ({
+            name: t.tokenInfo.name,
+            symbol: t.tokenInfo.symbol,
+            value: t.value,
+            percentage: t.percentage,
+            contractAddress: t.tokenInfo.contractAddress,
+          }))
+        );
 
         setLoadingStatus("Fetching transaction history...");
 
@@ -529,59 +496,102 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     };
 
     loadWalletData();
-  }, [address, onLoadingChange, retryCount, onStatsUpdate]);
+  }, [address, onLoadingChange, retryCount, onStatsUpdate, refreshKey]);
 
   // Memorarea datelor pentru graficul de distribuție a activelor
   const assetDistributionData = useMemo(() => {
-    if (!stats || stats.totalValue === 0) {
+    if (!stats || stats.totalValue === 0 || holdings.length === 0) {
       return [];
     }
 
-    // Calculate ETH value
+    console.log("Holdings pentru distribuția activelor:", holdings);
+
+    // Verificăm dacă există tokenul special "ETH is for DeFi"
+    const ethForDefiToken = holdings.find(
+      (token) =>
+        token.tokenInfo.name.toLowerCase().includes("eth is for defi") ||
+        token.tokenInfo.name.toLowerCase().includes("eth for defi") ||
+        token.tokenInfo.symbol.toLowerCase().includes("defi")
+    );
+
+    if (ethForDefiToken) {
+      console.log("Am găsit tokenul ETH is for DeFi:", ethForDefiToken);
+    }
+
+    // Calculăm valoarea ETH
     const ethValue = stats.ethBalance * stats.ethPrice;
-    const totalValue = stats.totalValue;
 
-    // Create a map to consolidate tokens with the same symbol
-    const tokenMap = new Map<string, any>();
+    // Creăm un array cu toate tokenurile, inclusiv ETH
+    const allAssets = [];
 
-    // Add ETH first
-    tokenMap.set("ETH", {
-      name: "ETH",
-      value: ethValue,
-      percentage: (ethValue / totalValue) * 100,
-    });
-
-    // Add top tokens (excluding ETH if it's already in the tokens list)
-    holdings.slice(0, 5).forEach((token) => {
-      if (token.value && token.value > 0) {
-        // Skip if it's ETH (already added)
-        if (token.tokenInfo.symbol.toLowerCase() === "eth") return;
-
-        tokenMap.set(token.tokenInfo.symbol, {
-          name: token.tokenInfo.symbol,
-          value: token.value,
-          percentage: (token.value / totalValue) * 100,
-        });
-      }
-    });
-
-    // Add "Others" category for remaining tokens
-    const otherTokens = holdings.slice(5);
-    const otherValue = otherTokens.reduce((sum, token) => {
-      // Skip if it's ETH (already added)
-      if (token.tokenInfo.symbol.toLowerCase() === "eth") return sum;
-      return sum + (token.value || 0);
-    }, 0);
-
-    if (otherValue > 0) {
-      tokenMap.set("Others", {
-        name: "Others",
-        value: otherValue,
-        percentage: (otherValue / totalValue) * 100,
+    // Adăugăm ETH doar dacă are valoare și nu există tokenul special
+    if (ethValue > 0 && !ethForDefiToken) {
+      allAssets.push({
+        name: "ETH",
+        symbol: "ETH",
+        value: ethValue,
+        percentage: (ethValue / stats.totalValue) * 100,
       });
     }
 
-    return Array.from(tokenMap.values());
+    // Adăugăm toate tokenurile cu valoare pozitivă
+    holdings.forEach((token) => {
+      if (token.value && token.value > 0) {
+        // Evităm duplicarea ETH dacă există deja în holdings
+        if (
+          token.tokenInfo.symbol.toLowerCase() === "eth" &&
+          !token.tokenInfo.name.toLowerCase().includes("defi")
+        )
+          return;
+
+        // Dacă este tokenul special, îl adăugăm cu prioritate
+        if (
+          token.tokenInfo.name.toLowerCase().includes("eth is for defi") ||
+          token.tokenInfo.name.toLowerCase().includes("eth for defi") ||
+          token.tokenInfo.symbol.toLowerCase().includes("defi")
+        ) {
+          allAssets.unshift({
+            name: token.tokenInfo.name,
+            symbol: token.tokenInfo.symbol,
+            value: token.value,
+            percentage: (token.value / stats.totalValue) * 100,
+          });
+        } else {
+          allAssets.push({
+            name: token.tokenInfo.name,
+            symbol: token.tokenInfo.symbol,
+            value: token.value,
+            percentage: (token.value / stats.totalValue) * 100,
+          });
+        }
+      }
+    });
+
+    // Sortăm toate activele după valoare (descrescător)
+    allAssets.sort((a, b) => b.value - a.value);
+
+    console.log("Toate activele sortate:", allAssets);
+
+    // Luăm primele 6 active pentru afișare individuală
+    const topAssets = allAssets.slice(0, 6);
+
+    // Combinăm restul activelor într-o categorie "Others"
+    const otherAssets = allAssets.slice(6);
+    const otherValue = otherAssets.reduce((sum, asset) => sum + asset.value, 0);
+
+    // Adăugăm categoria "Others" doar dacă există active suplimentare
+    if (otherValue > 0) {
+      topAssets.push({
+        name: "Others",
+        symbol: "OTHERS",
+        value: otherValue,
+        percentage: (otherValue / stats.totalValue) * 100,
+      });
+    }
+
+    console.log("Active pentru grafic:", topAssets);
+
+    return topAssets;
   }, [stats, holdings]);
 
   // Memorarea datelor pentru graficul de activitate a tranzacțiilor
@@ -696,10 +706,22 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     return result;
   }, [stats.totalValue, activeTimeRange]);
 
+  // Funcție pentru reîmprospătarea datelor
+  const handleRefresh = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
+
   return (
     <div>
       {/* Time range selector */}
-      <div className="flex justify-end mb-6">
+      <div className="flex justify-between mb-6">
+        <button
+          onClick={handleRefresh}
+          className="flex items-center px-4 py-2 bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300 rounded-lg hover:bg-teal-200 dark:hover:bg-teal-800/30 transition-colors"
+        >
+          <FiRefreshCw className="mr-2" /> Refresh Data
+        </button>
+
         <div className="inline-flex bg-gray-100 dark:bg-dark-tertiary rounded-lg p-1">
           {["7d", "30d", "90d", "all"].map((range) => (
             <button
@@ -914,9 +936,12 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                     innerRadius={60}
                     fill="#8884d8"
                     dataKey="value"
-                    label={({ name, percentage }) =>
-                      `${name} (${percentage.toFixed(1)}%)`
-                    }
+                    label={({ name, percentage }) => {
+                      // Limitează lungimea numelui pentru afișare
+                      const displayName =
+                        name.length > 15 ? name.substring(0, 12) + "..." : name;
+                      return `${displayName} (${percentage.toFixed(1)}%)`;
+                    }}
                   >
                     {assetDistributionData.map((entry, index) => (
                       <Cell
@@ -944,6 +969,10 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                     align="right"
                     iconType="circle"
                     iconSize={10}
+                    formatter={(value, entry, index) => {
+                      // Afișează numele complet în legendă
+                      return <span style={{ color: "#A0A0A0" }}>{value}</span>;
+                    }}
                   />
                 </PieChart>
               </ResponsiveContainer>
