@@ -91,6 +91,19 @@ interface OverviewStats {
   outgoingValue: number;
 }
 
+interface AssetDistributionItem {
+  name: string;
+  symbol: string;
+  value: number;
+  percentage: number;
+  smallTokens?: Array<{
+    name: string;
+    symbol: string;
+    value: number;
+    percentage: number;
+  }>;
+}
+
 // Colors for charts - using teal and green theme
 const COLORS = [
   "#14b8a6",
@@ -223,6 +236,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   >("30d");
   const [refreshKey, setRefreshKey] = useState(0); // Adăugat pentru a forța reîmprospătarea
   const [processedHoldings, setHoldings] = useState<TokenData[]>([]);
+  const [showAllTokens, setShowAllTokens] = useState(false);
 
   // Adaugă această referință pentru a urmări dacă datele s-au schimbat
   const previousDataRef = useRef<string | null>(null);
@@ -428,6 +442,16 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       );
       const totalPortfolioValue = totalTokenValue + (ethToken ? 0 : ethValue);
 
+      // Adăugăm procentajele la fiecare token
+      const tokensWithPercentages = processedTokens
+        .map((token) => ({
+          ...token,
+          percentage: token.value
+            ? (token.value / totalPortfolioValue) * 100
+            : 0,
+        }))
+        .sort((a, b) => (b.value || 0) - (a.value || 0));
+
       // Actualizăm statisticile
       const updatedStats = {
         totalValue: totalPortfolioValue,
@@ -442,7 +466,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       };
 
       setStats(updatedStats);
-      setHoldings(processedTokens);
+      setHoldings(tokensWithPercentages);
 
       // Actualizăm statisticile în componenta părinte
       if (onStatsUpdate) {
@@ -484,37 +508,25 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   // Înlocuiește funcția assetDistributionData existentă cu aceasta:
   const assetDistributionData = useMemo(() => {
     if (!stats || stats.totalValue === 0 || processedHoldings.length === 0) {
-      return [];
-    }
-
-    console.log("Holdings pentru distribuția activelor:", holdings);
-
-    // Verificăm dacă există tokenul special "ETH is for DeFi"
-    const ethForDefiToken = holdings.find(
-      (token) =>
-        token.tokenInfo.name.toLowerCase().includes("eth is for defi") ||
-        token.tokenInfo.name.toLowerCase().includes("eth for defi") ||
-        token.tokenInfo.symbol.toLowerCase().includes("defi")
-    );
-
-    if (ethForDefiToken) {
-      console.log("Am găsit tokenul ETH is for DeFi:", ethForDefiToken);
+      return [] as AssetDistributionItem[];
     }
 
     // Calculăm valoarea ETH
     const ethValue = stats.ethBalance * stats.ethPrice;
 
-    // Creăm un array cu tokenurile semnificative (>=1%)
-    const significantAssets = [];
+    // Creăm un array cu toate tokenurile
+    const allAssets: AssetDistributionItem[] = [];
 
     // Valoarea totală a tokenurilor mici (<1%)
     let smallTokensValue = 0;
+    // Array pentru a ține evidența tokenurilor mici
+    const smallTokens: AssetDistributionItem[] = [];
 
-    // Adăugăm ETH doar dacă are valoare și nu există tokenul special
-    if (ethValue > 0 && !ethForDefiToken) {
+    // Adăugăm ETH doar dacă are valoare
+    if (ethValue > 0) {
       const ethPercentage = (ethValue / stats.totalValue) * 100;
       if (ethPercentage >= 1) {
-        significantAssets.push({
+        allAssets.push({
           name: "ETH",
           symbol: "ETH",
           value: ethValue,
@@ -522,15 +534,17 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         });
       } else {
         smallTokensValue += ethValue;
-        console.log(
-          "ETH are procent sub 1%, adăugat la Others:",
-          ethPercentage.toFixed(2) + "%"
-        );
+        smallTokens.push({
+          name: "ETH",
+          symbol: "ETH",
+          value: ethValue,
+          percentage: ethPercentage,
+        });
       }
     }
 
     // Procesăm toate tokenurile
-    holdings.forEach((token) => {
+    processedHoldings.forEach((token) => {
       if (token.value && token.value > 0) {
         // Evităm duplicarea ETH dacă există deja în holdings
         if (
@@ -544,48 +558,33 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
         // Verificăm dacă tokenul are procent >= 1%
         if (percentage >= 1) {
-          // Dacă este tokenul special, îl adăugăm cu prioritate
-          if (
-            token.tokenInfo.name.toLowerCase().includes("eth is for defi") ||
-            token.tokenInfo.name.toLowerCase().includes("eth for defi") ||
-            token.tokenInfo.symbol.toLowerCase().includes("defi")
-          ) {
-            significantAssets.unshift({
-              name: token.tokenInfo.name,
-              symbol: token.tokenInfo.symbol,
-              value: token.value,
-              percentage: percentage,
-            });
-          } else {
-            significantAssets.push({
-              name: token.tokenInfo.name,
-              symbol: token.tokenInfo.symbol,
-              value: token.value,
-              percentage: percentage,
-            });
-          }
+          allAssets.push({
+            name: token.tokenInfo.name,
+            symbol: token.tokenInfo.symbol,
+            value: token.value,
+            percentage: percentage,
+          });
         } else {
           // Adăugăm valoarea la tokenurile mici
           smallTokensValue += token.value;
-          console.log(
-            `Token ${
-              token.tokenInfo.name
-            } are procent sub 1% (${percentage.toFixed(2)}%), adăugat la Others`
-          );
+          smallTokens.push({
+            name: token.tokenInfo.name,
+            symbol: token.tokenInfo.symbol,
+            value: token.value,
+            percentage: percentage,
+          });
         }
       }
     });
 
-    // Sortăm tokenurile semnificative după valoare (descrescător)
-    significantAssets.sort((a, b) => b.value - a.value);
-
-    console.log("Tokenuri semnificative (>=1%):", significantAssets);
+    // Sortăm tokenurile după valoare (descrescător)
+    allAssets.sort((a, b) => b.value - a.value);
 
     // Luăm primele 6 active pentru afișare individuală
-    const topAssets = significantAssets.slice(0, 6);
+    const topAssets = allAssets.slice(0, 6);
 
     // Combinăm restul activelor semnificative într-o categorie "Others"
-    const otherSignificantAssets = significantAssets.slice(6);
+    const otherSignificantAssets = allAssets.slice(6);
     const otherSignificantValue = otherSignificantAssets.reduce(
       (sum, asset) => sum + asset.value,
       0
@@ -602,15 +601,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         symbol: "OTHERS",
         value: otherValue,
         percentage: otherPercentage,
+        smallTokens: [...otherSignificantAssets, ...smallTokens], // Păstrăm referința la tokenurile incluse în "Others"
       });
-      console.log(
-        `Categoria "Others" are valoarea ${formatCurrency(
-          otherValue
-        )} (${otherPercentage.toFixed(2)}%)`
-      );
     }
-
-    console.log("Active finale pentru grafic:", topAssets);
 
     return topAssets;
   }, [stats, processedHoldings]);
@@ -1296,10 +1289,18 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         transition={{ duration: 0.3, delay: 1.0 }}
         className="bg-white dark:bg-dark-secondary rounded-xl p-6 shadow-lg border border-gray-100 dark:border-dark-tertiary mb-8"
       >
-        <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary mb-4 flex items-center">
-          <FiDollarSign className="h-5 w-5 mr-2 text-teal-500" />
-          Top Tokens
-        </h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary flex items-center">
+            <FiDollarSign className="h-5 w-5 mr-2 text-teal-500" />
+            {showAllTokens ? "All Tokens" : "Top Tokens"}
+          </h3>
+          <button
+            onClick={() => setShowAllTokens(!showAllTokens)}
+            className="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-dark-tertiary dark:hover:bg-dark-tertiary/80 text-gray-700 dark:text-dark-text-primary rounded-lg transition-colors"
+          >
+            {showAllTokens ? "Show Top 5" : "Show All"}
+          </button>
+        </div>
 
         {processedHoldings.length > 0 ? (
           <div className="overflow-x-auto">
@@ -1330,10 +1331,19 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                   >
                     Value
                   </th>
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider"
+                  >
+                    % of Portfolio
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-dark-secondary divide-y divide-gray-200 dark:divide-dark-tertiary">
-                {processedHoldings.slice(0, 5).map((token, idx) => (
+                {(showAllTokens
+                  ? processedHoldings
+                  : processedHoldings.slice(0, 5)
+                ).map((token, idx) => (
                   <tr
                     key={idx}
                     className="hover:bg-gray-50 dark:hover:bg-dark-tertiary/50 transition-colors"
@@ -1343,9 +1353,6 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
-                            "/placeholder.svg" ||
-                            "/placeholder.svg" ||
-                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg"
@@ -1382,10 +1389,33 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         {token.value ? formatCurrency(token.value) : "—"}
                       </div>
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div
+                        className={`text-sm font-medium ${
+                          (token.percentage || 0) >= 5
+                            ? "text-green-600 dark:text-green-400"
+                            : (token.percentage || 0) >= 1
+                            ? "text-teal-600 dark:text-teal-400"
+                            : "text-gray-600 dark:text-gray-400"
+                        }`}
+                      >
+                        {token.percentage
+                          ? token.percentage.toFixed(2) + "%"
+                          : "—"}
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {!showAllTokens && processedHoldings.length > 5 && (
+              <div className="mt-4 text-center">
+                <p className="text-sm text-gray-500 dark:text-dark-text-secondary">
+                  {processedHoldings.length - 5} more tokens not shown. Click
+                  "Show All" to see all tokens.
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-8">
