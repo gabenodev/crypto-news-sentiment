@@ -308,15 +308,13 @@ const WalletDashboard: React.FC = () => {
     );
   }
 
-  // Add this helper function to calculate total value
-
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-dark-primary">
       {/* Main content */}
-      <div className="flex-grow flex flex-col md:flex-row">
+      <div className="flex-grow flex flex-col md:flex-row relative">
         {/* Sidebar - now with auto height instead of fixed height */}
-        <div className="hidden lg:block lg:w-96 bg-white dark:bg-dark-primary shadow-lg fixed left-0 top-[57px] z-40 overflow-y-auto h-[calc(100vh-57px)]">
-          <div className="flex flex-col">
+        <div className="hidden lg:block lg:w-96 bg-white dark:bg-dark-primary shadow-lg fixed left-0 top-[57px] z-40 overflow-y-auto bottom-[50px]">
+          <div className="flex flex-col h-full">
             {/* Wallet info */}
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center mb-4">
@@ -521,7 +519,7 @@ const WalletDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
-            className="mb-20" // Add bottom margin to ensure content doesn't overlap with footer
+            className="mb-16" // Reduced bottom margin to account for footer
           >
             {activeTab === "overview" && (
               <WalletOverview
