@@ -113,101 +113,146 @@ const WalletDashboard: React.FC = () => {
     }
   }, [address]);
 
-  // Adăugăm un useEffect pentru a încărca toate datele o singură dată
-  useEffect(() => {
-    if (!address || !isValidAddress) return;
+  // Modificăm funcția calculateTotalValue pentru a evita dublarea ETH
+  const calculateTotalValue = (holdings: any[], ethBalance: number) => {
+    let total = 0;
 
-    const fetchAllData = async () => {
-      setIsLoading(true);
-      setLoadingStatus("Încărcare date portofel...");
-      setError(null); // Reset any previous errors
+    // Verificăm dacă ETH există deja în holdings pentru a evita dublarea
+    const ethTokenExists = holdings.some(
+      (token) =>
+        token.tokenInfo.symbol.toLowerCase() === "eth" &&
+        !token.tokenInfo.name.toLowerCase().includes("defi")
+    );
 
-      try {
-        console.log("🔄 Starting data fetch for wallet:", address);
+    // Adăugăm valoarea ETH doar dacă nu există deja în holdings
+    if (!ethTokenExists) {
+      total += ethBalance * ethPrice; // Folosim ethPrice din state
+    }
 
-        // Fetch ETH balance
-        console.log("🔍 Fetching ETH balance...");
-        const ethData = await fetchEthBalance(address);
-        console.log("📥 ETH balance response:", JSON.stringify(ethData));
-        let ethBalanceValue = 0;
-
-        // Verificăm dacă avem un rezultat valid
-        if (
-          typeof ethData.result === "string" &&
-          !isNaN(Number(ethData.result))
-        ) {
-          ethBalanceValue = Number.parseFloat(ethData.result) / 1e18;
-          console.log("💰 ETH balance in ETH:", ethBalanceValue);
-          setEthBalance(ethBalanceValue);
-        } else {
-          console.log("⚠️ Invalid ETH balance result, setting to 1 ETH");
-          ethBalanceValue = 1; // Folosim 1 ETH ca valoare implicită
-          setEthBalance(ethBalanceValue);
-        }
-
-        // Fetch token balances with a small delay to avoid rate limiting
-        setLoadingStatus("Încărcare token-uri...");
-        console.log("⏱️ Waiting before token balance request...");
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        console.log("🔍 Fetching token balances...");
-        const tokenData = await fetchTokenBalances(address);
-        console.log(
-          "📥 Token balances response:",
-          tokenData.length,
-          "tokens found"
-        );
-        console.log("📊 Token data sample:", tokenData.slice(0, 2));
-        setHoldings(tokenData || []);
-
-        // Fetch transaction history with a small delay to avoid rate limiting
-        setLoadingStatus("Încărcare istoric tranzacții...");
-        console.log("⏱️ Waiting before transaction history request...");
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        console.log("🔍 Fetching transaction history...");
-        const txHistory = await fetchTransactionHistory(address);
-        console.log(
-          "📥 Transaction history response:",
-          txHistory.length,
-          "transactions found"
-        );
-        console.log("📊 Transaction sample:", txHistory.slice(0, 2));
-        setTransactions(txHistory || []);
-
-        // Update wallet stats even if some data is missing
-        const totalValue = calculateTotalValue(
-          tokenData || [],
-          ethBalanceValue
-        );
-        console.log("💰 Calculated total value:", totalValue);
-
-        handleStatsUpdate({
-          totalValue: totalValue,
-          tokenCount: (tokenData || []).length,
-          ethBalance: ethBalanceValue,
-        });
-
-        console.log("✅ Data fetch complete");
-      } catch (err: any) {
-        console.error("❌ Error loading wallet data:", err);
-        setError(
-          err.message ||
-            "Eroare la încărcarea datelor. Etherscan API poate fi temporar indisponibil."
-        );
-
-        // Set empty data in case of error
-        setHoldings([]);
-        setTransactions([]);
-        setEthBalance(0);
-      } finally {
-        setIsLoading(false);
-        setLoadingStatus("");
+    // Adăugăm valorile token-urilor
+    for (const token of holdings) {
+      if (token.tokenInfo.price?.rate) {
+        const tokenBalance =
+          Number(token.balance) /
+          Math.pow(10, Number(token.tokenInfo.decimals));
+        total += tokenBalance * token.tokenInfo.price.rate;
       }
-    };
+    }
 
-    fetchAllData();
-  }, [address, isValidAddress, refreshKey]);
+    return total;
+  };
+
+  // Modificăm useEffect-ul care procesează datele pentru a asigura consistența
+  useEffect(() => {
+    if (address && isValidAddress) {
+      const fetchAllData = async () => {
+        setIsLoading(true);
+        setLoadingStatus("Încărcare date portofel...");
+        setError(null); // Reset any previous errors
+
+        try {
+          console.log("🔄 Starting data fetch for wallet:", address);
+
+          // Fetch ETH balance
+          console.log("🔍 Fetching ETH balance...");
+          const ethData = await fetchEthBalance(address);
+          console.log("📥 ETH balance response:", JSON.stringify(ethData));
+          let ethBalanceValue = 0;
+
+          // Verificăm dacă avem un rezultat valid
+          if (
+            typeof ethData.result === "string" &&
+            !isNaN(Number(ethData.result))
+          ) {
+            ethBalanceValue = Number.parseFloat(ethData.result) / 1e18;
+            console.log("💰 ETH balance in ETH:", ethBalanceValue);
+            setEthBalance(ethBalanceValue);
+          } else {
+            console.log("⚠️ Invalid ETH balance result, setting to 1 ETH");
+            ethBalanceValue = 1; // Folosim 1 ETH ca valoare implicită
+            setEthBalance(ethBalanceValue);
+          }
+
+          // Fetch token balances with a small delay to avoid rate limiting
+          setLoadingStatus("Încărcare token-uri...");
+          console.log("⏱️ Waiting before token balance request...");
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          console.log("🔍 Fetching token balances...");
+          const tokenData = await fetchTokenBalances(address);
+          console.log(
+            "📥 Token balances response:",
+            tokenData.length,
+            "tokens found"
+          );
+          console.log("📊 Token data sample:", tokenData.slice(0, 2));
+          setHoldings(tokenData || []);
+
+          // Fetch transaction history with a small delay to avoid rate limiting
+          setLoadingStatus("Încărcare istoric tranzacții...");
+          console.log("⏱️ Waiting before transaction history request...");
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
+          console.log("🔍 Fetching transaction history...");
+          const txHistory = await fetchTransactionHistory(address);
+          console.log(
+            "📥 Transaction history response:",
+            txHistory.length,
+            "transactions found"
+          );
+          console.log("📊 Transaction sample:", txHistory.slice(0, 2));
+          setTransactions(txHistory || []);
+
+          // Calculăm valoarea totală o singură dată aici și o transmitem la toate componentele
+          const totalValue = calculateTotalValue(
+            tokenData || [],
+            ethBalanceValue
+          );
+          console.log("💰 Calculated total value:", totalValue);
+
+          // Actualizăm statisticile o singură dată
+          const updatedStats = {
+            totalValue: totalValue,
+            tokenCount: (tokenData || []).length,
+            ethBalance: ethBalanceValue,
+          };
+
+          // Actualizăm state-ul local
+          setWalletStats(updatedStats);
+
+          // Transmitem statisticile actualizate la toate componentele copil
+          handleStatsUpdate(updatedStats);
+
+          console.log("✅ Data fetch complete");
+        } catch (err: any) {
+          console.error("❌ Error loading wallet data:", err);
+          setError(
+            err.message ||
+              "Eroare la încărcarea datelor. Etherscan API poate fi temporar indisponibil."
+          );
+
+          // Set empty data in case of error
+          setHoldings([]);
+          setTransactions([]);
+          setEthBalance(0);
+
+          // Resetăm și statisticile în caz de eroare
+          const emptyStats = {
+            totalValue: 0,
+            tokenCount: 0,
+            ethBalance: 0,
+          };
+          setWalletStats(emptyStats);
+          handleStatsUpdate(emptyStats);
+        } finally {
+          setIsLoading(false);
+          setLoadingStatus("");
+        }
+      };
+
+      fetchAllData();
+    }
+  }, [address, isValidAddress, refreshKey, ethPrice]);
 
   // Handle loading state changes
   const handleLoadingChange = (loading: boolean) => {
@@ -255,24 +300,6 @@ const WalletDashboard: React.FC = () => {
   }
 
   // Add this helper function to calculate total value
-  const calculateTotalValue = (holdings: any[], ethBalance: number) => {
-    let total = 0;
-
-    // Add ETH value
-    total += ethBalance * 3500; // Use default ETH price if actual price not available
-
-    // Add token values
-    for (const token of holdings) {
-      if (token.tokenInfo.price?.rate) {
-        const tokenBalance =
-          Number(token.balance) /
-          Math.pow(10, Number(token.tokenInfo.decimals));
-        total += tokenBalance * token.tokenInfo.price.rate;
-      }
-    }
-
-    return total;
-  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-dark-primary">

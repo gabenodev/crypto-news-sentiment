@@ -358,6 +358,48 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
     selectedToken,
   ]);
 
+  // Adăugăm verificarea pentru a evita dublarea ETH în calculul valorii totale
+  useEffect(() => {
+    if (!isLoading && holdings && holdings.length > 0) {
+      try {
+        // Verificăm dacă ETH există deja în holdings
+        const ethTokenExists = holdings.some(
+          (token) =>
+            token.tokenInfo.symbol.toLowerCase() === "eth" &&
+            !token.tokenInfo.name.toLowerCase().includes("defi")
+        );
+
+        // Calculăm valoarea ETH
+        const ethValue = ethBalance * ethPrice;
+
+        // Calculăm valoarea totală a token-urilor
+        let totalTokenValue = 0;
+        holdings.forEach((token) => {
+          if (token.tokenInfo.price?.rate) {
+            const decimals = Number(token.tokenInfo.decimals) || 0;
+            const formattedBalance =
+              Number(token.balance) / Math.pow(10, decimals);
+            totalTokenValue += formattedBalance * token.tokenInfo.price.rate;
+          }
+        });
+
+        // Calculăm valoarea totală a portofoliului, evitând dublarea ETH
+        const totalValue = totalTokenValue + (ethTokenExists ? 0 : ethValue);
+
+        // Actualizăm statisticile
+        if (onStatsUpdate) {
+          onStatsUpdate({
+            totalValue,
+            tokenCount: holdings.length,
+            ethBalance,
+          });
+        }
+      } catch (err) {
+        console.error("Eroare la calcularea valorii totale:", err);
+      }
+    }
+  }, [holdings, ethBalance, ethPrice, isLoading, onStatsUpdate]);
+
   // Prepare data for the bar chart
   const prepareBarChartData = (): Array<{
     name: string;

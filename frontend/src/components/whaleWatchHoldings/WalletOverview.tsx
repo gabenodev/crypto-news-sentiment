@@ -433,22 +433,27 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         }
       });
 
+      // Verificăm dacă există deja un token ETH pentru a evita numărarea dublă
+      const ethToken = processedTokens.find(
+        (token) =>
+          token.tokenInfo.symbol.toLowerCase() === "eth" &&
+          !token.tokenInfo.name.toLowerCase().includes("defi")
+      );
+
       // Calculăm valoarea ETH
       const ethValue = ethBalance * ethPrice;
 
-      // Verificăm dacă există deja un token ETH pentru a evita numărarea dublă
-      const ethToken = processedTokens.find(
-        (token) => token.tokenInfo.symbol.toLowerCase() === "eth"
-      );
+      // Calculăm valoarea totală a portofoliului, evitând dublarea ETH
       const totalPortfolioValue = totalTokenValue + (ethToken ? 0 : ethValue);
 
       // Adăugăm procentajele la fiecare token
       const tokensWithPercentages = processedTokens
         .map((token) => ({
           ...token,
-          percentage: token.value
-            ? (token.value / totalPortfolioValue) * 100
-            : 0,
+          percentage:
+            token.value && totalPortfolioValue > 0
+              ? (token.value / totalPortfolioValue) * 100
+              : 0,
         }))
         .sort((a, b) => (b.value || 0) - (a.value || 0));
 
@@ -511,6 +516,13 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       return [] as AssetDistributionItem[];
     }
 
+    // Verificăm dacă ETH există deja în holdings
+    const ethTokenExists = processedHoldings.some(
+      (token) =>
+        token.tokenInfo.symbol.toLowerCase() === "eth" &&
+        !token.tokenInfo.name.toLowerCase().includes("defi")
+    );
+
     // Calculăm valoarea ETH
     const ethValue = stats.ethBalance * stats.ethPrice;
 
@@ -522,8 +534,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     // Array pentru a ține evidența tokenurilor mici
     const smallTokens: AssetDistributionItem[] = [];
 
-    // Adăugăm ETH doar dacă are valoare
-    if (ethValue > 0) {
+    // Adăugăm ETH doar dacă are valoare și nu există deja în holdings
+    if (ethValue > 0 && !ethTokenExists) {
       const ethPercentage = (ethValue / stats.totalValue) * 100;
       if (ethPercentage >= 1) {
         allAssets.push({
@@ -546,13 +558,6 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     // Procesăm toate tokenurile
     processedHoldings.forEach((token) => {
       if (token.value && token.value > 0) {
-        // Evităm duplicarea ETH dacă există deja în holdings
-        if (
-          token.tokenInfo.symbol.toLowerCase() === "eth" &&
-          !token.tokenInfo.name.toLowerCase().includes("defi")
-        )
-          return;
-
         // Calculăm procentul
         const percentage = (token.value / stats.totalValue) * 100;
 
@@ -1353,6 +1358,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg"
