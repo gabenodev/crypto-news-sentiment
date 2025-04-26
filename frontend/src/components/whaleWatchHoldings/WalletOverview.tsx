@@ -755,13 +755,6 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     <div>
       {/* Time range selector */}
       <div className="flex justify-between mb-6">
-        <button
-          onClick={handleRefresh}
-          className="flex items-center px-4 py-2 bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300 rounded-lg hover:bg-teal-200 dark:hover:bg-teal-800/30 transition-colors"
-        >
-          <FiRefreshCw className="mr-2" /> Refresh Data
-        </button>
-
         <div className="inline-flex bg-gray-100 dark:bg-dark-tertiary rounded-lg p-1">
           {["7d", "30d", "90d", "all"].map((range) => (
             <button

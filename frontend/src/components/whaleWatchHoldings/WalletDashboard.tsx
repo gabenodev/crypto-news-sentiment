@@ -71,7 +71,7 @@ const WalletDashboard: React.FC = () => {
   const [ethBalance, setEthBalance] = useState(0);
   const [ethPrice, setEthPrice] = useState(3500); // Placeholder - în aplicația reală ar trebui să obținem prețul curent
   const [isLoading, setIsLoading] = useState(true);
-  const [loadingStatus, setLoadingStatus] = useState("Inițializare...");
+  const [loadingStatus, setLoadingStatus] = useState("Loading...");
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -312,9 +312,12 @@ const WalletDashboard: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-dark-primary">
       {/* Main content */}
       <div className="flex-grow flex flex-col md:flex-row relative">
-        {/* Sidebar - now with auto height instead of fixed height */}
-        <div className="hidden lg:block lg:w-96 bg-white dark:bg-dark-primary shadow-lg fixed left-0 top-[57px] z-40 overflow-y-auto bottom-[50px]">
-          <div className="flex flex-col h-full">
+        {/* Sidebar - now with dynamic positioning and rounded corners */}
+        <div
+          className="hidden lg:block lg:w-96 bg-white dark:bg-dark-primary shadow-lg fixed left-0 top-[57px] z-40 overflow-y-auto border-r border-teal-500/30 dark:border-teal-400/20 shadow-[0_0_15px_rgba(20,184,166,0.15)] dark:shadow-[0_0_15px_rgba(45,212,191,0.1)] rounded-tr-xl rounded-br-xl"
+          style={{ height: "calc(100vh - 57px - 175px)" }} // Adjusted height to leave space for footer
+        >
+          <div className="flex flex-col h-full pb-8">
             {/* Wallet info */}
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center mb-4">
@@ -392,7 +395,6 @@ const WalletDashboard: React.FC = () => {
                 </div>
               </div>
             </div>
-
             {/* Navigation */}
             <nav className="p-4">
               <ul className="space-y-2">
@@ -437,7 +439,6 @@ const WalletDashboard: React.FC = () => {
                 </li>
               </ul>
             </nav>
-
             {/* Recent wallets */}
             {recentWallets.length > 0 && (
               <div className="p-4 border-t border-gray-200 dark:border-gray-700">
