@@ -50,7 +50,6 @@ type TabType = "overview" | "holdings" | "transactions";
 
 const WalletDashboard: React.FC = () => {
   const { address = "" } = useParams<{ address: string }>();
-  const [isLoading, setIsLoading] = useState(true);
   const [isValidAddress, setIsValidAddress] = useState(true);
   const [copySuccess, setCopySuccess] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>("overview");
@@ -95,7 +94,7 @@ const WalletDashboard: React.FC = () => {
 
   // Handle loading state changes
   const handleLoadingChange = (loading: boolean) => {
-    setIsLoading(loading);
+    // setIsLoading(loading) // Removed setIsLoading
   };
 
   // Handle stats updates from child components

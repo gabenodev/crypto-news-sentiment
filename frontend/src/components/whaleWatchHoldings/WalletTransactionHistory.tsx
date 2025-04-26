@@ -189,14 +189,19 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
 
   // Format ETH value with full numbers
   const formatEthValue = (value: number) => {
-    if (value === 0) return "0 ETH";
+    try {
+      if (value === 0) return "0 ETH";
 
-    // Format with 6 decimal places for small values, fewer for larger values
-    const formattedValue = value.toLocaleString("en-US", {
-      maximumFractionDigits: value < 0.01 ? 6 : value < 1 ? 4 : 2,
-    });
+      // Format with 6 decimal places for small values, fewer for larger values
+      const formattedValue = value.toLocaleString("en-US", {
+        maximumFractionDigits: value < 0.01 ? 6 : value < 1 ? 4 : 2,
+      });
 
-    return `${formattedValue} ETH`;
+      return `${formattedValue} ETH`;
+    } catch (error) {
+      console.error("Error formatting ETH value:", error);
+      return `${value} ETH`;
+    }
   };
 
   // Get transaction direction

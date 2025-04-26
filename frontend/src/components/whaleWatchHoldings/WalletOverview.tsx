@@ -185,23 +185,27 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         return [];
       }
 
-      // Start with ETH
+      // Calculate ETH value
       const ethValue = stats.ethBalance * stats.ethPrice;
       const totalValue = stats.totalValue;
 
-      const data = [
-        {
-          name: "ETH",
-          value: ethValue,
-          percentage: (ethValue / totalValue) * 100,
-        },
-      ];
+      // Create a map to consolidate tokens with the same symbol
+      const tokenMap = new Map<string, any>();
 
-      // Add top tokens
-      const topTokens = holdings.slice(0, 5);
-      topTokens.forEach((token) => {
+      // Add ETH first
+      tokenMap.set("ETH", {
+        name: "ETH",
+        value: ethValue,
+        percentage: (ethValue / totalValue) * 100,
+      });
+
+      // Add top tokens (excluding ETH if it's already in the tokens list)
+      holdings.slice(0, 5).forEach((token) => {
         if (token.value && token.value > 0) {
-          data.push({
+          // Skip if it's ETH (already added)
+          if (token.tokenInfo.symbol.toLowerCase() === "eth") return;
+
+          tokenMap.set(token.tokenInfo.symbol, {
             name: token.tokenInfo.symbol,
             value: token.value,
             percentage: (token.value / totalValue) * 100,
@@ -211,20 +215,21 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
       // Add "Others" category for remaining tokens
       const otherTokens = holdings.slice(5);
-      const otherValue = otherTokens.reduce(
-        (sum, token) => sum + (token.value || 0),
-        0
-      );
+      const otherValue = otherTokens.reduce((sum, token) => {
+        // Skip if it's ETH (already added)
+        if (token.tokenInfo.symbol.toLowerCase() === "eth") return sum;
+        return sum + (token.value || 0);
+      }, 0);
 
       if (otherValue > 0) {
-        data.push({
+        tokenMap.set("Others", {
           name: "Others",
           value: otherValue,
           percentage: (otherValue / totalValue) * 100,
         });
       }
 
-      return data;
+      return Array.from(tokenMap.values());
     };
   }, [stats, holdings]);
 
@@ -532,29 +537,22 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       return [];
     }
 
-    // Start with ETH
-    const ethToken = holdings.find(
-      (token) => token.tokenInfo.symbol.toLowerCase() === "eth"
-    );
+    // Calculate ETH value
     const ethValue = stats.ethBalance * stats.ethPrice;
-    const ethValueToAdd = ethToken ? 0 : ethValue; // Only add ETH separately if it's not already in the tokens list
     const totalValue = stats.totalValue;
 
     // Create a map to consolidate tokens with the same symbol
-    const tokenMap = new Map();
+    const tokenMap = new Map<string, any>();
 
-    // Add ETH first (only if it's not already in the tokens list)
-    if (!ethToken && ethValueToAdd > 0) {
-      tokenMap.set("ETH", {
-        name: "ETH",
-        value: ethValueToAdd,
-        percentage: (ethValueToAdd / totalValue) * 100,
-      });
-    }
+    // Add ETH first
+    tokenMap.set("ETH", {
+      name: "ETH",
+      value: ethValue,
+      percentage: (ethValue / totalValue) * 100,
+    });
 
-    // Add top tokens
-    const topTokens = holdings.slice(0, 5);
-    topTokens.forEach((token) => {
+    // Add top tokens (excluding ETH if it's already in the tokens list)
+    holdings.slice(0, 5).forEach((token) => {
       if (token.value && token.value > 0) {
         // Skip if it's ETH (already added)
         if (token.tokenInfo.symbol.toLowerCase() === "eth") return;

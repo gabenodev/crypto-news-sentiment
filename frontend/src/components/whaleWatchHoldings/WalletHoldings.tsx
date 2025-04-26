@@ -85,23 +85,20 @@ const COLORS = [
   "#0891b2", // cyan-600
   "#06b6d4", // cyan-500
   "#22d3ee", // cyan-400
-  "#2dd4bf", // teal-400
-  "#34d399", // green-400
-  "#6ee7b7", // green-300
-  "#99f6e4", // teal-200
-  "#a7f3d0", // green-200
-  "#5eead4", // teal-300
-  "#0d9488", // teal-600
-  "#065f46", // green-800
-  "#134e4a", // teal-800
-  "#115e59", // teal-800
 ];
 
-// Modificăm funcția getCryptoLogoUrl pentru a folosi noul generator de placeholdere
+// Modify the getCryptoLogoUrl function to handle errors better
 const getCryptoLogoUrl = (symbol: string): string => {
   if (!symbol) return generateCryptoPlaceholder("?");
-  // Returnează direct placeholderul generat
-  return generateCryptoPlaceholder(symbol);
+  try {
+    // Return directly the placeholder generated
+    return generateCryptoPlaceholder(symbol);
+  } catch (error) {
+    console.error("Error generating crypto logo:", error);
+    return `/placeholder.svg?height=32&width=32&query=${encodeURIComponent(
+      symbol || "?"
+    )}`;
+  }
 };
 
 // Format currency values
@@ -387,77 +384,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
     return `$${value.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
   };
 
-  // Fix the prepareChartData function to fix rendering issues and prevent duplicate tokens
-  const prepareChartData = () => {
-    // First, consolidate tokens with the same symbol (fixes duplicate ETH issue)
-    const consolidatedMap = new Map<string, TokenData>();
-
-    filteredHoldings
-      .filter((token) => (token.value || 0) > 0)
-      .forEach((token) => {
-        const symbol = token.tokenInfo.symbol;
-        if (consolidatedMap.has(symbol)) {
-          // If we already have this symbol, add the values
-          const existing = consolidatedMap.get(symbol)!;
-          existing.value = (existing.value || 0) + (token.value || 0);
-          existing.formattedBalance =
-            (existing.formattedBalance || 0) + (token.formattedBalance || 0);
-        } else {
-          // Otherwise, add it to the map
-          consolidatedMap.set(symbol, { ...token });
-        }
-      });
-
-    // Convert map back to array and sort by value
-    const consolidatedData = Array.from(consolidatedMap.values())
-      .sort((a, b) => (b.value || 0) - (a.value || 0))
-      .map((token) => ({
-        ...token,
-        name: token.tokenInfo.symbol, // Ensure name is set for the chart
-      }));
-
-    // Recalculate percentages based on the consolidated total
-    const totalValue = consolidatedData.reduce(
-      (sum, token) => sum + (token.value || 0),
-      0
-    );
-    consolidatedData.forEach((token) => {
-      token.percentage = token.value ? (token.value / totalValue) * 100 : 0;
-    });
-
-    // Group small tokens into "Others" if we have more than 8 tokens
-    if (consolidatedData.length <= 8) return consolidatedData;
-
-    const topTokens = consolidatedData.slice(0, 7);
-    const otherTokens = consolidatedData.slice(7);
-
-    const otherValue = otherTokens.reduce(
-      (sum, token) => sum + (token.value || 0),
-      0
-    );
-    const otherPercentage = otherTokens.reduce(
-      (sum, token) => sum + (token.percentage || 0),
-      0
-    );
-
-    return [
-      ...topTokens,
-      {
-        tokenInfo: {
-          name: "Others",
-          symbol: "OTHERS",
-          decimals: "0",
-          image: generateCryptoPlaceholder("OTH"),
-        },
-        balance: "0",
-        formattedBalance: 0,
-        value: otherValue,
-        percentage: otherPercentage,
-        name: "Others",
-      },
-    ];
-  };
-
   // Prepare data for the bar chart
   const prepareBarChartData = () => {
     return filteredHoldings
@@ -467,19 +393,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
         name: token.tokenInfo.symbol,
         value: token.value || 0,
         percentage: token.percentage || 0,
-      }));
-  };
-
-  // Prepare data for the treemap
-  const prepareTreemapData = () => {
-    return filteredHoldings
-      .filter((token) => (token.value || 0) > 0)
-      .map((token) => ({
-        name: token.tokenInfo.symbol,
-        size: token.value || 0,
-        value: token.value || 0,
-        percentage: token.percentage || 0,
-        tokenInfo: token.tokenInfo,
       }));
   };
 

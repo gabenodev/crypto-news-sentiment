@@ -98,141 +98,83 @@ const selectColorPalette = (text: string): string[] => {
  */
 export const generateCryptoPlaceholder = (
   symbol: string,
-  size = 32
+  size: number = 100
 ): string => {
-  if (!symbol) symbol = "?";
+  try {
+    // Ensure symbol is a string and limit to 4 characters
+    const cleanSymbol = String(symbol || "?")
+      .slice(0, 4)
+      .toUpperCase();
 
-  const text = symbol.substring(0, 2).toUpperCase();
-  const [color1, color2] = selectColorPalette(symbol);
+    // Generate a deterministic color based on the symbol
+    const hue =
+      Array.from(cleanSymbol).reduce(
+        (acc, char) => acc + char.charCodeAt(0),
+        0
+      ) % 360;
+    const color = `hsl(${hue}, 65%, 55%)`;
+    const darkColor = `hsl(${hue}, 65%, 40%)`;
 
-  // Generează un pattern abstract bazat pe hash-ul simbolului
-  const hash = hashString(symbol);
-  const numShapes = 3 + Math.floor(hash * 3); // 3-5 forme
+    // Create SVG
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <rect width="100" height="100" fill="${color}" />
+        <circle cx="50" cy="50" r="35" fill="${darkColor}" />
+        <text x="50" y="50" font-family="Arial, sans-serif" font-size="30" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="central">${cleanSymbol}</text>
+      </svg>
+    `;
 
-  let shapes = "";
-
-  // Adaugă forme geometrice abstracte
-  for (let i = 0; i < numShapes; i++) {
-    const shapeHash = hashString(symbol + i);
-    const x = size * 0.1 + shapeHash * size * 0.8;
-    const y = size * 0.1 + hashString(symbol + i + 1) * size * 0.8;
-    const radius = size * (0.1 + hashString(symbol + i + 2) * 0.2);
-
-    // Alternează între cercuri și pătrate rotunjite
-    if (i % 2 === 0) {
-      shapes += `<circle cx="${x}" cy="${y}" r="${radius}" fill="rgba(255,255,255,0.15)" />`;
-    } else {
-      shapes += `<rect x="${x - radius}" y="${y - radius}" width="${
-        radius * 2
-      }" height="${radius * 2}" rx="${
-        radius * 0.5
-      }" fill="rgba(255,255,255,0.1)" />`;
-    }
+    // Use encodeURIComponent instead of btoa to handle Unicode characters
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  } catch (error) {
+    console.error("Error generating crypto placeholder:", error);
+    return `/placeholder.svg?height=32&width=32&query=${encodeURIComponent(
+      symbol || "?"
+    )}`;
   }
-
-  // Creează SVG-ul cu gradient și forme abstracte
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-      <defs>
-        <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="${color1}" />
-          <stop offset="100%" stop-color="${color2}" />
-        </linearGradient>
-      </defs>
-      <rect width="${size}" height="${size}" rx="${
-    size * 0.25
-  }" fill="url(#grad)" />
-      ${shapes}
-      <text x="50%" y="50%" font-family="Arial, sans-serif" font-size="${
-        size * 0.4
-      }" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">${text}</text>
-    </svg>`;
-
-  // Convertește la data URL
-  return `data:image/svg+xml;base64,${btoa(svg)}`;
 };
 
-/**
- * Generează un identicon pixelat pentru portofele, similar cu exemplul
- * @param address Adresa portofelului
- * @param size Dimensiunea imaginii
- * @returns Un URL de date pentru SVG
- */
 export const generateWalletPlaceholder = (
   address: string,
-  size = 32
+  size = 64
 ): string => {
-  if (!address) address = "wallet";
+  try {
+    if (!address) return "";
 
-  // Folosim adresa pentru a genera un hash consistent
-  const seed = Array.from(address).reduce(
-    (acc, char) => acc + char.charCodeAt(0),
-    0
-  );
+    // Take the first 6 characters of the address for color generation
+    const colorSeed = address.slice(2, 8);
+    const hue = Number.parseInt(colorSeed, 16) % 360;
+    const color = `hsl(${hue}, 70%, 60%)`;
+    const darkColor = `hsl(${hue}, 70%, 45%)`;
 
-  // Determinăm numărul de pixeli pe rând/coloană (8x8 grid)
-  const gridSize = 8;
-  const pixelSize = size / gridSize;
+    // Create a pattern based on the address
+    const patternSeed = address.slice(2, 10);
+    const patternDigits = Number.parseInt(patternSeed, 16) % 1000;
 
-  // Selectăm un fundal colorat în loc de negru
-  const backgroundIndex = Math.floor(
-    Math.abs(Math.sin(seed * 0.1) * 10000) % BACKGROUND_COLORS.length
-  );
-  const backgroundColor = BACKGROUND_COLORS[backgroundIndex];
+    // Create SVG with a simple pattern
+    const svg = `
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}">
+        <rect width="${size}" height="${size}" fill="${color}" />
+        <circle cx="${size / 2}" cy="${size / 2}" r="${
+      size / 3
+    }" fill="${darkColor}" />
+        <text x="${size / 2}" y="${
+      size / 2
+    }" font-family="monospace" font-size="${
+      size / 4
+    }" fill="white" text-anchor="middle" dominant-baseline="central">${address.slice(
+      0,
+      2
+    )}</text>
+      </svg>
+    `;
 
-  // Selectăm doar 3-4 culori pentru acest identicon, bazat pe adresă
-  const numColors = 3 + (seed % 2); // 3 sau 4 culori
-  const selectedColors: string[] = [];
-
-  // Selectăm culorile în mod deterministic bazat pe adresă
-  for (let i = 0; i < numColors; i++) {
-    const colorIndex = Math.floor(
-      Math.abs(Math.sin(seed + i * 100) * 10000) % PIXEL_COLORS.length
-    );
-    selectedColors.push(PIXEL_COLORS[colorIndex]);
+    // Use encodeURIComponent instead of btoa to handle Unicode characters
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  } catch (error) {
+    console.error("Error generating wallet placeholder:", error);
+    return `/placeholder.svg?height=${size}&width=${size}&query=wallet`;
   }
-
-  // Generăm matricea de pixeli
-  let pixels = "";
-  const matrix = Array(gridSize)
-    .fill(0)
-    .map(() => Array(gridSize).fill(0));
-
-  // Completăm matricea cu valori determinate de adresă
-  for (let i = 0; i < gridSize; i++) {
-    for (let j = 0; j < gridSize; j++) {
-      // Folosim un algoritm pseudorandom dar deterministic
-      const value =
-        Math.abs(Math.sin(seed + i * 11 + j * 7) * 10000) % numColors;
-      matrix[i][j] = Math.floor(value);
-    }
-  }
-
-  // Desenăm pixelii - creștem densitatea pentru a umple mai mult spațiul
-  for (let i = 0; i < gridSize; i++) {
-    for (let j = 0; j < gridSize; j++) {
-      // Folosim o formulă care generează mai mulți pixeli (70-80% din spațiu)
-      const shouldDraw =
-        Math.abs(Math.sin(seed + i * 13 + j * 17) * 1000) % 10 > 2;
-
-      if (shouldDraw) {
-        const colorIndex = matrix[i][j];
-        const pixelColor = selectedColors[colorIndex];
-        const x = i * pixelSize;
-        const y = j * pixelSize;
-
-        pixels += `<rect x="${x}" y="${y}" width="${pixelSize}" height="${pixelSize}" fill="${pixelColor}" />`;
-      }
-    }
-  }
-
-  // Creează SVG-ul cu fundal colorat și pixeli colorați
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-      <rect width="${size}" height="${size}" fill="${backgroundColor}" />
-      ${pixels}
-    </svg>`;
-
-  // Convertește la data URL
-  return `data:image/svg+xml;base64,${btoa(svg)}`;
 };
 
 /**
