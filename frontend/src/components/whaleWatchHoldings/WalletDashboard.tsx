@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
@@ -113,38 +113,14 @@ const WalletDashboard: React.FC = () => {
     }
   }, [address]);
 
-  // Modificăm funcția calculateTotalValue pentru a evita dublarea ETH
-  const calculateTotalValue = (holdings: any[], ethBalance: number) => {
-    let total = 0;
+  // Add a ref to track if we're already fetching data
+  const isFetchingRef = useRef(false);
 
-    // Verificăm dacă ETH există deja în holdings pentru a evita dublarea
-    const ethTokenExists = holdings.some(
-      (token) =>
-        token.tokenInfo.symbol.toLowerCase() === "eth" &&
-        !token.tokenInfo.name.toLowerCase().includes("defi")
-    );
-
-    // Adăugăm valoarea ETH doar dacă nu există deja în holdings
-    if (!ethTokenExists) {
-      total += ethBalance * ethPrice; // Folosim ethPrice din state
-    }
-
-    // Adăugăm valorile token-urilor
-    for (const token of holdings) {
-      if (token.tokenInfo.price?.rate) {
-        const tokenBalance =
-          Number(token.balance) /
-          Math.pow(10, Number(token.tokenInfo.decimals));
-        total += tokenBalance * token.tokenInfo.price.rate;
-      }
-    }
-
-    return total;
-  };
-
-  // Modificăm useEffect-ul care procesează datele pentru a asigura consistența
   useEffect(() => {
-    if (address && isValidAddress) {
+    if (address && isValidAddress && !isFetchingRef.current) {
+      // Set the flag to prevent concurrent fetches
+      isFetchingRef.current = true;
+
       const fetchAllData = async () => {
         setIsLoading(true);
         setLoadingStatus("Încărcare date portofel...");
@@ -247,12 +223,45 @@ const WalletDashboard: React.FC = () => {
         } finally {
           setIsLoading(false);
           setLoadingStatus("");
+          // Reset the fetching flag
+          isFetchingRef.current = false;
         }
       };
 
       fetchAllData();
     }
-  }, [address, isValidAddress, refreshKey, ethPrice]);
+  }, [address, isValidAddress, refreshKey]);
+
+  const calculateTotalValue = (holdings: any[], ethBalance: number) => {
+    let total = 0;
+
+    // Verificăm dacă ETH există deja în holdings pentru a evita dublarea
+    const ethTokenExists = holdings.some(
+      (token) =>
+        token.tokenInfo &&
+        token.tokenInfo.symbol &&
+        token.tokenInfo.symbol.toLowerCase() === "eth" &&
+        token.tokenInfo.name &&
+        !token.tokenInfo.name.toLowerCase().includes("defi")
+    );
+
+    // Adăugăm valoarea ETH doar dacă nu există deja în holdings
+    if (!ethTokenExists) {
+      total += ethBalance * ethPrice; // Folosim ethPrice din state
+    }
+
+    // Adăugăm valorile token-urilor
+    for (const token of holdings) {
+      if (token && token.tokenInfo && token.tokenInfo.price?.rate) {
+        const decimals = Number(token.tokenInfo.decimals || 0);
+        const tokenBalance =
+          Number(token.balance || 0) / Math.pow(10, decimals);
+        total += tokenBalance * token.tokenInfo.price.rate;
+      }
+    }
+
+    return total;
+  };
 
   // Handle loading state changes
   const handleLoadingChange = (loading: boolean) => {

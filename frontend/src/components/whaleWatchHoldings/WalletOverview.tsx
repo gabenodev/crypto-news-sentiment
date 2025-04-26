@@ -378,22 +378,33 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   }, [address]);
 
   // Înlocuim useEffect-ul care face fetch cu unul care procesează datele primite
+  // Add a ref to track if we've already processed the data
+  const dataProcessedRef = useRef(false);
+
   useEffect(() => {
     if (isLoading) {
       setLoading(true);
+      dataProcessedRef.current = false;
       return;
     }
 
     // Folosim o referință pentru a verifica dacă datele s-au schimbat cu adevărat
-    const holdingsKey = JSON.stringify(
-      holdings.map((h) => h.tokenInfo.contractAddress + h.balance)
-    );
+    const holdingsKey =
+      holdings && holdings.length
+        ? JSON.stringify(
+            holdings.map((h) => h.tokenInfo?.contractAddress + h.balance)
+          )
+        : "empty-holdings";
+
     const transactionsKey =
-      transactions.length > 0 ? transactions[0].transactionHash : "empty";
+      transactions && transactions.length > 0
+        ? transactions[0].transactionHash
+        : "empty-transactions";
+
     const dataKey = `${holdingsKey}-${transactionsKey}-${ethBalance}`;
 
     // Verificăm dacă datele sunt identice cu cele procesate anterior
-    if (previousDataRef.current === dataKey) {
+    if (previousDataRef.current === dataKey || dataProcessedRef.current) {
       setLoading(false);
       if (onLoadingChange) onLoadingChange(false);
       return;
@@ -401,11 +412,20 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
     // Actualizăm referința cu noile date
     previousDataRef.current = dataKey;
+    dataProcessedRef.current = true;
 
     try {
       // Procesăm datele primite
       let totalTokenValue = 0;
       const processedTokens = holdings.map((token: TokenData) => {
+        if (!token || !token.tokenInfo) {
+          return {
+            ...token,
+            formattedBalance: 0,
+            value: 0,
+          };
+        }
+
         const decimals = Number(token.tokenInfo.decimals) || 0;
         const formattedBalance = Number(token.balance) / Math.pow(10, decimals);
         const value = token.tokenInfo.price?.rate
@@ -425,19 +445,24 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       let incomingValue = 0;
       let outgoingValue = 0;
 
-      transactions.forEach((tx: TransactionData) => {
-        if (tx.to && tx.to.toLowerCase() === address.toLowerCase()) {
-          incomingValue += tx.value;
-        } else if (tx.from && tx.from.toLowerCase() === address.toLowerCase()) {
-          outgoingValue += tx.value;
-        }
-      });
+      if (transactions && transactions.length) {
+        transactions.forEach((tx: TransactionData) => {
+          if (tx.to && tx.to.toLowerCase() === address.toLowerCase()) {
+            incomingValue += tx.value || 0;
+          } else if (
+            tx.from &&
+            tx.from.toLowerCase() === address.toLowerCase()
+          ) {
+            outgoingValue += tx.value || 0;
+          }
+        });
+      }
 
       // Verificăm dacă există deja un token ETH pentru a evita numărarea dublă
       const ethToken = processedTokens.find(
         (token) =>
-          token.tokenInfo.symbol.toLowerCase() === "eth" &&
-          !token.tokenInfo.name.toLowerCase().includes("defi")
+          token.tokenInfo?.symbol?.toLowerCase() === "eth" &&
+          !token.tokenInfo?.name?.toLowerCase().includes("defi")
       );
 
       // Calculăm valoarea ETH
@@ -463,9 +488,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         ethBalance,
         ethPrice,
         tokenCount: processedTokens.length,
-        transactionCount: transactions.length,
+        transactionCount: transactions?.length || 0,
         lastActivity:
-          transactions.length > 0 ? transactions[0].timestamp : null,
+          transactions?.length > 0 ? transactions[0].timestamp : null,
         incomingValue,
         outgoingValue,
       };
@@ -487,16 +512,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       setLoading(false);
       if (onLoadingChange) onLoadingChange(false);
     }
-  }, [
-    holdings,
-    transactions,
-    ethBalance,
-    ethPrice,
-    isLoading,
-    address,
-    onLoadingChange,
-    onStatsUpdate,
-  ]);
+  }, [holdings, transactions, ethBalance, ethPrice, isLoading, address]);
 
   // Modificăm funcția handleRefresh pentru a utiliza funcția primită prin props
   const handleRefresh = useCallback(() => {
@@ -1358,6 +1374,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Cell,
@@ -163,21 +163,12 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   const [loading, setLoading] = useState(isLoading);
   const [localError, setLocalError] = useState<string | null>(error);
   const [processedHoldings, setProcessedHoldings] = useState<TokenData[]>([]);
-  const [filteredHoldings, setFilteredHoldings] = useState<TokenData[]>([]);
-  const [stats, setStats] = useState<StatsData>({
-    totalValue: 0,
-    tokenCount: 0,
-    topToken: null,
-    topGainer: null,
-    topLoser: null,
-  });
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "bar">("list");
   const [selectedToken, setSelectedToken] = useState<TokenData | null>(null);
   const [sortBy, setSortBy] = useState<"value" | "name" | "balance">("value");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showFilterMenu, setShowFilterMenu] = useState(false);
-  const [barChartData, setBarChartData] = useState<any[]>([]);
 
   // Use useRef to prevent duplicate requests
   const previousAddressRef = useRef("");
@@ -187,45 +178,63 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   const previousHoldingsRef = useRef("");
   const selectedTokenRef = useRef<string | null>(null);
 
-  // Effect for sorting holdings
-  useEffect(() => {
-    if (holdings.length > 0) {
-      // Aplicăm sortarea direct pe holdings, nu pe filteredHoldings
-      const sortedHoldings = [...holdings].sort((a, b) => {
-        if (sortBy === "value") {
-          const aValue = a.value || 0;
-          const bValue = b.value || 0;
-          return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
-        } else if (sortBy === "name") {
-          const aName = a.tokenInfo.name.toLowerCase();
-          const bName = b.tokenInfo.name.toLowerCase();
-          return sortOrder === "asc"
-            ? aName.localeCompare(bName)
-            : bName.localeCompare(aName);
-        } else {
-          const aBalance = a.formattedBalance || 0;
-          const bBalance = b.formattedBalance || 0;
-          return sortOrder === "asc"
-            ? aBalance - bBalance
-            : bBalance - aBalance;
-        }
-      });
+  // Folosim useMemo pentru a calcula filteredHoldings în loc de a folosi un state separat
+  const filteredHoldings = useMemo(() => {
+    if (processedHoldings.length === 0) return [];
 
-      // Apoi aplicăm filtrarea pe rezultatul sortat
-      if (searchTerm.trim() === "") {
-        setFilteredHoldings(sortedHoldings);
+    // Aplicăm sortarea
+    const sortedHoldings = [...processedHoldings].sort((a, b) => {
+      if (sortBy === "value") {
+        const aValue = a.value || 0;
+        const bValue = b.value || 0;
+        return sortOrder === "asc" ? aValue - bValue : bValue - aValue;
+      } else if (sortBy === "name") {
+        const aName = a.tokenInfo.name.toLowerCase();
+        const bName = b.tokenInfo.name.toLowerCase();
+        return sortOrder === "asc"
+          ? aName.localeCompare(bName)
+          : bName.localeCompare(aName);
       } else {
-        const term = searchTerm.toLowerCase();
-        setFilteredHoldings(
-          sortedHoldings.filter(
-            (token) =>
-              token.tokenInfo.name.toLowerCase().includes(term) ||
-              token.tokenInfo.symbol.toLowerCase().includes(term)
-          )
-        );
+        const aBalance = a.formattedBalance || 0;
+        const bBalance = b.formattedBalance || 0;
+        return sortOrder === "asc" ? aBalance - bBalance : bBalance - aBalance;
       }
+    });
+
+    // Apoi aplicăm filtrarea pe rezultatul sortat
+    if (searchTerm.trim() === "") {
+      return sortedHoldings;
+    } else {
+      const term = searchTerm.toLowerCase();
+      return sortedHoldings.filter(
+        (token) =>
+          token.tokenInfo.name.toLowerCase().includes(term) ||
+          token.tokenInfo.symbol.toLowerCase().includes(term)
+      );
     }
-  }, [sortBy, sortOrder, searchTerm, holdings]);
+  }, [processedHoldings, searchTerm, sortBy, sortOrder]);
+
+  // Folosim useMemo pentru a calcula barChartData în loc de a folosi un state separat
+  const barChartData = useMemo(() => {
+    if (filteredHoldings.length === 0) return [];
+
+    // Filtrăm token-urile care au valoare și luăm primele 10
+    return filteredHoldings
+      .filter((token) => (token.value || 0) > 0)
+      .slice(0, 10)
+      .map((token) => ({
+        name: token.tokenInfo.symbol,
+        value: token.value || 0,
+        percentage: token.percentage || 0,
+        tokenInfo: {
+          name: token.tokenInfo.name,
+          symbol: token.tokenInfo.symbol,
+          decimals: token.tokenInfo.decimals,
+          price: token.tokenInfo.price,
+          image: token.tokenInfo.image,
+        },
+      }));
+  }, [filteredHoldings]);
 
   // Cleanup effect
   useEffect(() => {
@@ -237,7 +246,9 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
     };
   }, [address]);
 
-  // Procesăm datele primite
+  // Create a ref to track if we've already updated stats
+  const statsUpdatedRef = useRef(false);
+
   useEffect(() => {
     if (isLoading) {
       setLoading(true);
@@ -309,8 +320,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
       };
 
       setProcessedHoldings(dataWithPercentages);
-      setFilteredHoldings(dataWithPercentages);
-      setStats(updatedStats);
       setLocalError(null);
 
       // Actualizăm statisticile în componenta părinte
@@ -321,10 +330,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
           ethBalance,
         });
       }
-
-      // Pregătim datele pentru bar chart
-      const chartData = prepareBarChartData(dataWithPercentages);
-      setBarChartData(chartData);
 
       // Gestionăm selecția tokenului
       if (dataWithPercentages.length > 0) {
@@ -354,19 +359,19 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
       setLoading(false);
       if (onLoadingChange) onLoadingChange(false);
     }
-  }, [
-    holdings,
-    isLoading,
-    ethBalance,
-    onLoadingChange,
-    onStatsUpdate,
-    selectedToken,
-  ]);
+    // Remove selectedToken from the dependency array to prevent infinite loops
+  }, [holdings, isLoading, ethBalance, onLoadingChange, onStatsUpdate]);
 
-  // Adăugăm verificarea pentru a evita dublarea ETH în calculul valorii totale
   useEffect(() => {
-    if (!isLoading && holdings && holdings.length > 0) {
+    if (
+      !isLoading &&
+      holdings &&
+      holdings.length > 0 &&
+      !statsUpdatedRef.current
+    ) {
       try {
+        // Set the flag to true to prevent multiple updates
+        statsUpdatedRef.current = true;
         // Verificăm dacă ETH există deja în holdings
         const ethTokenExists = holdings.some(
           (token) =>
@@ -403,66 +408,14 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
         console.error("Eroare la calcularea valorii totale:", err);
       }
     }
+
+    // Reset the flag when dependencies change
+    return () => {
+      if (isLoading) {
+        statsUpdatedRef.current = false;
+      }
+    };
   }, [holdings, ethBalance, ethPrice, isLoading, onStatsUpdate]);
-
-  // Modificăm funcția prepareBarChartData pentru a ne asigura că datele sunt procesate corect
-  // Înlocuim funcția existentă cu această versiune îmbunătățită
-
-  // Înlocuim funcția prepareBarChartData cu această versiune:
-  const prepareBarChartData = (
-    tokens: TokenData[] = processedHoldings
-  ): any[] => {
-    console.log("Preparing bar chart data from tokens:", tokens.length);
-
-    // Verificăm dacă avem token-uri cu valoare
-    const tokensWithValue = tokens.filter((token: TokenData) => {
-      const hasValue = token.value !== undefined && token.value > 0;
-      console.log(
-        `Token ${token.tokenInfo.symbol}: value=${token.value}, hasValue=${hasValue}`
-      );
-      return hasValue;
-    });
-
-    console.log("Tokens with value:", tokensWithValue.length);
-
-    // Luăm primele 10 token-uri cu valoare și le formatăm pentru grafic
-    const chartData = tokensWithValue.slice(0, 10).map((token: TokenData) => ({
-      name: token.tokenInfo.symbol,
-      value: token.value || 0,
-      percentage: token.percentage || 0,
-      tokenInfo: {
-        name: token.tokenInfo.name,
-        symbol: token.tokenInfo.symbol,
-        decimals: token.tokenInfo.decimals,
-        price: token.tokenInfo.price,
-        image: token.tokenInfo.image,
-      },
-    }));
-
-    console.log("Final bar chart data:", chartData);
-    return chartData;
-  };
-
-  // Actualizăm datele pentru bar chart când se schimbă filteredHoldings
-  useEffect(() => {
-    if (filteredHoldings.length > 0) {
-      const chartData = prepareBarChartData(filteredHoldings);
-      setBarChartData(chartData);
-    }
-  }, [filteredHoldings]);
-
-  // Adăugăm un useEffect separat pentru a actualiza barChartData când se schimbă processedHoldings
-  // Adăugăm acest useEffect după celelalte useEffect-uri existente:
-  useEffect(() => {
-    if (processedHoldings.length > 0) {
-      console.log(
-        "Updating bar chart data from processedHoldings:",
-        processedHoldings.length
-      );
-      const chartData = prepareBarChartData(processedHoldings);
-      setBarChartData(chartData);
-    }
-  }, [processedHoldings]);
 
   // Fix the handleTokenSelect function to prevent re-rendering issues
   const handleTokenSelect = (token: TokenData) => {
@@ -473,7 +426,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
       return;
     }
 
-    // Găsim tokenul complet din holdings pentru a ne asigura că avem toate datele
+    // Găsim tokenul complet din processedHoldings pentru a ne asigura că avem toate datele
     const fullToken =
       processedHoldings.find(
         (t: TokenData) => t.tokenInfo.symbol === token.tokenInfo.symbol
@@ -505,15 +458,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
     if (refreshData) {
       refreshData();
     }
-  };
-
-  // Determine font size based on the length of the number
-  const getTotalValueFontSize = (value: number) => {
-    const valueStr = Math.floor(value).toString();
-    if (valueStr.length > 12) return "text-xl"; // Very large numbers (trillions+)
-    if (valueStr.length > 9) return "text-2xl"; // Billions
-    if (valueStr.length > 6) return "text-2xl"; // Millions
-    return "text-3xl"; // Default size
   };
 
   if (loading)
