@@ -65,9 +65,6 @@ const tokenPriceCache: Record<
   { price: number | null; timestamp: number }
 > = {};
 
-// Cache for token icons
-const tokenImageCache: Record<string, { url: string; timestamp: number }> = {};
-
 // Cache for API responses to prevent duplicate requests
 const apiResponseCache: Record<string, { data: any; timestamp: number }> = {};
 
@@ -184,56 +181,16 @@ const fetchCryptoPrices = async (): Promise<Record<string, number>> => {
   }
 };
 
-// Function to get a token's icon from CoinGecko
-const getTokenImage = async (
-  contractAddress: string,
-  symbol: string
-): Promise<string> => {
-  // Check if we have the icon in cache and if it hasn't expired (1 day)
-  const cacheKey = contractAddress.toLowerCase();
-  const cacheEntry = tokenImageCache[cacheKey];
-  if (cacheEntry && Date.now() - cacheEntry.timestamp < 24 * 60 * 60 * 1000) {
-    return cacheEntry.url;
-  }
-
+// Function to get a token's icon - simplified to use only placeholders
+const getTokenImage = (contractAddress: string, symbol: string): string => {
   // Check if we have the predefined icon
-  const predefinedImage = POPULAR_TOKEN_IMAGES[cacheKey];
+  const predefinedImage = POPULAR_TOKEN_IMAGES[contractAddress.toLowerCase()];
   if (predefinedImage) {
-    // Save to cache
-    tokenImageCache[cacheKey] = {
-      url: predefinedImage,
-      timestamp: Date.now(),
-    };
     return predefinedImage;
   }
 
-  try {
-    // Try to get the icon from CoinGecko
-    const response = await fetch(
-      `https://api.coingecko.com/api/v3/coins/ethereum/contract/${contractAddress}`
-    );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const imageUrl = data.image?.thumb || data.image?.small || null;
-
-    if (imageUrl) {
-      // Save to cache
-      tokenImageCache[cacheKey] = {
-        url: imageUrl,
-        timestamp: Date.now(),
-      };
-      return imageUrl;
-    }
-
-    // If we can't find the icon, use a placeholder
-    return `/placeholder.svg?height=32&width=32&query=${symbol}`;
-  } catch (error) {
-    console.error("Error getting token icon:", error);
-    return `/placeholder.svg?height=32&width=32&query=${symbol}`;
-  }
+  // Return a placeholder instead of making API calls
+  return `/placeholder.svg?height=32&width=32&query=${symbol}`;
 };
 
 // Function to get a token's price
@@ -517,11 +474,9 @@ export const fetchTokenBalances = async (address: string) => {
       )
         continue;
 
-      // Get token price and icon in parallel
-      const [price, imageUrl] = await Promise.all([
-        getTokenPrice(tokenAddress, tokenData.tokenSymbol),
-        getTokenImage(tokenAddress, tokenData.tokenSymbol),
-      ]);
+      // Get token price only, use placeholder for image
+      const price = await getTokenPrice(tokenAddress, tokenData.tokenSymbol);
+      const imageUrl = getTokenImage(tokenAddress, tokenData.tokenSymbol);
 
       tokens.push({
         tokenInfo: {
