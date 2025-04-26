@@ -133,13 +133,14 @@ const formatDate = (timestamp: number | null): string => {
   });
 };
 
+// Custom tooltip component with improved styling for dark mode
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-gray-800 text-white p-2 rounded-md shadow-md">
-        <p className="label">{`${label}`}</p>
+      <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white p-3 rounded-md shadow-lg border border-gray-200 dark:border-gray-700">
+        <p className="font-medium mb-1">{`${label}`}</p>
         {payload.map((item: any) => (
-          <p key={item.dataKey} className="intro-text">
+          <p key={item.dataKey} className="text-sm">
             {`${item.name}: ${formatCurrency(item.value)}`}
           </p>
         ))}
@@ -148,6 +149,44 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   }
 
   return null;
+};
+
+// Custom pie chart label component to avoid overlapping
+const renderCustomizedLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+  index,
+  name,
+  value,
+}: any) => {
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) * 1.1;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+  // Shorten name for display
+  const displayName = name.length > 6 ? name.substring(0, 6) + "..." : name;
+
+  return (
+    <text
+      x={x}
+      y={y}
+      fill="#FFFFFF"
+      textAnchor={x > cx ? "start" : "end"}
+      dominantBaseline="central"
+      style={{
+        fontSize: "12px",
+        fontWeight: "bold",
+        textShadow: "0px 0px 3px rgba(0,0,0,0.7)",
+      }}
+    >
+      {`${displayName} (${(percent * 100).toFixed(1)}%)`}
+    </text>
+  );
 };
 
 const WalletOverview: React.FC<WalletOverviewProps> = ({
@@ -966,24 +1005,18 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
           <div className="h-[300px]">
             {assetDistributionData.length > 0 ? (
-              // Înlocuiește componenta PieChart cu această versiune îmbunătățită:
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={assetDistributionData}
                     cx="50%"
                     cy="50%"
-                    labelLine={true}
+                    labelLine={false}
                     outerRadius={100}
                     innerRadius={60}
                     fill="#8884d8"
                     dataKey="value"
-                    label={({ name, percentage }) => {
-                      // Limitează lungimea numelui pentru afișare pe grafic
-                      const displayName =
-                        name.length > 8 ? name.substring(0, 6) + "..." : name;
-                      return `${displayName} (${percentage.toFixed(1)}%)`;
-                    }}
+                    label={renderCustomizedLabel}
                   >
                     {assetDistributionData.map((entry, index) => (
                       <Cell
@@ -1013,10 +1046,16 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                     align="right"
                     iconType="circle"
                     iconSize={10}
+                    wrapperStyle={{ right: -10, top: 0 }}
                     formatter={(value, entry, index) => {
-                      // Afișează numele complet în legendă cu culoare adaptată pentru dark mode
                       return (
-                        <span style={{ color: "#A0A0A0", fontSize: "12px" }}>
+                        <span
+                          style={{
+                            color: "#FFFFFF",
+                            fontSize: "12px",
+                            textShadow: "0px 0px 2px rgba(0,0,0,0.5)",
+                          }}
+                        >
                           {value}
                         </span>
                       );
