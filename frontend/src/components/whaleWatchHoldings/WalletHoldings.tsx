@@ -183,29 +183,14 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   const isInitialMount = useRef(true);
   const isLoadingRef = useRef(false);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Effect for filtering holdings based on search term
-  useEffect(() => {
-    if (holdings.length > 0) {
-      if (searchTerm.trim() === "") {
-        setFilteredHoldings(holdings);
-      } else {
-        const term = searchTerm.toLowerCase();
-        setFilteredHoldings(
-          holdings.filter(
-            (token) =>
-              token.tokenInfo.name.toLowerCase().includes(term) ||
-              token.tokenInfo.symbol.toLowerCase().includes(term)
-          )
-        );
-      }
-    }
-  }, [searchTerm, holdings]);
+  const previousHoldingsRef = useRef("");
+  const selectedTokenRef = useRef<string | null>(null);
 
   // Effect for sorting holdings
   useEffect(() => {
-    if (filteredHoldings.length > 0) {
-      const sortedHoldings = [...filteredHoldings].sort((a, b) => {
+    if (holdings.length > 0) {
+      // Aplicăm sortarea direct pe holdings, nu pe filteredHoldings
+      const sortedHoldings = [...holdings].sort((a, b) => {
         if (sortBy === "value") {
           const aValue = a.value || 0;
           const bValue = b.value || 0;
@@ -224,9 +209,22 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
             : bBalance - aBalance;
         }
       });
-      setFilteredHoldings(sortedHoldings);
+
+      // Apoi aplicăm filtrarea pe rezultatul sortat
+      if (searchTerm.trim() === "") {
+        setFilteredHoldings(sortedHoldings);
+      } else {
+        const term = searchTerm.toLowerCase();
+        setFilteredHoldings(
+          sortedHoldings.filter(
+            (token) =>
+              token.tokenInfo.name.toLowerCase().includes(term) ||
+              token.tokenInfo.symbol.toLowerCase().includes(term)
+          )
+        );
+      }
     }
-  }, [sortBy, sortOrder]);
+  }, [sortBy, sortOrder, searchTerm, holdings]);
 
   // Cleanup effect
   useEffect(() => {
@@ -238,18 +236,32 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
     };
   }, [address]);
 
-  // Înlocuim useEffect-ul care face fetch cu unul care procesează datele primite
+  // Procesăm datele primite
   useEffect(() => {
     if (isLoading) {
       setLoading(true);
       return;
     }
 
+    // Verificăm dacă holdings s-a schimbat cu adevărat pentru a evita procesarea inutilă
+    const holdingsString = JSON.stringify(holdings);
+    if (holdingsString === previousHoldingsRef.current) {
+      return;
+    }
+    previousHoldingsRef.current = holdingsString;
+
     try {
+      // Salvăm simbolul tokenului selectat curent (dacă există)
+      const currentSelectedSymbol = selectedToken?.tokenInfo.symbol || null;
+      if (currentSelectedSymbol) {
+        selectedTokenRef.current = currentSelectedSymbol;
+      }
+
       // Procesăm datele primite
       let totalValue = 0;
       const processedTokens = holdings.map((token: TokenData) => {
         const decimals = Number(token.tokenInfo.decimals) || 0;
+        // Asigurăm-ne că formattedBalance este calculat corect
         const formattedBalance = Number(token.balance) / Math.pow(10, decimals);
         const value = token.tokenInfo.price?.rate
           ? formattedBalance * token.tokenInfo.price.rate
@@ -268,7 +280,10 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
       const dataWithPercentages = processedTokens
         .map((token: TokenData) => ({
           ...token,
-          percentage: token.value ? (token.value / totalValue) * 100 : 0,
+          percentage:
+            token.value && totalValue > 0
+              ? (token.value / totalValue) * 100
+              : 0,
         }))
         .sort((a, b) => (b.value || 0) - (a.value || 0));
 
@@ -305,9 +320,26 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
         });
       }
 
-      // Setăm primul token ca selectat implicit
+      // Gestionăm selecția tokenului
       if (dataWithPercentages.length > 0) {
-        setSelectedToken(dataWithPercentages[0]);
+        if (selectedTokenRef.current) {
+          // Încercăm să găsim tokenul anterior selectat
+          const previouslySelected = dataWithPercentages.find(
+            (token) => token.tokenInfo.symbol === selectedTokenRef.current
+          );
+          if (previouslySelected) {
+            // Actualizăm tokenul selectat cu datele complete
+            setSelectedToken(previouslySelected);
+          } else if (isInitialMount.current) {
+            // Dacă nu găsim tokenul anterior și este prima încărcare, selectăm primul token
+            setSelectedToken(dataWithPercentages[0]);
+            isInitialMount.current = false;
+          }
+        } else if (isInitialMount.current) {
+          // Dacă nu există un token selectat anterior și este prima încărcare, selectăm primul token
+          setSelectedToken(dataWithPercentages[0]);
+          isInitialMount.current = false;
+        }
       }
     } catch (err: any) {
       console.error("Eroare la procesarea datelor:", err);
@@ -316,22 +348,36 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
       setLoading(false);
       if (onLoadingChange) onLoadingChange(false);
     }
-  }, [holdings, isLoading, ethBalance, onLoadingChange, onStatsUpdate]);
-
-  // Function to format values for tooltip
-  const formatTooltipValue = (value: number) => {
-    return `$${value.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
-  };
+  }, [
+    holdings,
+    isLoading,
+    ethBalance,
+    onLoadingChange,
+    onStatsUpdate,
+    selectedToken,
+  ]);
 
   // Prepare data for the bar chart
-  const prepareBarChartData = () => {
+  const prepareBarChartData = (): Array<{
+    name: string;
+    value: number;
+    percentage: number;
+    tokenInfo: {
+      name: string;
+      symbol: string;
+      decimals: string;
+      price?: { rate: number };
+      image?: string;
+    };
+  }> => {
     return filteredHoldings
-      .filter((token) => (token.value || 0) > 0)
+      .filter((token: TokenData) => (token.value || 0) > 0)
       .slice(0, 10)
-      .map((token) => ({
+      .map((token: TokenData) => ({
         name: token.tokenInfo.symbol,
         value: token.value || 0,
         percentage: token.percentage || 0,
+        tokenInfo: token.tokenInfo,
       }));
   };
 
@@ -344,7 +390,15 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
       return;
     }
 
-    setSelectedToken(token);
+    // Găsim tokenul complet din holdings pentru a ne asigura că avem toate datele
+    const fullToken =
+      processedHoldings.find(
+        (t: TokenData) => t.tokenInfo.symbol === token.tokenInfo.symbol
+      ) || token;
+
+    // Salvăm simbolul tokenului selectat
+    selectedTokenRef.current = fullToken.tokenInfo.symbol;
+    setSelectedToken(fullToken);
   };
 
   // Toggle sort order
@@ -544,9 +598,12 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                     Balance
                   </p>
                   <p className="text-lg font-medium text-gray-900 dark:text-dark-text-primary">
-                    {selectedToken.formattedBalance?.toLocaleString("en-US", {
-                      maximumFractionDigits: 6,
-                    })}
+                    {(selectedToken.formattedBalance || 0).toLocaleString(
+                      "en-US",
+                      {
+                        maximumFractionDigits: 6,
+                      }
+                    )}
                   </p>
                 </div>
                 <div>
@@ -572,7 +629,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                     Portfolio %
                   </p>
                   <p className="text-lg font-medium text-green-600 dark:text-green-400">
-                    {selectedToken.percentage?.toFixed(2)}%
+                    {(selectedToken.percentage || 0).toFixed(2)}%
                   </p>
                 </div>
               </div>
@@ -584,7 +641,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                     Portfolio allocation
                   </span>
                   <span className="font-medium text-gray-900 dark:text-dark-text-primary">
-                    {selectedToken.percentage?.toFixed(2)}%
+                    {(selectedToken.percentage || 0).toFixed(2)}%
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 dark:bg-dark-tertiary rounded-full h-2.5">
@@ -606,7 +663,10 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                   <FiExternalLink className="mr-1" /> View on Etherscan
                 </a>
                 <button
-                  onClick={() => setSelectedToken(null)}
+                  onClick={() => {
+                    setSelectedToken(null);
+                    selectedTokenRef.current = null;
+                  }}
                   className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-dark-tertiary dark:hover:bg-dark-tertiary/80 text-gray-700 dark:text-dark-text-primary rounded-lg transition-colors"
                 >
                   Close
@@ -645,7 +705,8 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                   onClick={(data) => {
                     if (data && data.activePayload && data.activePayload[0]) {
                       const symbol = data.activePayload[0].payload.name;
-                      const token = holdings.find(
+                      // Căutăm tokenul în processedHoldings în loc de holdings pentru a avea toate datele calculate
+                      const token = processedHoldings.find(
                         (t) => t.tokenInfo.symbol === symbol
                       );
                       if (token) handleTokenSelect(token);
@@ -679,20 +740,38 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                     cursor={{ fill: "rgba(0, 0, 0, 0.1)" }}
                   />
                   <Bar dataKey="value" name="Value" radius={[4, 4, 0, 0]}>
-                    {prepareBarChartData().map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                        stroke={
-                          selectedToken?.tokenInfo.symbol === entry.name
-                            ? "#fff"
-                            : "none"
-                        }
-                        strokeWidth={
-                          selectedToken?.tokenInfo.symbol === entry.name ? 2 : 0
-                        }
-                      />
-                    ))}
+                    {prepareBarChartData().map(
+                      (
+                        entry: {
+                          name: string;
+                          value: number;
+                          percentage: number;
+                          tokenInfo: {
+                            name: string;
+                            symbol: string;
+                            decimals: string;
+                            price?: { rate: number };
+                            image?: string;
+                          };
+                        },
+                        index: number
+                      ) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                          stroke={
+                            selectedToken?.tokenInfo.symbol === entry.name
+                              ? "#fff"
+                              : "none"
+                          }
+                          strokeWidth={
+                            selectedToken?.tokenInfo.symbol === entry.name
+                              ? 2
+                              : 0
+                          }
+                        />
+                      )
+                    )}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
