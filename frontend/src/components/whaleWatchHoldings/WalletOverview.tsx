@@ -498,7 +498,10 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     loadWalletData();
   }, [address, onLoadingChange, retryCount, onStatsUpdate, refreshKey]);
 
-  // Memorarea datelor pentru graficul de distribuție a activelor
+  // Modificăm funcția assetDistributionData pentru a filtra tokenurile cu procent sub 1%
+  // și pentru a îmbunătăți afișarea numelor pe grafic
+
+  // Înlocuiește funcția assetDistributionData existentă cu aceasta:
   const assetDistributionData = useMemo(() => {
     if (!stats || stats.totalValue === 0 || holdings.length === 0) {
       return [];
@@ -521,20 +524,32 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     // Calculăm valoarea ETH
     const ethValue = stats.ethBalance * stats.ethPrice;
 
-    // Creăm un array cu toate tokenurile, inclusiv ETH
-    const allAssets = [];
+    // Creăm un array cu tokenurile semnificative (>=1%)
+    const significantAssets = [];
+
+    // Valoarea totală a tokenurilor mici (<1%)
+    let smallTokensValue = 0;
 
     // Adăugăm ETH doar dacă are valoare și nu există tokenul special
     if (ethValue > 0 && !ethForDefiToken) {
-      allAssets.push({
-        name: "ETH",
-        symbol: "ETH",
-        value: ethValue,
-        percentage: (ethValue / stats.totalValue) * 100,
-      });
+      const ethPercentage = (ethValue / stats.totalValue) * 100;
+      if (ethPercentage >= 1) {
+        significantAssets.push({
+          name: "ETH",
+          symbol: "ETH",
+          value: ethValue,
+          percentage: ethPercentage,
+        });
+      } else {
+        smallTokensValue += ethValue;
+        console.log(
+          "ETH are procent sub 1%, adăugat la Others:",
+          ethPercentage.toFixed(2) + "%"
+        );
+      }
     }
 
-    // Adăugăm toate tokenurile cu valoare pozitivă
+    // Procesăm toate tokenurile
     holdings.forEach((token) => {
       if (token.value && token.value > 0) {
         // Evităm duplicarea ETH dacă există deja în holdings
@@ -544,52 +559,78 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         )
           return;
 
-        // Dacă este tokenul special, îl adăugăm cu prioritate
-        if (
-          token.tokenInfo.name.toLowerCase().includes("eth is for defi") ||
-          token.tokenInfo.name.toLowerCase().includes("eth for defi") ||
-          token.tokenInfo.symbol.toLowerCase().includes("defi")
-        ) {
-          allAssets.unshift({
-            name: token.tokenInfo.name,
-            symbol: token.tokenInfo.symbol,
-            value: token.value,
-            percentage: (token.value / stats.totalValue) * 100,
-          });
+        // Calculăm procentul
+        const percentage = (token.value / stats.totalValue) * 100;
+
+        // Verificăm dacă tokenul are procent >= 1%
+        if (percentage >= 1) {
+          // Dacă este tokenul special, îl adăugăm cu prioritate
+          if (
+            token.tokenInfo.name.toLowerCase().includes("eth is for defi") ||
+            token.tokenInfo.name.toLowerCase().includes("eth for defi") ||
+            token.tokenInfo.symbol.toLowerCase().includes("defi")
+          ) {
+            significantAssets.unshift({
+              name: token.tokenInfo.name,
+              symbol: token.tokenInfo.symbol,
+              value: token.value,
+              percentage: percentage,
+            });
+          } else {
+            significantAssets.push({
+              name: token.tokenInfo.name,
+              symbol: token.tokenInfo.symbol,
+              value: token.value,
+              percentage: percentage,
+            });
+          }
         } else {
-          allAssets.push({
-            name: token.tokenInfo.name,
-            symbol: token.tokenInfo.symbol,
-            value: token.value,
-            percentage: (token.value / stats.totalValue) * 100,
-          });
+          // Adăugăm valoarea la tokenurile mici
+          smallTokensValue += token.value;
+          console.log(
+            `Token ${
+              token.tokenInfo.name
+            } are procent sub 1% (${percentage.toFixed(2)}%), adăugat la Others`
+          );
         }
       }
     });
 
-    // Sortăm toate activele după valoare (descrescător)
-    allAssets.sort((a, b) => b.value - a.value);
+    // Sortăm tokenurile semnificative după valoare (descrescător)
+    significantAssets.sort((a, b) => b.value - a.value);
 
-    console.log("Toate activele sortate:", allAssets);
+    console.log("Tokenuri semnificative (>=1%):", significantAssets);
 
     // Luăm primele 6 active pentru afișare individuală
-    const topAssets = allAssets.slice(0, 6);
+    const topAssets = significantAssets.slice(0, 6);
 
-    // Combinăm restul activelor într-o categorie "Others"
-    const otherAssets = allAssets.slice(6);
-    const otherValue = otherAssets.reduce((sum, asset) => sum + asset.value, 0);
+    // Combinăm restul activelor semnificative într-o categorie "Others"
+    const otherSignificantAssets = significantAssets.slice(6);
+    const otherSignificantValue = otherSignificantAssets.reduce(
+      (sum, asset) => sum + asset.value,
+      0
+    );
+
+    // Valoarea totală pentru "Others" (tokenuri semnificative > 6 + tokenuri mici < 1%)
+    const otherValue = otherSignificantValue + smallTokensValue;
 
     // Adăugăm categoria "Others" doar dacă există active suplimentare
     if (otherValue > 0) {
+      const otherPercentage = (otherValue / stats.totalValue) * 100;
       topAssets.push({
         name: "Others",
         symbol: "OTHERS",
         value: otherValue,
-        percentage: (otherValue / stats.totalValue) * 100,
+        percentage: otherPercentage,
       });
+      console.log(
+        `Categoria "Others" are valoarea ${formatCurrency(
+          otherValue
+        )} (${otherPercentage.toFixed(2)}%)`
+      );
     }
 
-    console.log("Active pentru grafic:", topAssets);
+    console.log("Active finale pentru grafic:", topAssets);
 
     return topAssets;
   }, [stats, holdings]);
@@ -925,6 +966,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
           <div className="h-[300px]">
             {assetDistributionData.length > 0 ? (
+              // Înlocuiește componenta PieChart cu această versiune îmbunătățită:
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -937,9 +979,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                     fill="#8884d8"
                     dataKey="value"
                     label={({ name, percentage }) => {
-                      // Limitează lungimea numelui pentru afișare
+                      // Limitează lungimea numelui pentru afișare pe grafic
                       const displayName =
-                        name.length > 15 ? name.substring(0, 12) + "..." : name;
+                        name.length > 8 ? name.substring(0, 6) + "..." : name;
                       return `${displayName} (${percentage.toFixed(1)}%)`;
                     }}
                   >
@@ -957,10 +999,12 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                     ]}
                     labelFormatter={(name: string) => `Token: ${name}`}
                     contentStyle={{
-                      backgroundColor: "rgba(30, 30, 30, 0.8)",
+                      backgroundColor: "rgba(30, 30, 30, 0.9)",
                       borderRadius: "8px",
                       border: "none",
-                      color: "#E0E0E0",
+                      color: "#FFFFFF",
+                      padding: "10px",
+                      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.3)",
                     }}
                   />
                   <Legend
@@ -970,8 +1014,12 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                     iconType="circle"
                     iconSize={10}
                     formatter={(value, entry, index) => {
-                      // Afișează numele complet în legendă
-                      return <span style={{ color: "#A0A0A0" }}>{value}</span>;
+                      // Afișează numele complet în legendă cu culoare adaptată pentru dark mode
+                      return (
+                        <span style={{ color: "#A0A0A0", fontSize: "12px" }}>
+                          {value}
+                        </span>
+                      );
                     }}
                   />
                 </PieChart>
