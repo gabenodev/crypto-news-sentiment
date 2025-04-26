@@ -26,6 +26,7 @@ import {
   FiExternalLink,
 } from "react-icons/fi";
 import { generateCryptoPlaceholder } from "../../utils/placeholderGenerator";
+import WalletLoadingState from "./components/WalletLoadingState";
 
 // Update WalletHoldingsProps interface
 interface WalletHoldingsProps {
@@ -450,11 +451,8 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
 
   if (loading)
     return (
-      <div className="flex flex-col justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mb-4"></div>
-        <p className="text-gray-600 dark:text-dark-text-primary">
-          {loadingStatus}
-        </p>
+      <div className="flex justify-center items-center py-8">
+        <WalletLoadingState status={loadingStatus} />
       </div>
     );
 

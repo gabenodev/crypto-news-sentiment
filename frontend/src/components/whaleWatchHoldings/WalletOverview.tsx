@@ -41,6 +41,7 @@ import {
   AreaChart,
 } from "recharts";
 import { generateCryptoPlaceholder } from "../../utils/placeholderGenerator";
+import WalletLoadingState from "./components/WalletLoadingState";
 
 interface WalletOverviewProps {
   address: string;
@@ -791,6 +792,14 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     setRefreshKey((prev) => prev + 1);
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <WalletLoadingState status={loadingStatus} />
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Time range selector */}
@@ -1017,6 +1026,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                     fill="#8884d8"
                     dataKey="value"
                     label={renderCustomizedLabel}
+                    isAnimationActive={true}
                   >
                     {assetDistributionData.map((entry, index) => (
                       <Cell
@@ -1025,21 +1035,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                       />
                     ))}
                   </Pie>
-                  <RechartsTooltip
-                    formatter={(value: number) => [
-                      formatCurrency(value),
-                      "Value",
-                    ]}
-                    labelFormatter={(name: string) => `Token: ${name}`}
-                    contentStyle={{
-                      backgroundColor: "rgba(30, 30, 30, 0.9)",
-                      borderRadius: "8px",
-                      border: "none",
-                      color: "#FFFFFF",
-                      padding: "10px",
-                      boxShadow: "0 4px 6px rgba(0, 0, 0, 0.3)",
-                    }}
-                  />
+                  {/* Removed tooltip to disable hover effect */}
                   <Legend
                     layout="vertical"
                     verticalAlign="middle"
@@ -1048,14 +1044,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                     iconSize={10}
                     wrapperStyle={{ right: -10, top: 0 }}
                     formatter={(value, entry, index) => {
+                      // Adapt text color based on theme
                       return (
-                        <span
-                          style={{
-                            color: "#FFFFFF",
-                            fontSize: "12px",
-                            textShadow: "0px 0px 2px rgba(0,0,0,0.5)",
-                          }}
-                        >
+                        <span className="text-gray-900 dark:text-white text-xs">
                           {value}
                         </span>
                       );
@@ -1415,6 +1406,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg" ||
+                            "/placeholder.svg" ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg"
                           }
                           alt={token.tokenInfo.name || "Token"}

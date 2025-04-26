@@ -17,6 +17,7 @@ import {
   FiClock,
   FiRefreshCw,
 } from "react-icons/fi";
+import WalletLoadingState from "./components/WalletLoadingState";
 
 interface WalletTransactionHistoryProps {
   address: string;
@@ -239,14 +240,11 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
 
   if (loading) {
     return (
-      <div className="flex flex-col justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent-primary mb-4"></div>
-        <p className="text-gray-600 dark:text-dark-text-primary">
-          {loadingStatus}
-        </p>
-        <p className="text-xs text-gray-500 dark:text-dark-text-secondary mt-2">
-          This may take a few moments as we connect to the blockchain
-        </p>
+      <div className="flex justify-center items-center py-8">
+        <WalletLoadingState
+          message="Loading Transaction History"
+          status={loadingStatus}
+        />
       </div>
     );
   }
