@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { motion } from "framer-motion";
 import {
   FiDollarSign,
@@ -224,6 +224,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   const [refreshKey, setRefreshKey] = useState(0); // Adăugat pentru a forța reîmprospătarea
   const [processedHoldings, setHoldings] = useState<TokenData[]>([]);
 
+  // Adaugă această referință pentru a urmări dacă datele s-au schimbat
+  const previousDataRef = useRef<string | null>(null);
+
   // Use refs to prevent duplicate requests and infinite loops
   const isLoadingRef = useRef(false);
   const previousAddressRef = useRef("");
@@ -367,6 +370,24 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       return;
     }
 
+    // Folosim o referință pentru a verifica dacă datele s-au schimbat cu adevărat
+    const holdingsKey = JSON.stringify(
+      holdings.map((h) => h.tokenInfo.contractAddress + h.balance)
+    );
+    const transactionsKey =
+      transactions.length > 0 ? transactions[0].transactionHash : "empty";
+    const dataKey = `${holdingsKey}-${transactionsKey}-${ethBalance}`;
+
+    // Verificăm dacă datele sunt identice cu cele procesate anterior
+    if (previousDataRef.current === dataKey) {
+      setLoading(false);
+      if (onLoadingChange) onLoadingChange(false);
+      return;
+    }
+
+    // Actualizăm referința cu noile date
+    previousDataRef.current = dataKey;
+
     try {
       // Procesăm datele primite
       let totalTokenValue = 0;
@@ -449,18 +470,20 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   ]);
 
   // Modificăm funcția handleRefresh pentru a utiliza funcția primită prin props
-  const handleRefreshData = () => {
+  const handleRefresh = useCallback(() => {
     if (refreshData) {
+      // Resetăm referința pentru a forța procesarea datelor
+      previousDataRef.current = null;
       refreshData();
     }
-  };
+  }, [refreshData]);
 
   // Modificăm funcția assetDistributionData pentru a filtra tokenurile cu procent sub 1%
   // și pentru a îmbunătăți afișarea numelor pe grafic
 
   // Înlocuiește funcția assetDistributionData existentă cu aceasta:
   const assetDistributionData = useMemo(() => {
-    if (!stats || stats.totalValue === 0 || holdings.length === 0) {
+    if (!stats || stats.totalValue === 0 || processedHoldings.length === 0) {
       return [];
     }
 
@@ -590,7 +613,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     console.log("Active finale pentru grafic:", topAssets);
 
     return topAssets;
-  }, [stats, holdings]);
+  }, [stats, processedHoldings]);
 
   // Memorarea datelor pentru graficul de activitate a tranzacțiilor
   const transactionActivityData = useMemo(() => {
@@ -705,11 +728,6 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   }, [stats.totalValue, activeTimeRange]);
 
   // Funcție pentru reîmprospătarea datelor
-  const handleRefresh = () => {
-    if (refreshData) {
-      refreshData();
-    }
-  };
 
   if (loading) {
     return (
@@ -1325,6 +1343,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
