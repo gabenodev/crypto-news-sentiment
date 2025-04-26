@@ -4,10 +4,6 @@ import React from "react";
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
-  fetchTokenBalances,
-  isValidEthereumAddress,
-} from "../../utils/API/etherScanAPI";
-import {
   Cell,
   ResponsiveContainer,
   Tooltip,
@@ -33,6 +29,13 @@ interface WalletHoldingsProps {
   address?: string;
   onLoadingChange?: (loading: boolean) => void;
   onStatsUpdate?: (stats: any) => void;
+  holdings?: TokenData[];
+  ethBalance?: number;
+  ethPrice?: number;
+  isLoading?: boolean;
+  error?: string | null;
+  loadingStatus?: string;
+  refreshData?: () => void;
 }
 
 // Interface for token data
@@ -144,15 +147,23 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
+// Modificăm componenta pentru a utiliza datele primite prin props
 const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   address = "",
   onLoadingChange,
   onStatsUpdate,
+  holdings = [],
+  ethBalance = 0,
+  ethPrice = 3500,
+  isLoading = false,
+  error = null,
+  loadingStatus = "Inițializare...",
+  refreshData,
 }: WalletHoldingsProps) => {
-  const [holdings, setHoldings] = useState<TokenData[]>([]);
+  const [loading, setLoading] = useState(isLoading);
+  const [localError, setLocalError] = useState<string | null>(error);
+  const [processedHoldings, setProcessedHoldings] = useState<TokenData[]>([]);
   const [filteredHoldings, setFilteredHoldings] = useState<TokenData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<StatsData>({
     totalValue: 0,
     tokenCount: 0,
@@ -162,9 +173,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "bar">("list");
-  const [loadingStatus, setLoadingStatus] = useState<string>("Initializing...");
   const [selectedToken, setSelectedToken] = useState<TokenData | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
   const [sortBy, setSortBy] = useState<"value" | "name" | "balance">("value");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [showFilterMenu, setShowFilterMenu] = useState(false);
@@ -229,156 +238,85 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
     };
   }, [address]);
 
+  // Înlocuim useEffect-ul care face fetch cu unul care procesează datele primite
   useEffect(() => {
-    // If address is empty, don't try to load holdings
-    if (!address) {
-      setLoading(false);
-      if (onLoadingChange) onLoadingChange(false);
+    if (isLoading) {
+      setLoading(true);
       return;
     }
 
-    // If it's the first mount, set the flag and continue
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-    }
-    // If it's not the first mount and the address hasn't changed, ignore
-    else if (previousAddressRef.current === address || isLoadingRef.current) {
-      return;
-    }
+    try {
+      // Procesăm datele primite
+      let totalValue = 0;
+      const processedTokens = holdings.map((token: TokenData) => {
+        const decimals = Number(token.tokenInfo.decimals) || 0;
+        const formattedBalance = Number(token.balance) / Math.pow(10, decimals);
+        const value = token.tokenInfo.price?.rate
+          ? formattedBalance * token.tokenInfo.price.rate
+          : 0;
 
-    // Update the previous address and set loading flag
-    previousAddressRef.current = address;
-    isLoadingRef.current = true;
+        totalValue += value;
 
-    const loadHoldings = async () => {
-      try {
-        setLoading(true);
-        if (onLoadingChange) onLoadingChange(true);
+        return {
+          ...token,
+          formattedBalance,
+          value,
+        };
+      });
 
-        // Check if the address is valid
-        if (!isValidEthereumAddress(address)) {
-          throw new Error("Invalid Ethereum address");
-        }
+      // Calculăm procentajele și sortăm după valoare
+      const dataWithPercentages = processedTokens
+        .map((token: TokenData) => ({
+          ...token,
+          percentage: token.value ? (token.value / totalValue) * 100 : 0,
+        }))
+        .sort((a, b) => (b.value || 0) - (a.value || 0));
 
-        setLoadingStatus("Fetching wallet data...");
+      // Calculăm statisticile
+      const topToken =
+        dataWithPercentages.length > 0
+          ? {
+              name: dataWithPercentages[0].tokenInfo.name,
+              symbol: dataWithPercentages[0].tokenInfo.symbol,
+              value: dataWithPercentages[0].value || 0,
+              percentage: dataWithPercentages[0].percentage || 0,
+            }
+          : null;
 
-        // Get data from API
-        const data = await fetchTokenBalances(address);
+      const updatedStats = {
+        totalValue,
+        tokenCount: dataWithPercentages.length,
+        topToken,
+        topGainer: null,
+        topLoser: null,
+      };
 
-        if (data.length === 0) {
-          setHoldings([]);
-          setFilteredHoldings([]);
-          setStats({
-            totalValue: 0,
-            tokenCount: 0,
-            topToken: null,
-            topGainer: null,
-            topLoser: null,
-          });
-          setError(null);
-          setLoading(false);
-          if (onLoadingChange) onLoadingChange(false);
-          isLoadingRef.current = false;
-          return;
-        }
+      setProcessedHoldings(dataWithPercentages);
+      setFilteredHoldings(dataWithPercentages);
+      setStats(updatedStats);
+      setLocalError(null);
 
-        // Process data to calculate values and percentages
-        let totalValue = 0;
-        const processedTokens = data.map((token: TokenData) => {
-          const decimals = Number(token.tokenInfo.decimals) || 0;
-          const formattedBalance =
-            Number(token.balance) / Math.pow(10, decimals);
-          const value = token.tokenInfo.price?.rate
-            ? formattedBalance * token.tokenInfo.price.rate
-            : 0;
-
-          totalValue += value;
-
-          return {
-            ...token,
-            formattedBalance,
-            value,
-          };
-        });
-
-        // Calculate percentages and sort by value
-        const dataWithPercentages = processedTokens
-          .map((token: TokenData) => ({
-            ...token,
-            percentage: token.value ? (token.value / totalValue) * 100 : 0,
-          }))
-          .sort((a, b) => (b.value || 0) - (a.value || 0));
-
-        // Calculate statistics
-        const topToken =
-          dataWithPercentages.length > 0
-            ? {
-                name: dataWithPercentages[0].tokenInfo.name,
-                symbol: dataWithPercentages[0].tokenInfo.symbol,
-                value: dataWithPercentages[0].value || 0,
-                percentage: dataWithPercentages[0].percentage || 0,
-              }
-            : null;
-
-        const updatedStats = {
+      // Actualizăm statisticile în componenta părinte
+      if (onStatsUpdate) {
+        onStatsUpdate({
           totalValue,
           tokenCount: dataWithPercentages.length,
-          topToken,
-          topGainer: null, // We don't have historical price data to calculate gains
-          topLoser: null,
-        };
-
-        setHoldings(dataWithPercentages);
-        setFilteredHoldings(dataWithPercentages);
-        setStats(updatedStats);
-
-        // Update parent component with stats
-        if (onStatsUpdate) {
-          onStatsUpdate({
-            totalValue,
-            tokenCount: dataWithPercentages.length,
-            ethBalance: 0, // This will be updated by WalletOverview
-          });
-        }
-
-        setError(null);
-        setRetryCount(0);
-
-        // Set the first token as selected by default
-        if (dataWithPercentages.length > 0) {
-          setSelectedToken(dataWithPercentages[0]);
-        }
-      } catch (err: any) {
-        console.error("Error loading holdings:", err);
-
-        // If we get an error and haven't retried too many times, retry
-        if (retryCount < 3) {
-          const nextRetryCount = retryCount + 1;
-          setRetryCount(nextRetryCount);
-          setError(`API error. Retrying... (${nextRetryCount}/3)`);
-
-          // Wait 2 seconds before retrying
-          retryTimeoutRef.current = setTimeout(() => {
-            retryTimeoutRef.current = null;
-            isLoadingRef.current = false; // Reset loading ref to allow retry
-            loadHoldings();
-          }, 2000);
-          return;
-        }
-
-        setError(err.message || "Failed to load wallet data");
-      } finally {
-        // Only set loading to false if we're not in a retry cycle
-        if (!retryTimeoutRef.current) {
-          setLoading(false);
-          if (onLoadingChange) onLoadingChange(false);
-          isLoadingRef.current = false;
-        }
+          ethBalance,
+        });
       }
-    };
 
-    loadHoldings();
-  }, [address, onLoadingChange, retryCount, onStatsUpdate]);
+      // Setăm primul token ca selectat implicit
+      if (dataWithPercentages.length > 0) {
+        setSelectedToken(dataWithPercentages[0]);
+      }
+    } catch (err: any) {
+      console.error("Eroare la procesarea datelor:", err);
+      setLocalError(err.message || "Eroare la procesarea datelor");
+    } finally {
+      setLoading(false);
+      if (onLoadingChange) onLoadingChange(false);
+    }
+  }, [holdings, isLoading, ethBalance, onLoadingChange, onStatsUpdate]);
 
   // Function to format values for tooltip
   const formatTooltipValue = (value: number) => {
@@ -425,19 +363,11 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
     setShowFilterMenu(false);
   };
 
-  // Retry loading data
+  // Modificăm funcția handleRetry pentru a utiliza funcția primită prin props
   const handleRetry = () => {
-    // Clear any existing retry timeout
-    if (retryTimeoutRef.current) {
-      clearTimeout(retryTimeoutRef.current);
-      retryTimeoutRef.current = null;
+    if (refreshData) {
+      refreshData();
     }
-
-    setRetryCount(0);
-    setError(null);
-    isLoadingRef.current = false; // Reset loading ref to allow retry
-    previousAddressRef.current = ""; // Reset address ref to force reload
-    setLoading(true);
   };
 
   // Determine font size based on the length of the number
@@ -456,14 +386,14 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
       </div>
     );
 
-  if (error)
+  if (localError)
     return (
       <div
         className="bg-red-100/30 dark:bg-error/20 border border-error/50 text-error px-4 py-3 rounded-lg relative"
         role="alert"
       >
         <strong className="font-bold">Error:</strong>
-        <span className="block sm:inline"> {error}</span>
+        <span className="block sm:inline"> {localError}</span>
         <button
           onClick={handleRetry}
           className="mt-2 flex items-center px-4 py-2 bg-error/10 text-error rounded-md hover:bg-error/20 transition-colors"

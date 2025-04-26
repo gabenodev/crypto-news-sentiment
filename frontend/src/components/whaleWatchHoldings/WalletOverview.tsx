@@ -4,12 +4,6 @@ import React from "react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
-  fetchTokenBalances,
-  fetchEthBalance,
-  fetchTransactionHistory,
-  isValidEthereumAddress,
-} from "../../utils/API/etherScanAPI";
-import {
   FiDollarSign,
   FiActivity,
   FiClock,
@@ -43,10 +37,19 @@ import {
 import { generateCryptoPlaceholder } from "../../utils/placeholderGenerator";
 import WalletLoadingState from "./components/WalletLoadingState";
 
+// Actualizăm interfața WalletOverviewProps pentru a include noile props
 interface WalletOverviewProps {
   address: string;
   onLoadingChange?: (loading: boolean) => void;
   onStatsUpdate?: (stats: any) => void;
+  holdings?: TokenData[];
+  transactions?: TransactionData[];
+  ethBalance?: number;
+  ethPrice?: number;
+  isLoading?: boolean;
+  error?: string | null;
+  loadingStatus?: string;
+  refreshData?: () => void;
 }
 
 interface TokenData {
@@ -190,31 +193,36 @@ const renderCustomizedLabel = ({
   );
 };
 
+// Modificăm componenta pentru a utiliza datele primite prin props
 const WalletOverview: React.FC<WalletOverviewProps> = ({
   address,
   onLoadingChange,
   onStatsUpdate,
+  holdings = [],
+  transactions = [],
+  ethBalance = 0,
+  ethPrice = 3500,
+  isLoading = false,
+  error = null,
+  loadingStatus = "Inițializare...",
+  refreshData,
 }) => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [holdings, setHoldings] = useState<TokenData[]>([]);
-  const [transactions, setTransactions] = useState<TransactionData[]>([]);
+  const [loading, setLoading] = useState(isLoading);
   const [stats, setStats] = useState<OverviewStats>({
     totalValue: 0,
-    ethBalance: 0,
-    ethPrice: 0,
+    ethBalance: ethBalance,
+    ethPrice: ethPrice,
     tokenCount: 0,
     transactionCount: 0,
     lastActivity: null,
     incomingValue: 0,
     outgoingValue: 0,
   });
-  const [loadingStatus, setLoadingStatus] = useState("Initializing...");
-  const [retryCount, setRetryCount] = useState(0);
   const [activeTimeRange, setActiveTimeRange] = useState<
     "7d" | "30d" | "90d" | "all"
   >("30d");
   const [refreshKey, setRefreshKey] = useState(0); // Adăugat pentru a forța reîmprospătarea
+  const [processedHoldings, setHoldings] = useState<TokenData[]>([]);
 
   // Use refs to prevent duplicate requests and infinite loops
   const isLoadingRef = useRef(false);
@@ -352,191 +360,100 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     };
   }, [address]);
 
+  // Înlocuim useEffect-ul care face fetch cu unul care procesează datele primite
   useEffect(() => {
-    // If we're already loading or the address hasn't changed, don't start a new load
-    if (
-      isLoadingRef.current ||
-      (previousAddressRef.current === address && refreshKey === 0)
-    ) {
+    if (isLoading) {
+      setLoading(true);
       return;
     }
 
-    // Update refs
-    isLoadingRef.current = true;
-    previousAddressRef.current = address;
+    try {
+      // Procesăm datele primite
+      let totalTokenValue = 0;
+      const processedTokens = holdings.map((token: TokenData) => {
+        const decimals = Number(token.tokenInfo.decimals) || 0;
+        const formattedBalance = Number(token.balance) / Math.pow(10, decimals);
+        const value = token.tokenInfo.price?.rate
+          ? formattedBalance * token.tokenInfo.price.rate
+          : 0;
 
-    // Modifică funcția loadWalletData pentru a afișa corect soldul ETH
-    const loadWalletData = async () => {
-      try {
-        setLoading(true);
-        if (onLoadingChange) onLoadingChange(true);
+        totalTokenValue += value;
 
-        // Check if the address is valid
-        if (!isValidEthereumAddress(address)) {
-          throw new Error("Invalid Ethereum address");
-        }
-
-        setLoadingStatus("Fetching ETH balance...");
-
-        // Fetch ETH balance
-        const ethData = await fetchEthBalance(address);
-        if (ethData.status === "0" || ethData.message === "NOTOK") {
-          throw new Error("API temporarily unavailable. Please try again.");
-        }
-
-        // Convertim corect din wei în ETH
-        const ethBalance = Number.parseFloat(ethData.result) / 1e18;
-        console.log("Raw ETH balance from API:", ethData.result);
-        console.log("Converted ETH balance:", ethBalance);
-
-        const ethPrice = 3500; // Placeholder - in a real app, fetch the current ETH price
-
-        setLoadingStatus("Fetching token balances...");
-
-        // Fetch token balances
-        const tokenData = await fetchTokenBalances(address);
-
-        // Afișăm datele brute pentru debugging
-        console.log("Date brute primite de la API:", tokenData);
-
-        // Process token data
-        let totalTokenValue = 0;
-        const processedTokens = tokenData.map((token: TokenData) => {
-          const decimals = Number(token.tokenInfo.decimals) || 0;
-          const formattedBalance =
-            Number(token.balance) / Math.pow(10, decimals);
-          const value = token.tokenInfo.price?.rate
-            ? formattedBalance * token.tokenInfo.price.rate
-            : 0;
-
-          totalTokenValue += value;
-
-          return {
-            ...token,
-            formattedBalance,
-            value,
-          };
-        });
-
-        // Calculate percentages and sort by value
-        const tokensWithPercentages = processedTokens
-          .map((token: TokenData) => ({
-            ...token,
-            percentage: token.value ? (token.value / totalTokenValue) * 100 : 0,
-          }))
-          .sort((a, b) => (b.value || 0) - (a.value || 0));
-
-        // Afișăm datele procesate pentru debugging
-        console.log(
-          "Date procesate pentru holdings:",
-          tokensWithPercentages.map((t) => ({
-            name: t.tokenInfo.name,
-            symbol: t.tokenInfo.symbol,
-            value: t.value,
-            percentage: t.percentage,
-            contractAddress: t.tokenInfo.contractAddress,
-          }))
-        );
-
-        setLoadingStatus("Fetching transaction history...");
-
-        // Fetch transaction history
-        const txHistory = await fetchTransactionHistory(address);
-
-        // Calculate transaction stats
-        let incomingValue = 0;
-        let outgoingValue = 0;
-
-        txHistory.forEach((tx: TransactionData) => {
-          if (tx.to && tx.to.toLowerCase() === address.toLowerCase()) {
-            incomingValue += tx.value;
-          } else if (
-            tx.from &&
-            tx.from.toLowerCase() === address.toLowerCase()
-          ) {
-            outgoingValue += tx.value;
-          }
-        });
-
-        // Set data
-        setHoldings(tokensWithPercentages);
-        setTransactions(txHistory);
-
-        // Calculăm valoarea ETH
-        const ethValue = ethBalance * ethPrice;
-        console.log("ETH Balance:", ethBalance);
-        console.log("ETH Price:", ethPrice);
-        console.log("ETH Value:", ethValue);
-        console.log("Total Token Value:", totalTokenValue);
-
-        // Calculăm valoarea totală a portofoliului
-        // Check if there's already an ETH token in the tokens list to avoid double counting
-        const ethToken = processedTokens.find(
-          (token) => token.tokenInfo.symbol.toLowerCase() === "eth"
-        );
-        const totalPortfolioValue = totalTokenValue + (ethToken ? 0 : ethValue);
-
-        // Update the stats with the correct total value
-        const updatedStats = {
-          totalValue: totalPortfolioValue,
-          ethBalance,
-          ethPrice,
-          tokenCount: tokensWithPercentages.length,
-          transactionCount: txHistory.length,
-          lastActivity: txHistory.length > 0 ? txHistory[0].timestamp : null,
-          incomingValue,
-          outgoingValue,
+        return {
+          ...token,
+          formattedBalance,
+          value,
         };
+      });
 
-        console.log("ETH Balance (ETH):", ethBalance);
-        console.log("ETH Price (USD):", ethPrice);
-        console.log("ETH Value (USD):", ethBalance * ethPrice);
-        console.log("Total Token Value (USD):", totalTokenValue);
-        console.log(
-          "Total Portfolio Value (USD):",
-          totalTokenValue + ethBalance * ethPrice
-        );
+      // Calculăm valorile pentru statistici
+      let incomingValue = 0;
+      let outgoingValue = 0;
 
-        setStats(updatedStats);
-
-        // Update parent component with stats
-        if (onStatsUpdate) {
-          onStatsUpdate(updatedStats);
+      transactions.forEach((tx: TransactionData) => {
+        if (tx.to && tx.to.toLowerCase() === address.toLowerCase()) {
+          incomingValue += tx.value;
+        } else if (tx.from && tx.from.toLowerCase() === address.toLowerCase()) {
+          outgoingValue += tx.value;
         }
+      });
 
-        setError(null);
-        setRetryCount(0);
-      } catch (err: any) {
-        console.error("Error loading wallet data:", err);
+      // Calculăm valoarea ETH
+      const ethValue = ethBalance * ethPrice;
 
-        // If we get an error and haven't retried too many times, retry
-        if (retryCount < 3) {
-          const nextRetryCount = retryCount + 1;
-          setRetryCount(nextRetryCount);
-          setError(`API error. Retrying... (${nextRetryCount}/3)`);
+      // Verificăm dacă există deja un token ETH pentru a evita numărarea dublă
+      const ethToken = processedTokens.find(
+        (token) => token.tokenInfo.symbol.toLowerCase() === "eth"
+      );
+      const totalPortfolioValue = totalTokenValue + (ethToken ? 0 : ethValue);
 
-          // Wait 2 seconds before retrying
-          retryTimeoutRef.current = setTimeout(() => {
-            retryTimeoutRef.current = null;
-            isLoadingRef.current = false; // Reset loading ref to allow retry
-            loadWalletData();
-          }, 2000);
-          return;
-        }
+      // Actualizăm statisticile
+      const updatedStats = {
+        totalValue: totalPortfolioValue,
+        ethBalance,
+        ethPrice,
+        tokenCount: processedTokens.length,
+        transactionCount: transactions.length,
+        lastActivity:
+          transactions.length > 0 ? transactions[0].timestamp : null,
+        incomingValue,
+        outgoingValue,
+      };
 
-        setError(err.message || "Failed to load wallet data");
-      } finally {
-        // Only set loading to false if we're not in a retry cycle
-        if (!retryTimeoutRef.current) {
-          setLoading(false);
-          if (onLoadingChange) onLoadingChange(false);
-          isLoadingRef.current = false;
-        }
+      setStats(updatedStats);
+      setHoldings(processedTokens);
+
+      // Actualizăm statisticile în componenta părinte
+      if (onStatsUpdate) {
+        onStatsUpdate({
+          totalValue: totalPortfolioValue,
+          tokenCount: processedTokens.length,
+          ethBalance,
+        });
       }
-    };
+    } catch (err) {
+      console.error("Eroare la procesarea datelor:", err);
+    } finally {
+      setLoading(false);
+      if (onLoadingChange) onLoadingChange(false);
+    }
+  }, [
+    holdings,
+    transactions,
+    ethBalance,
+    ethPrice,
+    isLoading,
+    address,
+    onLoadingChange,
+    onStatsUpdate,
+  ]);
 
-    loadWalletData();
-  }, [address, onLoadingChange, retryCount, onStatsUpdate, refreshKey]);
+  // Modificăm funcția handleRefresh pentru a utiliza funcția primită prin props
+  const handleRefreshData = () => {
+    if (refreshData) {
+      refreshData();
+    }
+  };
 
   // Modificăm funcția assetDistributionData pentru a filtra tokenurile cu procent sub 1%
   // și pentru a îmbunătăți afișarea numelor pe grafic
@@ -789,7 +706,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
   // Funcție pentru reîmprospătarea datelor
   const handleRefresh = () => {
-    setRefreshKey((prev) => prev + 1);
+    if (refreshData) {
+      refreshData();
+    }
   };
 
   if (loading) {
@@ -1364,7 +1283,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           Top Tokens
         </h3>
 
-        {holdings.length > 0 ? (
+        {processedHoldings.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200 dark:divide-dark-tertiary">
               <thead className="bg-gray-50 dark:bg-dark-tertiary">
@@ -1396,7 +1315,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-dark-secondary divide-y divide-gray-200 dark:divide-dark-tertiary">
-                {holdings.slice(0, 5).map((token, idx) => (
+                {processedHoldings.slice(0, 5).map((token, idx) => (
                   <tr
                     key={idx}
                     className="hover:bg-gray-50 dark:hover:bg-dark-tertiary/50 transition-colors"
@@ -1406,6 +1325,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||

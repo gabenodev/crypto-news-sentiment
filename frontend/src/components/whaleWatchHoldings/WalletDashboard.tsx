@@ -17,6 +17,11 @@ import WalletHoldings from "./WalletHoldings";
 import WalletTransactionHistory from "./WalletTransactionHistory";
 import { isValidEthereumAddress } from "../../utils/API/etherScanAPI";
 import { generateWalletPlaceholder } from "../../utils/placeholderGenerator";
+import {
+  fetchEthBalance,
+  fetchTokenBalances,
+  fetchTransactionHistory,
+} from "../../utils/API/etherScanAPI";
 
 // Popular wallets with names
 const KNOWN_WALLETS: Record<string, { name: string; description: string }> = {
@@ -60,8 +65,24 @@ const WalletDashboard: React.FC = () => {
     ethBalance: 0,
   });
 
+  // Adăugăm state-uri pentru a stoca datele la nivel de Dashboard
+  const [holdings, setHoldings] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [ethBalance, setEthBalance] = useState(0);
+  const [ethPrice, setEthPrice] = useState(3500); // Placeholder - în aplicația reală ar trebui să obținem prețul curent
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingStatus, setLoadingStatus] = useState("Inițializare...");
+  const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
   // Get wallet info if it's a known wallet
   const walletInfo = KNOWN_WALLETS[address] || null;
+
+  // Adăugăm după declararea state-urilor, înainte de useEffect-uri
+  // Funcție pentru a reîmprospăta datele
+  const refreshData = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
 
   // Load recent wallets from localStorage on component mount
   useEffect(() => {
@@ -92,9 +113,49 @@ const WalletDashboard: React.FC = () => {
     }
   }, [address]);
 
+  // Adăugăm un useEffect pentru a încărca toate datele o singură dată
+  useEffect(() => {
+    if (!address || !isValidAddress) return;
+
+    const fetchAllData = async () => {
+      setIsLoading(true);
+      setLoadingStatus("Încărcare date portofel...");
+
+      try {
+        // Fetch ETH balance
+        const ethData = await fetchEthBalance(address);
+        if (ethData.status === "0" || ethData.message === "NOTOK") {
+          throw new Error("API temporar indisponibil. Încercați din nou.");
+        }
+
+        const ethBalanceValue = Number.parseFloat(ethData.result) / 1e18;
+        setEthBalance(ethBalanceValue);
+
+        // Fetch token balances
+        setLoadingStatus("Încărcare token-uri...");
+        const tokenData = await fetchTokenBalances(address);
+        setHoldings(tokenData);
+
+        // Fetch transaction history
+        setLoadingStatus("Încărcare istoric tranzacții...");
+        const txHistory = await fetchTransactionHistory(address);
+        setTransactions(txHistory);
+
+        setError(null);
+      } catch (err: any) {
+        console.error("Eroare la încărcarea datelor portofelului:", err);
+        setError(err.message || "Eroare la încărcarea datelor");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, [address, isValidAddress, refreshKey]);
+
   // Handle loading state changes
   const handleLoadingChange = (loading: boolean) => {
-    // setIsLoading(loading) // Removed setIsLoading
+    setIsLoading(loading);
   };
 
   // Handle stats updates from child components
@@ -326,6 +387,14 @@ const WalletDashboard: React.FC = () => {
                 address={address}
                 onLoadingChange={handleLoadingChange}
                 onStatsUpdate={handleStatsUpdate}
+                holdings={holdings}
+                transactions={transactions}
+                ethBalance={ethBalance}
+                ethPrice={ethPrice}
+                isLoading={isLoading}
+                error={error}
+                loadingStatus={loadingStatus}
+                refreshData={refreshData}
               />
             )}
             {activeTab === "holdings" && (
@@ -333,12 +402,24 @@ const WalletDashboard: React.FC = () => {
                 address={address}
                 onLoadingChange={handleLoadingChange}
                 onStatsUpdate={handleStatsUpdate}
+                holdings={holdings}
+                ethBalance={ethBalance}
+                ethPrice={ethPrice}
+                isLoading={isLoading}
+                error={error}
+                loadingStatus={loadingStatus}
+                refreshData={refreshData}
               />
             )}
             {activeTab === "transactions" && (
               <WalletTransactionHistory
                 address={address}
                 onLoadingChange={handleLoadingChange}
+                transactions={transactions}
+                isLoading={isLoading}
+                error={error}
+                loadingStatus={loadingStatus}
+                refreshData={refreshData}
               />
             )}
           </motion.div>

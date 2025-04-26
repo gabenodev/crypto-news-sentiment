@@ -5,10 +5,6 @@ import React from "react";
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
-  fetchTransactionHistory,
-  isValidEthereumAddress,
-} from "../../utils/API/etherScanAPI";
-import {
   FiExternalLink,
   FiArrowUp,
   FiArrowDown,
@@ -19,9 +15,15 @@ import {
 } from "react-icons/fi";
 import WalletLoadingState from "./components/WalletLoadingState";
 
+// Actualizăm interfața WalletTransactionHistoryProps pentru a include noile props
 interface WalletTransactionHistoryProps {
   address: string;
   onLoadingChange?: (loading: boolean) => void;
+  transactions?: TransactionData[];
+  isLoading?: boolean;
+  error?: string | null;
+  loadingStatus?: string;
+  refreshData?: () => void;
 }
 
 interface TransactionData {
@@ -38,21 +40,27 @@ interface TransactionData {
   tokenDecimal?: string;
 }
 
+// Modificăm componenta pentru a utiliza datele primite prin props
 const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
   address,
   onLoadingChange,
+  transactions = [],
+  isLoading = false,
+  error = null,
+  loadingStatus = "Inițializare...",
+  refreshData,
 }) => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [transactions, setTransactions] = useState<TransactionData[]>([]);
+  const [loading, setLoading] = useState(isLoading);
+  const [localError, setLocalError] = useState<string | null>(error);
+  const [processedTransactions, setProcessedTransactions] = useState<
+    TransactionData[]
+  >([]);
   const [filteredTransactions, setFilteredTransactions] = useState<
     TransactionData[]
   >([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<"all" | "incoming" | "outgoing">("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const [retryCount, setRetryCount] = useState(0);
-  const [loadingStatus, setLoadingStatus] = useState("Initializing...");
   const transactionsPerPage = 10;
 
   // Use refs to prevent duplicate requests and infinite loops
@@ -70,77 +78,34 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
     };
   }, [address]);
 
-  // Fetch transaction history
+  // Înlocuim useEffect-ul care face fetch cu unul care procesează datele primite
   useEffect(() => {
-    // If we're already loading or the address hasn't changed, don't start a new load
-    if (isLoadingRef.current || previousAddressRef.current === address) {
+    if (isLoading) {
+      setLoading(true);
       return;
     }
 
-    // Update refs
-    isLoadingRef.current = true;
-    previousAddressRef.current = address;
+    try {
+      // Sortăm tranzacțiile după timestamp (cele mai noi primele)
+      const sortedTransactions: TransactionData[] = [...transactions].sort(
+        (a: TransactionData, b: TransactionData) => b.timestamp - a.timestamp
+      );
 
-    const loadTransactions = async () => {
-      try {
-        setLoading(true);
-        if (onLoadingChange) onLoadingChange(true);
-
-        // Check if the address is valid
-        if (!isValidEthereumAddress(address)) {
-          throw new Error("Invalid Ethereum address");
-        }
-
-        setLoadingStatus("Fetching transaction history...");
-
-        // Fetch transaction history using etherScanAPI
-        const txHistory = await fetchTransactionHistory(address);
-
-        // Sort transactions by timestamp (newest first)
-        const sortedTransactions: TransactionData[] = txHistory.sort(
-          (a: TransactionData, b: TransactionData) => b.timestamp - a.timestamp
-        );
-
-        setTransactions(sortedTransactions);
-        setFilteredTransactions(sortedTransactions);
-        setError(null);
-        setRetryCount(0);
-      } catch (err: any) {
-        console.error("Error loading transactions:", err);
-
-        // If we get an error and haven't retried too many times, retry
-        if (retryCount < 3) {
-          const nextRetryCount = retryCount + 1;
-          setRetryCount(nextRetryCount);
-          setError(`API error. Retrying... (${nextRetryCount}/3)`);
-          setLoadingStatus(`Retrying... (Attempt ${nextRetryCount}/3)`);
-
-          // Wait 2 seconds before retrying
-          retryTimeoutRef.current = setTimeout(() => {
-            retryTimeoutRef.current = null;
-            isLoadingRef.current = false; // Reset loading ref to allow retry
-            loadTransactions();
-          }, 2000);
-          return;
-        }
-
-        setError(err.message || "Failed to load transaction data");
-      } finally {
-        // Only set loading to false if we're not in a retry cycle
-        if (!retryTimeoutRef.current) {
-          setLoading(false);
-          if (onLoadingChange) onLoadingChange(false);
-          isLoadingRef.current = false;
-        }
-      }
-    };
-
-    loadTransactions();
-  }, [address, onLoadingChange, retryCount]);
+      setProcessedTransactions(sortedTransactions);
+      setFilteredTransactions(sortedTransactions);
+      setLocalError(null);
+    } catch (err: any) {
+      console.error("Eroare la procesarea tranzacțiilor:", err);
+      setLocalError(err.message || "Eroare la procesarea datelor");
+    } finally {
+      setLoading(false);
+      if (onLoadingChange) onLoadingChange(false);
+    }
+  }, [transactions, isLoading, onLoadingChange]);
 
   // Filter transactions based on search term and filter type
   useEffect(() => {
-    let filtered = [...transactions];
+    let filtered = [...processedTransactions];
 
     // Apply type filter
     if (filter === "incoming") {
@@ -167,7 +132,7 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
 
     setFilteredTransactions(filtered);
     setCurrentPage(1); // Reset to first page when filtering
-  }, [transactions, searchTerm, filter, address]);
+  }, [processedTransactions, searchTerm, filter, address]);
 
   // Format timestamp to readable date
   const formatDate = (timestamp: number) => {
@@ -223,19 +188,11 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
   // Change page
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
-  // Retry loading transactions
+  // Modificăm funcția handleRetry pentru a utiliza funcția primită prin props
   const handleRetry = () => {
-    // Clear any existing retry timeout
-    if (retryTimeoutRef.current) {
-      clearTimeout(retryTimeoutRef.current);
-      retryTimeoutRef.current = null;
+    if (refreshData) {
+      refreshData();
     }
-
-    setRetryCount(0);
-    setError(null);
-    isLoadingRef.current = false; // Reset loading ref to allow retry
-    previousAddressRef.current = ""; // Reset address ref to force reload
-    setLoading(true);
   };
 
   if (loading) {
@@ -249,14 +206,14 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
     );
   }
 
-  if (error) {
+  if (localError) {
     return (
       <div
         className="bg-red-100/30 dark:bg-error/20 border border-error/50 text-error px-4 py-3 rounded-lg relative"
         role="alert"
       >
         <strong className="font-bold">Error:</strong>
-        <span className="block sm:inline"> {error}</span>
+        <span className="block sm:inline"> {localError}</span>
         <button
           onClick={handleRetry}
           className="mt-2 flex items-center px-4 py-2 bg-error/10 text-error rounded-md hover:bg-error/20 transition-colors"
@@ -267,7 +224,7 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
     );
   }
 
-  if (transactions.length === 0) {
+  if (processedTransactions.length === 0) {
     return (
       <div className="text-center py-8 bg-white dark:bg-dark-secondary rounded-xl shadow border border-gray-100 dark:border-dark-tertiary">
         <div className="bg-gray-100 dark:bg-dark-tertiary rounded-full p-6 inline-flex mb-4">
