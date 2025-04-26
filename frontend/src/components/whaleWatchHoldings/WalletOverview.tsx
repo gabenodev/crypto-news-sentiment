@@ -15,7 +15,6 @@ import {
   FiInfo,
   FiTrendingDown,
   FiZap,
-  FiRefreshCw,
 } from "react-icons/fi";
 import {
   BarChart,
@@ -365,6 +364,27 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       return result;
     };
   }, [stats.totalValue, activeTimeRange]);
+
+  // Custom tooltip for transaction activity
+  const TransactionActivityTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
+          <p className="font-medium text-gray-900 dark:text-white text-base">
+            {new Date(label).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+            })}
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+            <span className="font-medium">Transactions:</span>{" "}
+            {payload[0].value}
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
 
   // Fetch wallet data
   useEffect(() => {
@@ -1049,17 +1069,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                     axisLine={{ stroke: "rgba(160, 160, 160, 0.2)" }}
                   />
                   <RechartsTooltip
-                    formatter={(value: number) => [
-                      `${value} transactions`,
-                      "Count",
-                    ]}
-                    labelFormatter={(date) => `Date: ${date}`}
-                    contentStyle={{
-                      backgroundColor: "rgba(30, 30, 30, 0.8)",
-                      borderRadius: "8px",
-                      border: "none",
-                      color: "#E0E0E0",
-                    }}
+                    content={<TransactionActivityTooltip />}
+                    cursor={{ fill: "rgba(0, 0, 0, 0.1)" }}
                   />
                   <Bar
                     dataKey="count"
@@ -1367,6 +1378,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg" ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
