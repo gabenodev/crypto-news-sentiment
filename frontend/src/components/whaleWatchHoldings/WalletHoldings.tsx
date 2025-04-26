@@ -18,7 +18,6 @@ import {
   FiSearch,
   FiBarChart2,
   FiRefreshCw,
-  FiFilter,
   FiExternalLink,
 } from "react-icons/fi";
 import { generateCryptoPlaceholder } from "../../utils/placeholderGenerator";
@@ -157,7 +156,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   ethPrice = 3500,
   isLoading = false,
   error = null,
-  loadingStatus = "Inițializare...",
+  loadingStatus = "Initializing...",
   refreshData,
 }: WalletHoldingsProps) => {
   const [loading, setLoading] = useState(isLoading);
@@ -528,71 +527,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
             Bar Chart
           </button>
         </div>
-
-        <div className="flex items-center space-x-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:flex-none">
-            <input
-              type="text"
-              placeholder="Search token..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full sm:w-64 pl-10 pr-4 py-2 border rounded-lg dark:bg-dark-tertiary dark:border-dark-tertiary dark:text-dark-text-primary focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-            />
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-dark-text-secondary" />
-          </div>
-
-          <div className="relative">
-            <button
-              onClick={() => setShowFilterMenu(!showFilterMenu)}
-              className="p-2 bg-gray-100 hover:bg-gray-200 dark:bg-dark-tertiary dark:hover:bg-dark-tertiary/80 text-gray-700 dark:text-dark-text-primary rounded-lg transition-colors"
-            >
-              <FiFilter />
-            </button>
-
-            {showFilterMenu && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-dark-secondary rounded-lg shadow-lg border border-gray-100 dark:border-dark-tertiary z-10">
-                <div className="p-2">
-                  <p className="text-sm font-medium text-gray-700 dark:text-dark-text-primary mb-2">
-                    Sort by
-                  </p>
-                  <button
-                    onClick={() => handleSortBy("value")}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm ${
-                      sortBy === "value"
-                        ? "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300"
-                        : "hover:bg-gray-100 dark:hover:bg-dark-tertiary"
-                    }`}
-                  >
-                    Value{" "}
-                    {sortBy === "value" && (sortOrder === "asc" ? "↑" : "↓")}
-                  </button>
-                  <button
-                    onClick={() => handleSortBy("name")}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm ${
-                      sortBy === "name"
-                        ? "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300"
-                        : "hover:bg-gray-100 dark:hover:bg-dark-tertiary"
-                    }`}
-                  >
-                    Name{" "}
-                    {sortBy === "name" && (sortOrder === "asc" ? "↑" : "↓")}
-                  </button>
-                  <button
-                    onClick={() => handleSortBy("balance")}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm ${
-                      sortBy === "balance"
-                        ? "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300"
-                        : "hover:bg-gray-100 dark:hover:bg-dark-tertiary"
-                    }`}
-                  >
-                    Balance{" "}
-                    {sortBy === "balance" && (sortOrder === "asc" ? "↑" : "↓")}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* Token detail card - shows when a token is selected */}
@@ -732,12 +666,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                   ? "Tokens exist but none have a calculated value. Try refreshing the data."
                   : "No tokens found in this wallet."}
               </p>
-              <button
-                onClick={refreshData}
-                className="mt-4 px-4 py-2 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-md hover:bg-teal-200 dark:hover:bg-teal-800/50 transition-colors"
-              >
-                <FiRefreshCw className="inline mr-2" /> Refresh Data
-              </button>
             </div>
           ) : (
             <div className="h-[400px]">

@@ -123,7 +123,7 @@ const WalletDashboard: React.FC = () => {
 
       const fetchAllData = async () => {
         setIsLoading(true);
-        setLoadingStatus("Încărcare date portofel...");
+        setLoadingStatus("Loading wallet data...");
         setError(null); // Reset any previous errors
 
         try {
@@ -150,7 +150,7 @@ const WalletDashboard: React.FC = () => {
           }
 
           // Fetch token balances with a small delay to avoid rate limiting
-          setLoadingStatus("Încărcare token-uri...");
+          setLoadingStatus("Loading tokens...");
           console.log("⏱️ Waiting before token balance request...");
           await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -165,7 +165,7 @@ const WalletDashboard: React.FC = () => {
           setHoldings(tokenData || []);
 
           // Fetch transaction history with a small delay to avoid rate limiting
-          setLoadingStatus("Încărcare istoric tranzacții...");
+          setLoadingStatus("Loading transaction history...");
           console.log("⏱️ Waiting before transaction history request...");
           await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -204,7 +204,7 @@ const WalletDashboard: React.FC = () => {
           console.error("❌ Error loading wallet data:", err);
           setError(
             err.message ||
-              "Eroare la încărcarea datelor. Etherscan API poate fi temporar indisponibil."
+              "Error loading data. Etherscan API may be temporarily unavailable."
           );
 
           // Set empty data in case of error
@@ -315,7 +315,7 @@ const WalletDashboard: React.FC = () => {
       {/* Main content */}
       <div className="flex-grow flex flex-col md:flex-row">
         {/* Sidebar - now with auto height instead of fixed height */}
-        <div className="hidden lg:block lg:w-80 bg-white dark:bg-dark-primary shadow-lg fixed left-0 top-[57px] z-40 overflow-y-auto">
+        <div className="hidden lg:block lg:w-96 bg-white dark:bg-dark-primary shadow-lg fixed left-0 top-[57px] z-40 overflow-y-auto h-[calc(100vh-57px)]">
           <div className="flex flex-col">
             {/* Wallet info */}
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -477,7 +477,7 @@ const WalletDashboard: React.FC = () => {
         </div>
 
         {/* Main content area */}
-        <div className="w-full lg:ml-80 flex-1 p-4 pt-4 mt-0">
+        <div className="w-full lg:ml-96 flex-1 p-4 pt-4 mt-0">
           <div className="mb-4">
             <Link
               to="/wallet-holdings"
@@ -505,15 +505,14 @@ const WalletDashboard: React.FC = () => {
                 {error}
               </p>
               <p className="mt-2 text-sm text-red-600 dark:text-red-300">
-                Etherscan API poate fi temporar indisponibil sau a atins limita
-                de rate. Încercați din nou mai târziu sau verificați un alt
-                portofel.
+                Etherscan API may be temporarily unavailable or has reached its
+                rate limit. Try again later or check another wallet.
               </p>
               <button
                 onClick={refreshData}
                 className="mt-3 px-4 py-2 bg-red-100 dark:bg-red-800/30 text-red-700 dark:text-red-300 rounded-md hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors"
               >
-                Încearcă din nou
+                Try Again
               </button>
             </div>
           )}
