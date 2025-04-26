@@ -269,9 +269,10 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
 
         totalValue += value;
 
+        // Make sure formattedBalance is properly set
         return {
           ...token,
-          formattedBalance,
+          formattedBalance: formattedBalance,
           value,
         };
       });
@@ -880,9 +881,18 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
                           <div className="text-sm font-medium text-gray-900 dark:text-dark-text-primary">
-                            {formattedBalance.toLocaleString("en-US", {
-                              maximumFractionDigits: 6,
-                            })}
+                            {formattedBalance > 0
+                              ? formattedBalance.toLocaleString("en-US", {
+                                  maximumFractionDigits: 6,
+                                })
+                              : token.balance
+                              ? (
+                                  Number(token.balance) /
+                                  Math.pow(10, Number(token.tokenInfo.decimals))
+                                ).toLocaleString("en-US", {
+                                  maximumFractionDigits: 6,
+                                })
+                              : "0"}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right">
