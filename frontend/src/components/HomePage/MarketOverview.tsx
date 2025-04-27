@@ -45,7 +45,9 @@ const MarketOverview = () => {
 
         // Calculate BTC dominance
         const btcDominance =
-          totalMarketCap > 0 ? (btcMarketCap / totalMarketCap) * 100 : 0;
+          totalMarketCap > 0
+            ? Math.min(100, (btcMarketCap / totalMarketCap) * 100)
+            : 0;
 
         setMarketData({
           totalMarketCap,
@@ -123,7 +125,7 @@ const MarketOverview = () => {
     },
     {
       title: "BTC Dominance",
-      value: `${marketData.btcDominance.toFixed(2)}%`,
+      value: `${Math.min(100, marketData.btcDominance).toFixed(2)}%`,
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
