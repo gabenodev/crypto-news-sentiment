@@ -216,7 +216,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   ethPrice = 3500,
   isLoading = false,
   error = null,
-  loadingStatus = "Inițializare...",
+  loadingStatus = "Initializing...",
   refreshData,
 }) => {
   const [loading, setLoading] = useState(isLoading);
@@ -401,27 +401,28 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   // Add a ref to track if we've already processed the data
   const dataProcessedRef = useRef(false);
 
-  // Adăugăm o funcție pentru a verifica și corecta valorile anormale
+  // Adaugăm o funcție pentru a verifica și corecta valorile anormale
+  // Add a function to check and correct abnormal values
   const normalizeTokenValue = (
     token: TokenData,
     totalPortfolioValue: number
   ): TokenData => {
     if (!token || !token.tokenInfo) return token;
 
-    // Asigurăm-ne că formattedBalance este întotdeauna definit
+    // Make sure formattedBalance is always defined
     const formattedBalance = token.formattedBalance || 0;
 
-    // Verificăm dacă tokenul are o valoare suspectă
+    // Check if the token has a suspicious value
     if (token.value && token.value > 1000000000) {
-      // Peste 1 miliard USD
+      // Over 1 billion USD
       const symbol = token.tokenInfo.symbol.toLowerCase();
-      // Permitem stablecoin-urile cunoscute să aibă valori mari
+      // Allow known stablecoins to have large values
       const isStablecoin = ["usdt", "usdc", "dai", "busd", "tusd"].includes(
         symbol
       );
 
       if (!isStablecoin) {
-        // Verificăm dacă numele tokenului conține cuvinte suspecte
+        // Check if token name contains suspicious words
         const name = token.tokenInfo.name.toLowerCase();
         const suspiciousWords = [
           "vitalik",
@@ -444,7 +445,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           console.log(
             `🚨 Correcting suspicious token value: ${token.tokenInfo.name} from ${token.value} to 0`
           );
-          // Resetăm valoarea și procentajul pentru tokenurile suspecte
+          // Reset value and percentage for suspicious tokens
           return {
             ...token,
             formattedBalance,
@@ -526,7 +527,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         };
       });
 
-      // Normalizăm valorile tokenurilor suspecte
+      // Normalize suspicious token values
       processedTokens = processedTokens.map((token) =>
         normalizeTokenValue(token, totalTokenValue)
       ) as {
@@ -1429,8 +1430,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
             <span className="flex items-center">
               <FiInfo className="mr-1" size={12} />
-              Notă: Datorită limitărilor API, este posibil să nu fie afișate
-              toate tokenurile. Pentru o vizualizare completă, verificați pe
+              Note: Due to API limitations, not all tokens may be displayed. For
+              a complete view, check on
               <a
                 href={`https://etherscan.io/address/${address}#tokentxns`}
                 target="_blank"
@@ -1495,6 +1496,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||

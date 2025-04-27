@@ -147,27 +147,26 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-// Modificăm funcția normalizeTokenValue pentru a asigura că formattedBalance este întotdeauna definit
 const normalizeTokenValue = (
   token: TokenData,
   totalPortfolioValue: number
 ): TokenData => {
   if (!token || !token.tokenInfo) return token;
 
-  // Asigurăm-ne că formattedBalance este întotdeauna definit
+  // Make sure formattedBalance is always defined
   const formattedBalance = token.formattedBalance || 0;
 
-  // Verificăm dacă tokenul are o valoare suspectă
+  // Check if the token has a suspicious value
   if (token.value && token.value > 1000000000) {
-    // Peste 1 miliard USD
+    // Over 1 billion USD
     const symbol = token.tokenInfo.symbol.toLowerCase();
-    // Permitem stablecoin-urile cunoscute să aibă valori mari
+    // Allow known stablecoins to have large values
     const isStablecoin = ["usdt", "usdc", "dai", "busd", "tusd"].includes(
       symbol
     );
 
     if (!isStablecoin) {
-      // Verificăm dacă numele tokenului conține cuvinte suspecte
+      // Check if token name contains suspicious words
       const name = token.tokenInfo.name.toLowerCase();
       const suspiciousWords = [
         "vitalik",
@@ -190,7 +189,7 @@ const normalizeTokenValue = (
         console.log(
           `🚨 Correcting suspicious token value: ${token.tokenInfo.name} from ${token.value} to 0`
         );
-        // Resetăm valoarea și procentajul pentru tokenurile suspecte
+        // Reset value and percentage for suspicious tokens
         return {
           ...token,
           formattedBalance,
@@ -354,7 +353,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
         };
       });
 
-      // Normalizăm valorile tokenurilor suspecte
+      // Normalize suspicious token values
       processedTokens = processedTokens.map((token) =>
         normalizeTokenValue(token, totalValue)
       ) as {
@@ -619,8 +618,8 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
         <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
           <span className="flex items-center">
             <FiInfo className="mr-1" size={12} />
-            Notă: Datorită limitărilor API, este posibil să nu fie afișate toate
-            tokenurile. Pentru o vizualizare completă, verificați pe
+            Note: Due to API limitations, not all tokens may be displayed. For a
+            complete view, check on
             <a
               href={`https://etherscan.io/address/${address}#tokentxns`}
               target="_blank"
