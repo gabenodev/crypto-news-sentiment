@@ -258,8 +258,8 @@ const getTokenPrice = async (
   }
 };
 
-// Function to get ETH price
-const getEthPrice = async (): Promise<number | null> => {
+// Exportăm funcția getEthPrice pentru a o putea folosi în WalletDashboard
+export const getEthPrice = async (): Promise<number | null> => {
   // Check if we have the price in cache and if it hasn't expired (5 minutes)
   const cacheEntry = tokenPriceCache["ethereum"];
   if (cacheEntry && Date.now() - cacheEntry.timestamp < 5 * 60 * 1000) {

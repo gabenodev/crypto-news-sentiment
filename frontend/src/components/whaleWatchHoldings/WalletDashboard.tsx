@@ -22,6 +22,7 @@ import {
   fetchEthBalance,
   fetchTokenBalances,
   fetchTransactionHistory,
+  getEthPrice,
 } from "../../utils/API/etherScanAPI";
 
 // Popular wallets with names
@@ -70,7 +71,8 @@ const WalletDashboard: React.FC = () => {
   const [holdings, setHoldings] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [ethBalance, setEthBalance] = useState(0);
-  const [ethPrice, setEthPrice] = useState(3500); // Placeholder - în aplicația reală ar trebui să obținem prețul curent
+  // Modificăm starea ethPrice pentru a folosi o valoare inițială mai realistă
+  const [ethPrice, setEthPrice] = useState(0); // Inițializăm cu 0 și vom actualiza cu valoarea reală
   const [isLoading, setIsLoading] = useState(true);
   const [loadingStatus, setLoadingStatus] = useState("Loading...");
   const [error, setError] = useState<string | null>(null);
@@ -132,6 +134,7 @@ const WalletDashboard: React.FC = () => {
   // Add a ref to track if we're already fetching data
   const isFetchingRef = useRef(false);
 
+  // Înlocuim useEffect-ul care face fetch-ul datelor pentru a include și obținerea prețului ETH
   useEffect(() => {
     if (address && isValidAddress && !isFetchingRef.current) {
       // Set the flag to prevent concurrent fetches
@@ -144,6 +147,14 @@ const WalletDashboard: React.FC = () => {
 
         try {
           console.log("🔄 Starting data fetch for wallet:", address);
+
+          // Fetch ETH price first
+          console.log("🔍 Fetching ETH price...");
+          const ethPriceData = await getEthPrice(); // Folosim funcția getEthPrice din etherScanAPI
+          console.log("💲 ETH price:", ethPriceData);
+          const currentEthPrice = ethPriceData || 3500; // Folosim 3500 ca fallback dacă API-ul eșuează
+          setEthPrice(currentEthPrice);
+          console.log("💲 Updated ETH price state:", currentEthPrice);
 
           // Fetch ETH balance
           console.log("🔍 Fetching ETH balance...");
@@ -196,9 +207,11 @@ const WalletDashboard: React.FC = () => {
           setTransactions(txHistory || []);
 
           // Calculăm valoarea totală o singură dată aici și o transmitem la toate componentele
+          // Folosim prețul real al ETH pentru calcul
           const totalValue = calculateTotalValue(
             tokenData || [],
-            ethBalanceValue
+            ethBalanceValue,
+            currentEthPrice
           );
           console.log("💰 Calculated total value:", totalValue);
 
@@ -248,7 +261,12 @@ const WalletDashboard: React.FC = () => {
     }
   }, [address, isValidAddress, refreshKey]);
 
-  const calculateTotalValue = (holdings: any[], ethBalance: number) => {
+  // Modificăm funcția calculateTotalValue pentru a folosi prețul ETH primit ca parametru
+  const calculateTotalValue = (
+    holdings: any[],
+    ethBalance: number,
+    ethPrice: number
+  ) => {
     let total = 0;
 
     // Verificăm dacă ETH există deja în holdings pentru a evita dublarea
@@ -263,7 +281,7 @@ const WalletDashboard: React.FC = () => {
 
     // Adăugăm valoarea ETH doar dacă nu există deja în holdings
     if (!ethTokenExists) {
-      total += ethBalance * ethPrice; // Folosim ethPrice din state
+      total += ethBalance * ethPrice; // Folosim ethPrice din parametru
     }
 
     // Adăugăm valorile token-urilor

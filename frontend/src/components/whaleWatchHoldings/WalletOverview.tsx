@@ -873,6 +873,11 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           </p>
           <p className="text-sm text-gray-500 dark:text-dark-text-secondary mt-2">
             Value: {formatCurrency(stats.ethBalance * stats.ethPrice)}
+            {stats.ethPrice > 0 && (
+              <span className="ml-1 text-xs">
+                (@${stats.ethPrice.toLocaleString()})
+              </span>
+            )}
           </p>
         </motion.div>
 
@@ -1385,6 +1390,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
