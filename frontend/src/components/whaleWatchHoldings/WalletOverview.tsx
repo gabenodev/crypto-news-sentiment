@@ -1138,9 +1138,12 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                   ETH Dominance
                 </span>
                 <span className="font-medium text-blue-600 dark:text-blue-400">
-                  {Math.round(
-                    ((stats.ethBalance * stats.ethPrice) / stats.totalValue) *
-                      100
+                  {Math.min(
+                    100,
+                    Math.round(
+                      ((stats.ethBalance * stats.ethPrice) / stats.totalValue) *
+                        100
+                    )
                   )}
                   %
                 </span>
@@ -1149,9 +1152,13 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                 <div
                   className="bg-blue-500 h-2 rounded-full"
                   style={{
-                    width: `${Math.round(
-                      ((stats.ethBalance * stats.ethPrice) / stats.totalValue) *
-                        100
+                    width: `${Math.min(
+                      100,
+                      Math.round(
+                        ((stats.ethBalance * stats.ethPrice) /
+                          stats.totalValue) *
+                          100
+                      )
                     )}%`,
                   }}
                 ></div>
@@ -1378,6 +1385,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
