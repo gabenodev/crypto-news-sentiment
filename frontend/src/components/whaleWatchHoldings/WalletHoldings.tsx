@@ -719,14 +719,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
 
               {/* Token actions */}
               <div className="mt-4 flex space-x-2">
-                <a
-                  href={`https://etherscan.io/token/${selectedToken.tokenInfo.symbol}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-dark-tertiary dark:hover:bg-dark-tertiary/80 text-gray-700 dark:text-dark-text-primary rounded-lg transition-colors flex items-center"
-                >
-                  <FiExternalLink className="mr-1" /> View on Etherscan
-                </a>
                 <button
                   onClick={() => {
                     setSelectedToken(null);

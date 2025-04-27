@@ -157,7 +157,11 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <p className="font-medium mb-1">{`${label}`}</p>
         {payload.map((item: any) => (
           <p key={item.dataKey} className="text-sm">
-            {`${item.name}: ${formatCurrency(item.value)}`}
+            {`${item.name}: ${
+              item.dataKey === "gas"
+                ? `${(item.value * 1000000).toFixed(6)} Gwei`
+                : formatCurrency(item.value)
+            }`}
           </p>
         ))}
       </div>
@@ -314,6 +318,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         if (!tx.timestamp || !tx.gasUsed || !tx.gasPrice) return;
 
         const date = new Date(tx.timestamp * 1000).toISOString().split("T")[0];
+        // Calculate gas in ETH
         const gasUsed = (Number(tx.gasUsed) * Number(tx.gasPrice)) / 1e18;
 
         if (!gasByDay[date]) {
@@ -1303,7 +1308,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={gasUsageData}
-                  margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
+                  margin={{ top: 5, right: 5, left: 15, bottom: 5 }}
                 >
                   <XAxis
                     dataKey="date"
@@ -1317,9 +1322,24 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                   <YAxis
                     tick={{ fill: "#A0A0A0", fontSize: 10 }}
                     axisLine={{ stroke: "rgba(160, 160, 160, 0.2)" }}
-                    tickFormatter={(value) => `${value.toFixed(2)} ETH`}
+                    tickFormatter={(value) => `${(value * 1000000).toFixed(0)}`}
+                    label={{
+                      value: "Gwei",
+                      angle: -90,
+                      position: "insideLeft",
+                      dx: -10,
+                      fontSize: 12,
+                      fill: "#A0A0A0",
+                    }}
+                    width={40}
                   />
-                  <RechartsTooltip content={<CustomTooltip />} />
+                  <RechartsTooltip
+                    content={<CustomTooltip />}
+                    formatter={(value: number) => [
+                      (value * 1000000).toFixed(6) + " Gwei",
+                      "Gas Used",
+                    ]}
+                  />
                   <Line
                     type="monotone"
                     dataKey="gas"
@@ -1496,6 +1516,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg" ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
