@@ -159,6 +159,32 @@ const WalletHoldingsPage: React.FC = () => {
               </div>
             </form>
 
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 mb-6">
+              <div className="flex items-start">
+                <FiInfo className="text-blue-500 mt-1 mr-3 flex-shrink-0" />
+                <div>
+                  <p className="text-sm text-blue-800 dark:text-blue-300">
+                    Enter a valid Ethereum address to see all ERC-20 tokens held
+                    by that wallet.
+                  </p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                    <strong>Note:</strong> Due to API limitations, some tokens
+                    or values may not display correctly. For a complete view,
+                    please verify on{" "}
+                    <a
+                      href="https://etherscan.io"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline hover:text-blue-700 dark:hover:text-blue-300"
+                    >
+                      Etherscan
+                    </a>
+                    .
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {recentWallets.length > 0 && (
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
@@ -188,21 +214,6 @@ const WalletHoldingsPage: React.FC = () => {
                 </div>
               </div>
             )}
-
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
-              <div className="flex items-start">
-                <FiInfo className="text-blue-500 mt-1 mr-3 flex-shrink-0" />
-                <div>
-                  <p className="text-sm text-blue-800 dark:text-blue-300">
-                    Enter a valid Ethereum address to see all ERC-20 tokens held
-                    by that wallet.
-                  </p>
-                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                    Data is fetched in real-time from Etherscan and CoinGecko.
-                  </p>
-                </div>
-              </div>
-            </div>
           </motion.div>
         </div>
 
@@ -286,6 +297,7 @@ const WalletHoldingsPage: React.FC = () => {
               <h3 className="font-medium text-lg mb-2">View Assets</h3>
               <p className="text-gray-500 dark:text-gray-400 text-sm">
                 See all tokens held, their value, and portfolio distribution.
+                Some tokens may be filtered due to API limitations.
               </p>
             </div>
 
