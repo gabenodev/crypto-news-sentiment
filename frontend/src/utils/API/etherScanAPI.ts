@@ -697,6 +697,62 @@ const generateMockTransactions = (address: string) => {
 // și a îmbunătăți gestionarea erorilor
 
 // Modificăm funcția fetchTokenBalances pentru a limita numărul de token-uri procesate
+// Adăugăm o funcție pentru a detecta și filtra tokenurile cu valori anormale
+const isAbnormalToken = (token: any): boolean => {
+  // Verificăm dacă tokenul are o cantitate suspectă (prea mare)
+  if (token.tokenInfo && token.tokenInfo.decimals && token.balance) {
+    const decimals = Number(token.tokenInfo.decimals);
+    const formattedBalance = Number(token.balance) / Math.pow(10, decimals);
+
+    // Dacă balanța formatată este mai mare de 1 milion și nu este un stablecoin cunoscut
+    if (formattedBalance > 1000000) {
+      const symbol = token.tokenInfo.symbol.toLowerCase();
+      // Permitem stablecoin-urile cunoscute să aibă valori mari (USDT, USDC, DAI etc.)
+      const isStablecoin = ["usdt", "usdc", "dai", "busd", "tusd"].includes(
+        symbol
+      );
+
+      if (!isStablecoin) {
+        // Verificăm dacă numele tokenului conține cuvinte suspecte
+        const name = token.tokenInfo.name.toLowerCase();
+        const suspiciousWords = [
+          "vitalik",
+          "buterin",
+          "musk",
+          "elon",
+          "raccoon",
+          "pet",
+          "inu",
+          "shib",
+          "doge",
+          "moon",
+          "safe",
+          "cum",
+          "elon",
+        ];
+
+        if (suspiciousWords.some((word) => name.includes(word))) {
+          console.log(
+            `🚨 Detected suspicious token: ${token.tokenInfo.name} with large balance: ${formattedBalance}`
+          );
+          return true;
+        }
+
+        // Verificăm dacă balanța este extrem de mare (peste 100 milioane)
+        if (formattedBalance > 100000000) {
+          console.log(
+            `🚨 Detected token with extremely large balance: ${token.tokenInfo.name}, ${formattedBalance}`
+          );
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+};
+
+// Modificăm funcția fetchTokenBalances pentru a filtra tokenurile anormale
 export const fetchTokenBalances = async (address: string) => {
   try {
     console.log("🔍 Fetching token balances for address:", address);
@@ -838,17 +894,24 @@ export const fetchTokenBalances = async (address: string) => {
           if (tokenBalances.size >= 50) break;
         }
 
-        // Adăugăm token-urile la rezultat
+        // Adăugăm token-urile la rezultat, dar filtrăm cele anormale
         // Convertim Map la Array pentru a evita eroarea de iterare
         Array.from(tokenBalances.entries()).forEach(([_, tokenData]) => {
-          tokens.push({
+          const token = {
             tokenInfo: tokenData.tokenInfo,
             balance: tokenData.balance,
-          });
+          };
+
+          // Verificăm dacă tokenul este anormal înainte de a-l adăuga
+          if (!isAbnormalToken(token)) {
+            tokens.push(token);
+          }
         });
 
         console.log(
-          `✅ Added ${tokenBalances.size} tokens based on transaction history`
+          `✅ Added ${
+            tokens.length - 1
+          } tokens based on transaction history (after filtering)`
         );
       } else {
         // Dacă nu avem rezultate valide pentru tranzacțiile cu token-uri, adăugăm token-uri mock
@@ -908,8 +971,8 @@ export const fetchTokenBalances = async (address: string) => {
                 tokenItem.symbol
               );
 
-              // Adăugăm tokenul la lista noastră
-              tokens.push({
+              // Creăm obiectul token
+              const token = {
                 tokenInfo: {
                   name: tokenItem.name,
                   symbol: tokenItem.symbol,
@@ -919,7 +982,12 @@ export const fetchTokenBalances = async (address: string) => {
                   contractAddress: tokenItem.contractAddress.toLowerCase(),
                 },
                 balance: tokenItem.balance,
-              });
+              };
+
+              // Verificăm dacă tokenul este anormal înainte de a-l adăuga
+              if (!isAbnormalToken(token)) {
+                tokens.push(token);
+              }
 
               // Limităm numărul total de tokenuri pentru a evita probleme de performanță
               if (tokens.length >= 100) break;

@@ -401,6 +401,67 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   // Add a ref to track if we've already processed the data
   const dataProcessedRef = useRef(false);
 
+  // Adăugăm o funcție pentru a verifica și corecta valorile anormale
+  const normalizeTokenValue = (
+    token: TokenData,
+    totalPortfolioValue: number
+  ): TokenData => {
+    if (!token || !token.tokenInfo) return token;
+
+    // Asigurăm-ne că formattedBalance este întotdeauna definit
+    const formattedBalance = token.formattedBalance || 0;
+
+    // Verificăm dacă tokenul are o valoare suspectă
+    if (token.value && token.value > 1000000000) {
+      // Peste 1 miliard USD
+      const symbol = token.tokenInfo.symbol.toLowerCase();
+      // Permitem stablecoin-urile cunoscute să aibă valori mari
+      const isStablecoin = ["usdt", "usdc", "dai", "busd", "tusd"].includes(
+        symbol
+      );
+
+      if (!isStablecoin) {
+        // Verificăm dacă numele tokenului conține cuvinte suspecte
+        const name = token.tokenInfo.name.toLowerCase();
+        const suspiciousWords = [
+          "vitalik",
+          "buterin",
+          "musk",
+          "elon",
+          "raccoon",
+          "pet",
+          "inu",
+          "shib",
+          "doge",
+          "moon",
+          "safe",
+        ];
+
+        if (
+          suspiciousWords.some((word) => name.includes(word)) ||
+          token.value > totalPortfolioValue * 0.9
+        ) {
+          console.log(
+            `🚨 Correcting suspicious token value: ${token.tokenInfo.name} from ${token.value} to 0`
+          );
+          // Resetăm valoarea și procentajul pentru tokenurile suspecte
+          return {
+            ...token,
+            formattedBalance,
+            value: 0,
+            percentage: 0,
+          };
+        }
+      }
+    }
+
+    return {
+      ...token,
+      formattedBalance,
+    };
+  };
+
+  // Modificăm useEffect pentru a aplica normalizarea
   useEffect(() => {
     if (isLoading) {
       setLoading(true);
@@ -437,7 +498,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     try {
       // Procesăm datele primite
       let totalTokenValue = 0;
-      const processedTokens = holdings.map((token: TokenData) => {
+      let processedTokens = holdings.map((token: TokenData) => {
         if (!token || !token.tokenInfo) {
           return {
             ...token,
@@ -452,7 +513,11 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           ? formattedBalance * token.tokenInfo.price.rate
           : 0;
 
-        totalTokenValue += value;
+        // Adăugăm la totalTokenValue doar dacă valoarea nu este suspectă
+        if (value < 1000000000) {
+          // Sub 1 miliard USD
+          totalTokenValue += value;
+        }
 
         return {
           ...token,
@@ -460,6 +525,30 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           value,
         };
       });
+
+      // Normalizăm valorile tokenurilor suspecte
+      processedTokens = processedTokens.map((token) =>
+        normalizeTokenValue(token, totalTokenValue)
+      ) as {
+        formattedBalance: number;
+        value: number;
+        tokenInfo: {
+          name: string;
+          symbol: string;
+          decimals: string;
+          price?: { rate: number };
+          image?: string;
+          contractAddress?: string;
+        };
+        balance: string;
+        percentage?: number;
+      }[];
+
+      // Recalculăm totalTokenValue după normalizare
+      totalTokenValue = processedTokens.reduce(
+        (sum, token) => sum + (token.value || 0),
+        0
+      );
 
       // Calculăm valorile pentru statistici
       let incomingValue = 0;
@@ -1406,6 +1495,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg" ||
+                            "/placeholder.svg" ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||

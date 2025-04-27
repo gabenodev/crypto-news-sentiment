@@ -147,6 +147,66 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
+// Modificăm funcția normalizeTokenValue pentru a asigura că formattedBalance este întotdeauna definit
+const normalizeTokenValue = (
+  token: TokenData,
+  totalPortfolioValue: number
+): TokenData => {
+  if (!token || !token.tokenInfo) return token;
+
+  // Asigurăm-ne că formattedBalance este întotdeauna definit
+  const formattedBalance = token.formattedBalance || 0;
+
+  // Verificăm dacă tokenul are o valoare suspectă
+  if (token.value && token.value > 1000000000) {
+    // Peste 1 miliard USD
+    const symbol = token.tokenInfo.symbol.toLowerCase();
+    // Permitem stablecoin-urile cunoscute să aibă valori mari
+    const isStablecoin = ["usdt", "usdc", "dai", "busd", "tusd"].includes(
+      symbol
+    );
+
+    if (!isStablecoin) {
+      // Verificăm dacă numele tokenului conține cuvinte suspecte
+      const name = token.tokenInfo.name.toLowerCase();
+      const suspiciousWords = [
+        "vitalik",
+        "buterin",
+        "musk",
+        "elon",
+        "raccoon",
+        "pet",
+        "inu",
+        "shib",
+        "doge",
+        "moon",
+        "safe",
+      ];
+
+      if (
+        suspiciousWords.some((word) => name.includes(word)) ||
+        token.value > totalPortfolioValue * 0.9
+      ) {
+        console.log(
+          `🚨 Correcting suspicious token value: ${token.tokenInfo.name} from ${token.value} to 0`
+        );
+        // Resetăm valoarea și procentajul pentru tokenurile suspecte
+        return {
+          ...token,
+          formattedBalance,
+          value: 0,
+          percentage: 0,
+        };
+      }
+    }
+  }
+
+  return {
+    ...token,
+    formattedBalance,
+  };
+};
+
 // Modificăm componenta pentru a utiliza datele primite prin props
 const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   address = "",
@@ -249,6 +309,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   // Create a ref to track if we've already updated stats
   const statsUpdatedRef = useRef(false);
 
+  // Modificăm useEffect pentru a aplica normalizarea
   useEffect(() => {
     if (isLoading) {
       setLoading(true);
@@ -271,7 +332,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
 
       // Procesăm datele primite
       let totalValue = 0;
-      const processedTokens = holdings.map((token: TokenData) => {
+      let processedTokens = holdings.map((token: TokenData) => {
         const decimals = Number(token.tokenInfo.decimals) || 0;
         // Asigurăm-ne că formattedBalance este calculat corect
         const formattedBalance = Number(token.balance) / Math.pow(10, decimals);
@@ -279,7 +340,11 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
           ? formattedBalance * token.tokenInfo.price.rate
           : 0;
 
-        totalValue += value;
+        // Adăugăm la totalValue doar dacă valoarea nu este suspectă
+        if (value < 1000000000) {
+          // Sub 1 miliard USD
+          totalValue += value;
+        }
 
         // Make sure formattedBalance is properly set
         return {
@@ -288,6 +353,29 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
           value,
         };
       });
+
+      // Normalizăm valorile tokenurilor suspecte
+      processedTokens = processedTokens.map((token) =>
+        normalizeTokenValue(token, totalValue)
+      ) as {
+        formattedBalance: number;
+        value: number;
+        tokenInfo: {
+          name: string;
+          symbol: string;
+          decimals: string;
+          price?: { rate: number };
+          image?: string;
+        };
+        balance: string;
+        percentage?: number;
+      }[];
+
+      // Recalculăm totalValue după normalizare
+      totalValue = processedTokens.reduce(
+        (sum, token) => sum + (token.value || 0),
+        0
+      );
 
       // Calculăm procentajele și sortăm după valoare
       const dataWithPercentages = processedTokens
@@ -779,7 +867,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider cursor-pointer"
+                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:dark-text-secondary uppercase tracking-wider cursor-pointer"
                       onClick={() => handleSortBy("balance")}
                     >
                       Balance{" "}
@@ -788,13 +876,13 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider"
+                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:dark-text-secondary uppercase tracking-wider"
                     >
                       Price
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider cursor-pointer"
+                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:dark-text-secondary uppercase tracking-wider cursor-pointer"
                       onClick={() => handleSortBy("value")}
                     >
                       Value{" "}
@@ -802,7 +890,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
                     </th>
                     <th
                       scope="col"
-                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-dark-text-secondary uppercase tracking-wider"
+                      className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:dark-text-secondary uppercase tracking-wider"
                     >
                       % of Total
                     </th>
