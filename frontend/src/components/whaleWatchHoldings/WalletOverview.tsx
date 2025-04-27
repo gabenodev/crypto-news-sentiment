@@ -1337,6 +1337,22 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           >
             {showAllTokens ? "Show Top 5" : "Show All"}
           </button>
+          <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
+            <span className="flex items-center">
+              <FiInfo className="mr-1" size={12} />
+              Notă: Datorită limitărilor API, este posibil să nu fie afișate
+              toate tokenurile. Pentru o vizualizare completă, verificați pe
+              <a
+                href={`https://etherscan.io/address/${address}#tokentxns`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-teal-600 dark:text-teal-400 hover:underline ml-1"
+              >
+                Etherscan
+              </a>
+              .
+            </span>
+          </div>
         </div>
 
         {processedHoldings.length > 0 ? (
@@ -1390,6 +1406,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||

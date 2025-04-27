@@ -770,7 +770,7 @@ export const fetchTokenBalances = async (address: string) => {
     // și apoi procesăm datele local în loc să facem apeluri separate pentru fiecare token
     try {
       // Folosim un singur apel pentru a obține tranzacțiile token
-      const tokenTxUrl = `https://api.etherscan.io/api?module=account&action=tokentx&address=${address}&page=1&offset=100&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
+      const tokenTxUrl = `https://api.etherscan.io/api?module=account&action=tokentx&address=${address}&page=1&offset=300&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
       console.log("🔍 Fetching token transactions...");
 
       // Creștem timpul de cache pentru a reduce apelurile repetate
@@ -834,8 +834,8 @@ export const fetchTokenBalances = async (address: string) => {
             });
           }
 
-          // Limităm la primele 15 token-uri pentru a reduce apelurile API
-          if (tokenBalances.size >= 15) break;
+          // Limităm la primele 50 token-uri pentru a obține o vizualizare mai completă
+          if (tokenBalances.size >= 50) break;
         }
 
         // Adăugăm token-urile la rezultat
@@ -859,6 +859,82 @@ export const fetchTokenBalances = async (address: string) => {
       console.error("❌ Error fetching token transactions:", tokenTxError);
       // Adăugăm token-uri fallback în caz de eroare
       addFallbackTokens(tokens);
+    }
+
+    // Încercăm să obținem mai multe tokenuri folosind endpoint-ul tokenlist dacă este disponibil
+    if (tokens.length < 10) {
+      try {
+        console.log(
+          "🔍 Încercăm să obținem mai multe tokenuri folosind endpoint-ul tokenlist..."
+        );
+        const tokenListUrl = `https://api.etherscan.io/api?module=account&action=tokenlist&address=${address}&apikey=${ETHERSCAN_API_KEY}`;
+
+        const tokenListData = await cachedApiCall(
+          tokenListUrl,
+          TOKEN_CACHE_TIME,
+          1
+        );
+        console.log("📜 Token list data status:", tokenListData.status);
+
+        if (
+          tokenListData.status === "1" &&
+          Array.isArray(tokenListData.result) &&
+          tokenListData.result.length > 0
+        ) {
+          console.log(
+            "📊 Token list found:",
+            tokenListData.result.length,
+            "tokens"
+          );
+
+          // Procesăm tokenurile din tokenlist
+          for (const tokenItem of tokenListData.result) {
+            // Verificăm dacă tokenul există deja în lista noastră
+            const existingTokenIndex = tokens.findIndex(
+              (t) =>
+                t.tokenInfo.contractAddress &&
+                t.tokenInfo.contractAddress.toLowerCase() ===
+                  tokenItem.contractAddress.toLowerCase()
+            );
+
+            if (existingTokenIndex === -1) {
+              // Obținem prețul tokenului
+              const price = await getTokenPrice(
+                tokenItem.contractAddress,
+                tokenItem.symbol
+              );
+              const imageUrl = getTokenImage(
+                tokenItem.contractAddress,
+                tokenItem.symbol
+              );
+
+              // Adăugăm tokenul la lista noastră
+              tokens.push({
+                tokenInfo: {
+                  name: tokenItem.name,
+                  symbol: tokenItem.symbol,
+                  decimals: tokenItem.decimals,
+                  price: price ? { rate: price } : undefined,
+                  image: imageUrl,
+                  contractAddress: tokenItem.contractAddress.toLowerCase(),
+                },
+                balance: tokenItem.balance,
+              });
+
+              // Limităm numărul total de tokenuri pentru a evita probleme de performanță
+              if (tokens.length >= 100) break;
+            }
+          }
+
+          console.log(
+            "✅ Added additional tokens from tokenlist, total now:",
+            tokens.length
+          );
+        }
+      } catch (tokenListError) {
+        console.error("❌ Error fetching token list:", tokenListError);
+        // Continuăm cu tokenurile pe care le avem deja
+      }
     }
 
     // Salvăm rezultatele în cache pentru a reduce apelurile viitoare

@@ -19,6 +19,7 @@ import {
   FiBarChart2,
   FiRefreshCw,
   FiExternalLink,
+  FiInfo,
 } from "react-icons/fi";
 import { generateCryptoPlaceholder } from "../../utils/placeholderGenerator";
 import WalletLoadingState from "./components/WalletLoadingState";
@@ -526,6 +527,22 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
             <FiBarChart2 className="mr-2" />
             Bar Chart
           </button>
+        </div>
+        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
+          <span className="flex items-center">
+            <FiInfo className="mr-1" size={12} />
+            Notă: Datorită limitărilor API, este posibil să nu fie afișate toate
+            tokenurile. Pentru o vizualizare completă, verificați pe
+            <a
+              href={`https://etherscan.io/address/${address}#tokentxns`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-teal-600 dark:text-teal-400 hover:underline ml-1"
+            >
+              Etherscan
+            </a>
+            .
+          </span>
         </div>
       </div>
 
