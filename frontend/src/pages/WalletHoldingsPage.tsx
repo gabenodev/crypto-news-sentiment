@@ -108,7 +108,7 @@ const WalletHoldingsPage: React.FC = () => {
         transition={{ duration: 0.5 }}
         className="mb-8 text-center"
       >
-        <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-600 to-teal-500 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-bold mb-2 bg-gradient-to-r from-teal-400 to-green-500 bg-clip-text text-transparent">
           Wallet Holdings Explorer
         </h1>
         <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
