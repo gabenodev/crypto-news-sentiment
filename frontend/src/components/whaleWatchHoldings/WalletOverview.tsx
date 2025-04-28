@@ -32,6 +32,7 @@ import {
   Legend,
   Area,
   AreaChart,
+  ReferenceLine,
 } from "recharts";
 import { generateCryptoPlaceholder } from "../../utils/placeholderGenerator";
 import WalletLoadingState from "./components/WalletLoadingState";
@@ -307,10 +308,10 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
         // Volatilitatea diferă în funcție de tipul de activ
         let volatility;
-        if (symbol === "eth") volatility = 0.03; // ETH are volatilitate medie
+        if (symbol === "eth") volatility = 0.05; // Mărită de la 0.03 la 0.05
         else if (["usdt", "usdc", "dai", "busd", "tusd"].includes(symbol))
-          volatility = 0.002; // Stablecoins au volatilitate foarte mică
-        else volatility = 0.05; // Alte token-uri au volatilitate mai mare
+          volatility = 0.003; // Mărită de la 0.002 la 0.003
+        else volatility = 0.08; // Mărită de la 0.05 la 0.08
 
         // Generăm un preț istoric deterministic bazat pe data și simbol
         // Folosim o funcție sinusoidală pentru a simula ciclurile de piață
@@ -325,7 +326,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
         // Adăugăm un trend general descendent pe măsură ce mergem în trecut
         // Acest lucru simulează creșterea generală a pieței crypto în timp
-        const trendFactor = 1 - (daysPassed / dataPoints) * 0.15;
+        const trendFactor = 1 - (daysPassed / dataPoints) * 0.25; // Mărit de la 0.15 la 0.25
 
         const historicalPrice = currentPrice * priceFactor * trendFactor;
 
@@ -993,6 +994,10 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                 tick={{ fill: "#A0A0A0" }}
                 axisLine={{ stroke: "rgba(160, 160, 160, 0.2)" }}
                 tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
+                domain={["auto", "auto"]}
+                scale="linear"
+                padding={{ top: 10, bottom: 10 }}
+                allowDataOverflow={false}
               />
               <CartesianGrid
                 strokeDasharray="3 3"
@@ -1008,6 +1013,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                 fillOpacity={1}
                 fill="url(#colorValue)"
               />
+              <ReferenceLine y={0} stroke="rgba(160, 160, 160, 0.2)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -1469,6 +1475,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
