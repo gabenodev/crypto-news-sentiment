@@ -3,6 +3,7 @@
 import React from "react";
 
 import { useState, useEffect, useRef } from "react";
+import { CHAIN_NATIVE_TOKENS } from "../../utils/API/etherScanAPI";
 import { motion } from "framer-motion";
 import {
   FiExternalLink,
@@ -15,7 +16,7 @@ import {
 } from "react-icons/fi";
 import WalletLoadingState from "./components/WalletLoadingState";
 
-// Actualizăm interfața WalletTransactionHistoryProps pentru a include noile props
+// Update the interface to include chainId
 interface WalletTransactionHistoryProps {
   address: string;
   onLoadingChange?: (loading: boolean) => void;
@@ -24,6 +25,7 @@ interface WalletTransactionHistoryProps {
   error?: string | null;
   loadingStatus?: string;
   refreshData?: () => void;
+  chainId?: number;
 }
 
 interface TransactionData {
@@ -40,7 +42,7 @@ interface TransactionData {
   tokenDecimal?: string;
 }
 
-// Modificăm componenta pentru a utiliza datele primite prin props
+// Update the component to use chainId
 const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
   address,
   onLoadingChange,
@@ -49,6 +51,7 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
   error = null,
   loadingStatus = "Inițializare...",
   refreshData,
+  chainId = 1,
 }) => {
   const [loading, setLoading] = useState(isLoading);
   const [localError, setLocalError] = useState<string | null>(error);
@@ -153,21 +156,31 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
   };
 
-  // Format ETH value with full numbers
-  const formatEthValue = (value: number) => {
+  // Update formatEthValue function to use the correct token symbol
+  const formatNativeTokenValue = (value: number) => {
     try {
-      if (value === 0) return "0 ETH";
+      if (value === 0) return `0 ${CHAIN_NATIVE_TOKENS[chainId]}`;
 
       // Format with 6 decimal places for small values, fewer for larger values
       const formattedValue = value.toLocaleString("en-US", {
         maximumFractionDigits: value < 0.01 ? 6 : value < 1 ? 4 : 2,
       });
 
-      return `${formattedValue} ETH`;
+      return `${formattedValue} ${CHAIN_NATIVE_TOKENS[chainId]}`;
     } catch (error) {
-      console.error("Error formatting ETH value:", error);
-      return `${value} ETH`;
+      console.error(
+        `Error formatting ${CHAIN_NATIVE_TOKENS[chainId]} value:`,
+        error
+      );
+      return `${value} ${CHAIN_NATIVE_TOKENS[chainId]}`;
     }
+  };
+
+  // Update the explorer URL based on the chain
+  const getExplorerUrl = (txHash: string) => {
+    return chainId === 56
+      ? `https://bscscan.com/tx/${txHash}`
+      : `https://etherscan.io/tx/${txHash}`;
   };
 
   // Get transaction direction
@@ -416,12 +429,12 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
                           }`}
                         >
                           {direction === "incoming" ? "+" : "-"}
-                          {formatEthValue(tx.value)}
+                          {formatNativeTokenValue(tx.value)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <a
-                          href={`https://etherscan.io/tx/${tx.transactionHash}`}
+                          href={getExplorerUrl(tx.transactionHash)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 transition-colors"

@@ -12,6 +12,7 @@ import {
   FiCopy,
   FiExternalLink,
   FiClock,
+  FiGlobe,
 } from "react-icons/fi";
 import WalletOverview from "./WalletOverview";
 import WalletHoldings from "./WalletHoldings";
@@ -23,6 +24,8 @@ import {
   fetchTokenBalances,
   fetchTransactionHistory,
   getEthPrice,
+  CHAIN_NAMES,
+  CHAIN_NATIVE_TOKENS,
 } from "../../utils/API/etherScanAPI";
 
 // Popular wallets with names
@@ -66,6 +69,14 @@ const WalletDashboard: React.FC = () => {
     tokenCount: 0,
     ethBalance: 0,
   });
+  // Add state for selected chain
+  const [selectedChain, setSelectedChain] = useState<number>(1); // Default to Ethereum (1)
+
+  // Add state for available chains
+  const availableChains = [
+    { id: 1, name: "Ethereum", icon: "🔷" },
+    { id: 56, name: "BSC", icon: "🟡" },
+  ];
 
   // Adăugăm state-uri pentru a stoca datele la nivel de Dashboard
   const [holdings, setHoldings] = useState<any[]>([]);
@@ -135,6 +146,7 @@ const WalletDashboard: React.FC = () => {
   const isFetchingRef = useRef(false);
 
   // Înlocuim useEffect-ul care face fetch-ul datelor pentru a include și obținerea prețului ETH
+  // Update the data fetching useEffect to include chainId
   useEffect(() => {
     if (address && isValidAddress && !isFetchingRef.current) {
       // Set the flag to prevent concurrent fetches
@@ -142,38 +154,65 @@ const WalletDashboard: React.FC = () => {
 
       const fetchAllData = async () => {
         setIsLoading(true);
-        setLoadingStatus("Loading wallet data...");
+        setLoadingStatus(
+          `Loading wallet data from ${CHAIN_NAMES[selectedChain]}...`
+        );
         setError(null); // Reset any previous errors
 
         try {
-          console.log("🔄 Starting data fetch for wallet:", address);
+          console.log(
+            `🔄 Starting data fetch for wallet: ${address} on ${CHAIN_NAMES[selectedChain]}`
+          );
 
-          // Fetch ETH price first
-          console.log("🔍 Fetching ETH price...");
-          const ethPriceData = await getEthPrice(); // Folosim funcția getEthPrice din etherScanAPI
-          console.log("💲 ETH price:", ethPriceData);
-          const currentEthPrice = ethPriceData || 3500; // Folosim 3500 ca fallback dacă API-ul eșuează
-          setEthPrice(currentEthPrice);
-          console.log("💲 Updated ETH price state:", currentEthPrice);
+          // Fetch ETH/BNB price first
+          console.log(
+            `🔍 Fetching ${CHAIN_NATIVE_TOKENS[selectedChain]} price...`
+          );
+          const nativePriceData = await getEthPrice(selectedChain);
+          console.log(
+            `💲 ${CHAIN_NATIVE_TOKENS[selectedChain]} price:`,
+            nativePriceData
+          );
+          const currentNativePrice =
+            nativePriceData || (selectedChain === 56 ? 300 : 3500); // Use appropriate fallback
+          setEthPrice(currentNativePrice);
+          console.log(
+            `💲 Updated ${CHAIN_NATIVE_TOKENS[selectedChain]} price state:`,
+            currentNativePrice
+          );
 
-          // Fetch ETH balance
-          console.log("🔍 Fetching ETH balance...");
-          const ethData = await fetchEthBalance(address);
-          console.log("📥 ETH balance response:", JSON.stringify(ethData));
-          let ethBalanceValue = 0;
+          // Fetch ETH/BNB balance
+          console.log(
+            `🔍 Fetching ${CHAIN_NATIVE_TOKENS[selectedChain]} balance...`
+          );
+          const nativeData = await fetchEthBalance(address, selectedChain);
+          console.log(
+            `📥 ${CHAIN_NATIVE_TOKENS[selectedChain]} balance response:`,
+            JSON.stringify(nativeData)
+          );
+          let nativeBalanceValue = 0;
 
-          // Verificăm dacă avem un rezultat valid
+          // Check if we have a valid result
           if (
-            typeof ethData.result === "string" &&
-            !isNaN(Number(ethData.result))
+            typeof nativeData.result === "string" &&
+            !isNaN(Number(nativeData.result))
           ) {
-            ethBalanceValue = Number.parseFloat(ethData.result) / 1e18;
-            console.log("💰 ETH balance in ETH:", ethBalanceValue);
-            setEthBalance(ethBalanceValue);
+            nativeBalanceValue = Number.parseFloat(nativeData.result) / 1e18;
+            console.log(
+              `💰 ${CHAIN_NATIVE_TOKENS[selectedChain]} balance in ${CHAIN_NATIVE_TOKENS[selectedChain]}:`,
+              nativeBalanceValue
+            );
+            setEthBalance(nativeBalanceValue);
           } else {
-            console.log("⚠️ Invalid ETH balance result, setting to 1 ETH");
-            ethBalanceValue = 1; // Folosim 1 ETH ca valoare implicită
-            setEthBalance(ethBalanceValue);
+            console.log(
+              `⚠️ Invalid ${
+                CHAIN_NATIVE_TOKENS[selectedChain]
+              } balance result, setting to ${
+                selectedChain === 56 ? "10" : "1"
+              } ${CHAIN_NATIVE_TOKENS[selectedChain]}`
+            );
+            nativeBalanceValue = selectedChain === 56 ? 10 : 1; // Use appropriate default value
+            setEthBalance(nativeBalanceValue);
           }
 
           // Fetch token balances with a small delay to avoid rate limiting
@@ -181,8 +220,10 @@ const WalletDashboard: React.FC = () => {
           console.log("⏱️ Waiting before token balance request...");
           await new Promise((resolve) => setTimeout(resolve, 500));
 
-          console.log("🔍 Fetching token balances...");
-          const tokenData = await fetchTokenBalances(address);
+          console.log(
+            `🔍 Fetching token balances on ${CHAIN_NAMES[selectedChain]}...`
+          );
+          const tokenData = await fetchTokenBalances(address, selectedChain);
           console.log(
             "📥 Token balances response:",
             tokenData.length,
@@ -196,8 +237,13 @@ const WalletDashboard: React.FC = () => {
           console.log("⏱️ Waiting before transaction history request...");
           await new Promise((resolve) => setTimeout(resolve, 500));
 
-          console.log("🔍 Fetching transaction history...");
-          const txHistory = await fetchTransactionHistory(address);
+          console.log(
+            `🔍 Fetching transaction history on ${CHAIN_NAMES[selectedChain]}...`
+          );
+          const txHistory = await fetchTransactionHistory(
+            address,
+            selectedChain
+          );
           console.log(
             "📥 Transaction history response:",
             txHistory.length,
@@ -206,34 +252,39 @@ const WalletDashboard: React.FC = () => {
           console.log("📊 Transaction sample:", txHistory.slice(0, 2));
           setTransactions(txHistory || []);
 
-          // Calculăm valoarea totală o singură dată aici și o transmitem la toate componentele
-          // Folosim prețul real al ETH pentru calcul
+          // Calculate total value once here and pass it to all components
+          // Use the real native token price for calculation
           const totalValue = calculateTotalValue(
             tokenData || [],
-            ethBalanceValue,
-            currentEthPrice
+            nativeBalanceValue,
+            currentNativePrice
           );
           console.log("💰 Calculated total value:", totalValue);
 
-          // Actualizăm statisticile o singură dată
+          // Update statistics once
           const updatedStats = {
             totalValue: totalValue,
             tokenCount: (tokenData || []).length,
-            ethBalance: ethBalanceValue,
+            ethBalance: nativeBalanceValue,
           };
 
-          // Actualizăm state-ul local
+          // Update local state
           setWalletStats(updatedStats);
 
-          // Transmitem statisticile actualizate la toate componentele copil
+          // Pass updated statistics to all child components
           handleStatsUpdate(updatedStats);
 
           console.log("✅ Data fetch complete");
         } catch (err: any) {
-          console.error("❌ Error loading wallet data:", err);
+          console.error(
+            `❌ Error loading wallet data from ${CHAIN_NAMES[selectedChain]}:`,
+            err
+          );
           setError(
             err.message ||
-              "Error loading data. Etherscan API may be temporarily unavailable."
+              `Error loading data. ${
+                selectedChain === 1 ? "Etherscan" : "BscScan"
+              } API may be temporarily unavailable.`
           );
 
           // Set empty data in case of error
@@ -241,7 +292,7 @@ const WalletDashboard: React.FC = () => {
           setTransactions([]);
           setEthBalance(0);
 
-          // Resetăm și statisticile în caz de eroare
+          // Reset statistics in case of error
           const emptyStats = {
             totalValue: 0,
             tokenCount: 0,
@@ -259,7 +310,7 @@ const WalletDashboard: React.FC = () => {
 
       fetchAllData();
     }
-  }, [address, isValidAddress, refreshKey]);
+  }, [address, isValidAddress, refreshKey, selectedChain]);
 
   // Modificăm funcția calculateTotalValue pentru a folosi prețul ETH primit ca parametru
   const calculateTotalValue = (
@@ -270,17 +321,18 @@ const WalletDashboard: React.FC = () => {
     let total = 0;
 
     // Verificăm dacă ETH există deja în holdings pentru a evita dublarea
-    const ethTokenExists = holdings.some(
+    const nativeTokenExists = holdings.some(
       (token) =>
         token.tokenInfo &&
         token.tokenInfo.symbol &&
-        token.tokenInfo.symbol.toLowerCase() === "eth" &&
+        token.tokenInfo.symbol.toLowerCase() ===
+          CHAIN_NATIVE_TOKENS[selectedChain].toLowerCase() &&
         token.tokenInfo.name &&
         !token.tokenInfo.name.toLowerCase().includes("defi")
     );
 
     // Adăugăm valoarea ETH doar dacă nu există deja în holdings
-    if (!ethTokenExists) {
+    if (!nativeTokenExists) {
       total += ethBalance * ethPrice; // Folosim ethPrice din parametru
     }
 
@@ -317,6 +369,16 @@ const WalletDashboard: React.FC = () => {
     setTimeout(() => setCopySuccess(false), 2000);
   };
 
+  // Handle chain change
+  const handleChainChange = (chainId: number) => {
+    if (chainId !== selectedChain) {
+      setSelectedChain(chainId);
+      setIsLoading(true);
+      setLoadingStatus(`Switching to ${CHAIN_NAMES[chainId]}...`);
+      // The useEffect will trigger a data refresh
+    }
+  };
+
   // If address is invalid, show error
   if (!isValidAddress) {
     return (
@@ -346,6 +408,13 @@ const WalletDashboard: React.FC = () => {
   const truncateAddress = (addr: string) => {
     if (!addr) return "";
     return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
+  };
+
+  // Get explorer URL based on selected chain
+  const getExplorerUrl = (address: string) => {
+    return selectedChain === 56
+      ? `https://bscscan.com/address/${address}`
+      : `https://etherscan.io/address/${address}`;
   };
 
   return (
@@ -378,13 +447,46 @@ const WalletDashboard: React.FC = () => {
                   {walletInfo ? walletInfo.name : "Anonymous Wallet"}
                 </h1>
                 <p className="text-xs text-gray-500 dark:text-dark-text-secondary text-center">
-                  {walletInfo ? walletInfo.description : "Ethereum address"}
+                  {walletInfo ? walletInfo.description : "Blockchain address"}
                 </p>
               </div>
             </div>
 
+            {/* Chain selector */}
+            <div className="px-5 py-3 flex justify-center">
+              <div className="bg-gray-50 dark:bg-dark-secondary rounded-lg p-2 mb-3 border border-gray-200 dark:border-gray-700 shadow-inner w-full">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-sm text-gray-500 dark:text-dark-text-secondary flex items-center">
+                    <FiGlobe
+                      className="mr-2 text-teal-500 dark:text-teal-400"
+                      size={14}
+                    />
+                    Blockchain
+                  </span>
+                </div>
+                <div className="flex space-x-2 mt-2">
+                  {availableChains.map((chain) => (
+                    <button
+                      key={chain.id}
+                      onClick={() => handleChainChange(chain.id)}
+                      className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
+                        selectedChain === chain.id
+                          ? "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border-l-2 border-teal-500 dark:border-teal-400"
+                          : "bg-white dark:bg-dark-tertiary text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary/80"
+                      }`}
+                    >
+                      <span className="flex items-center justify-center">
+                        <span className="mr-2">{chain.icon}</span>
+                        {chain.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             {/* Portfolio value card - centrat */}
-            <div className="p-5 flex justify-center">
+            <div className="px-5 flex justify-center">
               <div className="bg-gray-50 dark:bg-dark-secondary rounded-lg p-4 mb-5 border border-gray-200 dark:border-gray-700 shadow-inner w-full">
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-sm text-gray-500 dark:text-dark-text-secondary">
@@ -400,7 +502,8 @@ const WalletDashboard: React.FC = () => {
                 <div className="flex justify-between mt-2 text-sm">
                   <span className="text-gray-600 dark:text-dark-text-primary flex items-center">
                     <span className="inline-block w-2 h-2 rounded-full bg-teal-400 mr-2"></span>
-                    {walletStats.ethBalance.toFixed(4)} ETH
+                    {walletStats.ethBalance.toFixed(4)}{" "}
+                    {CHAIN_NATIVE_TOKENS[selectedChain]}
                   </span>
                   <span className="text-teal-600 dark:text-teal-400">
                     {walletStats.tokenCount} tokens
@@ -425,11 +528,13 @@ const WalletDashboard: React.FC = () => {
                       <FiCopy size={14} />
                     </button>
                     <a
-                      href={`https://etherscan.io/address/${address}`}
+                      href={getExplorerUrl(address)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 p-1 ml-1 transition-colors"
-                      title="View on Etherscan"
+                      title={`View on ${
+                        selectedChain === 56 ? "BscScan" : "Etherscan"
+                      }`}
                     >
                       <FiExternalLink size={14} />
                     </a>
@@ -585,8 +690,9 @@ const WalletDashboard: React.FC = () => {
                 {error}
               </p>
               <p className="mt-2 text-sm text-red-600 dark:text-red-300">
-                Etherscan API may be temporarily unavailable or has reached its
-                rate limit. Try again later or check another wallet.
+                {selectedChain === 56 ? "BscScan" : "Etherscan"} API may be
+                temporarily unavailable or has reached its rate limit. Try again
+                later or check another wallet.
               </p>
               <button
                 onClick={refreshData}
@@ -616,6 +722,7 @@ const WalletDashboard: React.FC = () => {
                 error={error}
                 loadingStatus={loadingStatus}
                 refreshData={refreshData}
+                chainId={selectedChain}
               />
             )}
             {activeTab === "holdings" && (
@@ -630,6 +737,7 @@ const WalletDashboard: React.FC = () => {
                 error={error}
                 loadingStatus={loadingStatus}
                 refreshData={refreshData}
+                chainId={selectedChain}
               />
             )}
             {activeTab === "transactions" && (
@@ -641,6 +749,7 @@ const WalletDashboard: React.FC = () => {
                 error={error}
                 loadingStatus={loadingStatus}
                 refreshData={refreshData}
+                chainId={selectedChain}
               />
             )}
           </motion.div>

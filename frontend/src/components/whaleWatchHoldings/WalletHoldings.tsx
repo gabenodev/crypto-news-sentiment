@@ -18,13 +18,15 @@ import {
   FiSearch,
   FiBarChart2,
   FiRefreshCw,
-  FiExternalLink,
   FiInfo,
 } from "react-icons/fi";
 import { generateCryptoPlaceholder } from "../../utils/placeholderGenerator";
 import WalletLoadingState from "./components/WalletLoadingState";
 
-// Update WalletHoldingsProps interface
+// Import the chain constants
+import { CHAIN_NATIVE_TOKENS } from "../../utils/API/etherScanAPI";
+
+// Update the WalletHoldingsProps interface to include chainId
 interface WalletHoldingsProps {
   address?: string;
   onLoadingChange?: (loading: boolean) => void;
@@ -36,6 +38,7 @@ interface WalletHoldingsProps {
   error?: string | null;
   loadingStatus?: string;
   refreshData?: () => void;
+  chainId?: number;
 }
 
 // Interface for token data
@@ -218,6 +221,7 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   error = null,
   loadingStatus = "Initializing...",
   refreshData,
+  chainId = 1,
 }: WalletHoldingsProps) => {
   const [loading, setLoading] = useState(isLoading);
   const [localError, setLocalError] = useState<string | null>(error);
@@ -544,6 +548,26 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   const handleRetry = () => {
     if (refreshData) {
       refreshData();
+    }
+  };
+
+  // Update formatEthValue function to use the correct token symbol
+  const formatNativeTokenValue = (value: number) => {
+    try {
+      if (value === 0) return `0 ${CHAIN_NATIVE_TOKENS[chainId]}`;
+
+      // Format with 6 decimal places for small values, fewer for larger values
+      const formattedValue = value.toLocaleString("en-US", {
+        maximumFractionDigits: value < 0.01 ? 6 : value < 1 ? 4 : 2,
+      });
+
+      return `${formattedValue} ${CHAIN_NATIVE_TOKENS[chainId]}`;
+    } catch (error) {
+      console.error(
+        `Error formatting ${CHAIN_NATIVE_TOKENS[chainId]} value:`,
+        error
+      );
+      return `${value} ${CHAIN_NATIVE_TOKENS[chainId]}`;
     }
   };
 

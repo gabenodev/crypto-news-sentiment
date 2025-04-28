@@ -1,9 +1,34 @@
 // Improved API functions for Ethereum wallet data
 
-// Etherscan API Key - Înlocuim cu o cheie API validă
-// Cheia actuală "RP1AAGBP2YNUWFTAFP6KWT7GRRKC5BG5MM" este invalidă
-// Modificăm cheia API pentru a folosi cea care funcționează pentru endpoint-ul ethprice
+// Update the API key and add API URLs for different chains
 const ETHERSCAN_API_KEY = "RP1AAGBP2YNUWFTAFP6KWT7GRRKC5BG5MM";
+
+// Base URL for the v2 API that supports all chains
+const API_BASE_URL = "https://api.etherscan.io/v2/api";
+
+// Define API base URLs for different chains
+const CHAIN_API_URLS: Record<number, string> = {
+  1: "https://api.etherscan.io", // Ethereum Mainnet
+  56: "https://api.bscscan.com", // Binance Smart Chain
+};
+
+// Define chain names for display
+export const CHAIN_NAMES: Record<number, string> = {
+  1: "Ethereum",
+  56: "Binance Smart Chain",
+};
+
+// Define native token symbols for each chain
+export const CHAIN_NATIVE_TOKENS: Record<number, string> = {
+  1: "ETH",
+  56: "BNB",
+};
+
+// Define native token names for each chain
+export const CHAIN_NATIVE_TOKEN_NAMES: Record<number, string> = {
+  1: "Ethereum",
+  56: "Binance Coin",
+};
 
 // Interfaces for data types
 interface TokenBalance {
@@ -184,9 +209,15 @@ const fetchCryptoPrices = async (): Promise<Record<string, number>> => {
 };
 
 // Function to get a token's icon - simplified to use only placeholders
-const getTokenImage = (contractAddress: string, symbol: string): string => {
-  // Check if we have the predefined icon
-  const predefinedImage = POPULAR_TOKEN_IMAGES[contractAddress.toLowerCase()];
+const getTokenImage = (
+  contractAddress: string,
+  symbol: string,
+  chainId = 1
+): string => {
+  // Check if we have the predefined icon for this chain
+  const predefinedImages =
+    chainId === 56 ? POPULAR_TOKEN_IMAGES_BSC : POPULAR_TOKEN_IMAGES;
+  const predefinedImage = predefinedImages[contractAddress.toLowerCase()];
   if (predefinedImage) {
     return predefinedImage;
   }
@@ -195,20 +226,78 @@ const getTokenImage = (contractAddress: string, symbol: string): string => {
   return `/placeholder.svg?height=32&width=32&query=${symbol}`;
 };
 
+// Function to determine if a token is abnormal based on certain criteria
+const isAbnormalToken = (token: any): boolean => {
+  // Check if the token has a suspicious value
+  if (token.tokenInfo && token.tokenInfo.decimals && token.balance) {
+    const decimals = Number(token.tokenInfo.decimals);
+    const formattedBalance = Number(token.balance) / Math.pow(10, decimals);
+
+    // If the formatted balance is over 1 million and not a known stablecoin
+    if (formattedBalance > 1000000) {
+      const symbol = token.tokenInfo.symbol.toLowerCase();
+      // Allow known stablecoins to have large values (USDT, USDC, DAI etc.)
+      const isStablecoin = ["usdt", "usdc", "dai", "busd", "tusd"].includes(
+        symbol
+      );
+
+      if (!isStablecoin) {
+        // Check if token name contains suspicious words
+        const name = token.tokenInfo.name.toLowerCase();
+        const suspiciousWords = [
+          "vitalik",
+          "buterin",
+          "musk",
+          "elon",
+          "raccoon",
+          "pet",
+          "inu",
+          "shib",
+          "doge",
+          "moon",
+          "safe",
+          "cum",
+          "elon",
+        ];
+
+        if (suspiciousWords.some((word) => name.includes(word))) {
+          console.log(
+            `🚨 Detected suspicious token: ${token.tokenInfo.name} with large balance: ${formattedBalance}`
+          );
+          return true;
+        }
+
+        // Check if balance is extremely large (over 100 million)
+        if (formattedBalance > 100000000) {
+          console.log(
+            `🚨 Detected token with extremely large balance: ${token.tokenInfo.name}, ${formattedBalance}`
+          );
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+};
+
 // Function to get a token's price
 const getTokenPrice = async (
   contractAddress: string,
-  symbol: string
+  symbol: string,
+  chainId = 1
 ): Promise<number | null> => {
   // Check if we have the price in cache and if it hasn't expired (5 minutes)
-  const cacheKey = contractAddress.toLowerCase();
+  const cacheKey = `${contractAddress.toLowerCase()}_${chainId}`;
   const cacheEntry = tokenPriceCache[cacheKey];
   if (cacheEntry && Date.now() - cacheEntry.timestamp < 5 * 60 * 1000) {
     return cacheEntry.price;
   }
 
-  // Check if we have the predefined price
-  const predefinedPrice = POPULAR_TOKEN_PRICES[cacheKey];
+  // Check if we have the predefined price for this chain
+  const predefinedPrices =
+    chainId === 56 ? POPULAR_TOKEN_PRICES_BSC : POPULAR_TOKEN_PRICES;
+  const predefinedPrice = predefinedPrices[contractAddress.toLowerCase()];
   if (predefinedPrice) {
     // Save to cache
     tokenPriceCache[cacheKey] = {
@@ -233,15 +322,16 @@ const getTokenPrice = async (
     }
 
     // If we don't find the price in the backend API, try with CoinGecko
+    const network = chainId === 56 ? "binance-smart-chain" : "ethereum";
     const response = await fetch(
-      `https://api.coingecko.com/api/v3/simple/token_price/ethereum?contract_addresses=${contractAddress}&vs_currencies=usd`
+      `https://api.coingecko.com/api/v3/simple/token_price/${network}?contract_addresses=${contractAddress}&vs_currencies=usd`
     );
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-    const price = data[cacheKey]?.usd || null;
+    const price = data[contractAddress.toLowerCase()]?.usd || null;
 
     // Save to cache
     if (price !== null) {
@@ -259,9 +349,10 @@ const getTokenPrice = async (
 };
 
 // Exportăm funcția getEthPrice pentru a o putea folosi în WalletDashboard
-export const getEthPrice = async (): Promise<number | null> => {
+export const getEthPrice = async (chainId = 1): Promise<number | null> => {
   // Check if we have the price in cache and if it hasn't expired (5 minutes)
-  const cacheEntry = tokenPriceCache["ethereum"];
+  const cacheKey = chainId === 56 ? "binance_coin" : "ethereum";
+  const cacheEntry = tokenPriceCache[cacheKey];
   if (cacheEntry && Date.now() - cacheEntry.timestamp < 5 * 60 * 1000) {
     return cacheEntry.price;
   }
@@ -269,40 +360,65 @@ export const getEthPrice = async (): Promise<number | null> => {
   try {
     // Try to get the price from the backend API
     const prices = await fetchCryptoPrices();
+    const symbol = chainId === 56 ? "bnb" : "eth";
 
-    if (prices["eth"]) {
+    if (prices[symbol]) {
       // Save to cache
-      tokenPriceCache["ethereum"] = {
-        price: prices["eth"],
+      tokenPriceCache[cacheKey] = {
+        price: prices[symbol],
         timestamp: Date.now(),
       };
-      return prices["eth"];
+      return prices[symbol];
     }
 
-    // If we don't find the price in the backend API, try with CoinGecko
-    const response = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd"
+    // If we don't find the price in the backend API, try with the blockchain explorer API
+    const apiUrl = CHAIN_API_URLS[chainId] || CHAIN_API_URLS[1];
+    const action = chainId === 56 ? "bnbprice" : "ethprice";
+
+    const url = `${apiUrl}/v2/api?chainid=${chainId}&module=stats&action=${action}&apikey=${ETHERSCAN_API_KEY}`;
+    const response = await cachedApiCall(url, 5 * 60 * 1000);
+
+    if (response.status === "1" && response.result) {
+      const price = Number.parseFloat(response.result.ethusd);
+
+      // Save to cache
+      if (!isNaN(price)) {
+        tokenPriceCache[cacheKey] = {
+          price,
+          timestamp: Date.now(),
+        };
+        return price;
+      }
+    }
+
+    // If all else fails, try CoinGecko
+    const coinGeckoId = chainId === 56 ? "binancecoin" : "ethereum";
+    const coinGeckoResponse = await fetch(
+      `https://api.coingecko.com/api/v3/simple/price?ids=${coinGeckoId}&vs_currencies=usd`
     );
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (coinGeckoResponse.ok) {
+      const data = await coinGeckoResponse.json();
+      const price = data[coinGeckoId]?.usd || null;
+
+      // Save to cache
+      if (price !== null) {
+        tokenPriceCache[cacheKey] = {
+          price,
+          timestamp: Date.now(),
+        };
+      }
+      return price;
     }
 
-    const data = await response.json();
-    const price = data.ethereum?.usd || null;
-
-    // Save to cache
-    if (price !== null) {
-      tokenPriceCache["ethereum"] = {
-        price,
-        timestamp: Date.now(),
-      };
-    }
-
-    return price;
+    // Return fallback price if all APIs fail
+    return chainId === 56 ? 300 : 3500;
   } catch (error) {
-    console.error("Error getting ETH price:", error);
-    // Return an approximate price for ETH in case of error
-    return 3500;
+    console.error(
+      `❌ Error getting ${CHAIN_NATIVE_TOKENS[chainId]} price:`,
+      error
+    );
+    // Return an approximate price in case of error
+    return chainId === 56 ? 300 : 3500;
   }
 };
 
@@ -310,12 +426,12 @@ export const getEthPrice = async (): Promise<number | null> => {
 // Modificăm funcția isApiKeyValid pentru a verifica specific endpoint-ul ethprice
 const isApiKeyValid = async (): Promise<boolean> => {
   try {
-    // Facem un apel de test pentru a verifica dacă API key-ul este valid pentru ethprice
-    const testUrl = `https://api.etherscan.io/api?module=stats&action=ethprice&apikey=${ETHERSCAN_API_KEY}`;
+    // Test call to verify if the API key is valid for ethprice
+    const testUrl = `${API_BASE_URL}?chainid=1&module=stats&action=ethprice&apikey=${ETHERSCAN_API_KEY}`;
     const response = await fetch(testUrl);
     const data = await response.json();
 
-    // Dacă primim status "1", API key-ul este valid pentru acest endpoint
+    // If we get status "1", the API key is valid for this endpoint
     return data.status === "1";
   } catch (error) {
     console.error("Error checking API key validity:", error);
@@ -329,10 +445,10 @@ const isEndpointAvailable = async (
   action: string
 ): Promise<boolean> => {
   try {
-    // Facem un apel de test pentru a verifica disponibilitatea endpoint-ului
-    let testUrl = `https://api.etherscan.io/api?module=${module}&action=${action}&apikey=${ETHERSCAN_API_KEY}`;
+    // Test call to check endpoint availability
+    let testUrl = `${API_BASE_URL}?chainid=1&module=${module}&action=${action}&apikey=${ETHERSCAN_API_KEY}`;
 
-    // Pentru endpoint-urile care necesită parametri, adăugăm valori dummy
+    // For endpoints that require parameters, add dummy values
     if (action === "balance" || action === "tokenbalance") {
       testUrl +=
         "&address=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045&tag=latest";
@@ -344,10 +460,10 @@ const isEndpointAvailable = async (
     const response = await fetch(testUrl);
     const data = await response.json();
 
-    // Verificăm dacă răspunsul indică o eroare de API key
+    // Check if the response indicates an API key error
     if (data.message && data.message.includes("Invalid API Key")) {
       console.warn(
-        `Endpoint ${module}/${action} nu este disponibil cu această cheie API`
+        `Endpoint ${module}/${action} is not available with this API key`
       );
       return false;
     }
@@ -388,7 +504,7 @@ const cachedApiCall = async (
   try {
     console.log("🌐 Calling API:", url.substring(0, 50) + "...");
 
-    // Adăugăm un delay aleatoriu pentru a evita rate limiting
+    // Add a random delay to avoid rate limiting
     const randomDelay = Math.floor(Math.random() * 500);
     await new Promise((resolve) => setTimeout(resolve, randomDelay));
 
@@ -404,7 +520,7 @@ const cachedApiCall = async (
       JSON.stringify(data).substring(0, 200) + "..."
     );
 
-    // Detectăm imediat erorile de API key și returnăm date mock
+    // Detect API key errors and return mock data
     if (
       data.status === "0" &&
       data.message === "NOTOK" &&
@@ -450,10 +566,14 @@ const cachedApiCall = async (
 
 // Helper function to generate appropriate mock response based on URL
 const getMockResponseForUrl = (url: string): any => {
+  // Extract chain ID from URL if present
+  const chainIdMatch = url.match(/chainid=(\d+)/);
+  const chainId = chainIdMatch ? Number.parseInt(chainIdMatch[1]) : 1; // Default to Ethereum if not found
+
   if (url.includes("action=balance")) {
     return {
       status: "1",
-      result: "1000000000000000000", // 1 ETH în wei
+      result: chainId === 56 ? "10000000000000000000" : "1000000000000000000", // 10 BNB or 1 ETH in wei
       message: "Mock balance due to API error",
     };
   } else if (url.includes("action=txlist")) {
@@ -463,20 +583,34 @@ const getMockResponseForUrl = (url: string): any => {
       : "0x0000000000000000000000000000000000000000";
     return {
       status: "1",
-      result: generateMockTransactions(address),
+      result: generateMockTransactions(address, chainId),
       message: "Mock transactions due to API error",
     };
   } else if (url.includes("action=tokentx")) {
     return {
       status: "1",
-      result: generateMockTokenTransactions(),
+      result: generateMockTokenTransactions(chainId),
       message: "Mock token transactions due to API error",
     };
   } else if (url.includes("action=tokenbalance")) {
     return {
       status: "1",
-      result: "1000000", // Valoare generică pentru token balance
+      result: "1000000", // Generic value for token balance
       message: "Mock token balance due to API error",
+    };
+  } else if (
+    url.includes("action=ethprice") ||
+    url.includes("action=bnbprice")
+  ) {
+    return {
+      status: "1",
+      result: {
+        ethbtc: chainId === 56 ? "0.01" : "0.05",
+        ethbtc_timestamp: Math.floor(Date.now() / 1000).toString(),
+        ethusd: chainId === 56 ? "300" : "3500",
+        ethusd_timestamp: Math.floor(Date.now() / 1000).toString(),
+      },
+      message: "Mock price due to API error",
     };
   }
 
@@ -489,16 +623,25 @@ const getMockResponseForUrl = (url: string): any => {
 };
 
 // Function to fetch ETH balance
-export const fetchEthBalance = async (address: string) => {
+export const fetchEthBalance = async (address: string, chainId = 1) => {
   try {
-    console.log("🔍 Fetching ETH balance for address:", address);
-    const url = `https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=${ETHERSCAN_API_KEY}`;
+    console.log(
+      `🔍 Fetching ${CHAIN_NATIVE_TOKENS[chainId]} balance for address:`,
+      address,
+      `on chain ${chainId}`
+    );
+    const apiUrl = CHAIN_API_URLS[chainId] || CHAIN_API_URLS[1]; // Default to Ethereum if chain not supported
+
+    const url = `${API_BASE_URL}?chainid=${chainId}&module=account&action=balance&address=${address}&tag=latest&apikey=${ETHERSCAN_API_KEY}`;
 
     // Use cached API call with 30 second cache time
     const data = await cachedApiCall(url, 30000);
-    console.log("💰 ETH Balance data:", JSON.stringify(data));
+    console.log(
+      `💰 ${CHAIN_NATIVE_TOKENS[chainId]} Balance data:`,
+      JSON.stringify(data)
+    );
 
-    // Verificăm dacă avem un rezultat valid
+    // Check if we have a valid result
     if (typeof data.result === "string" && !isNaN(Number(data.result))) {
       return {
         status: "1",
@@ -507,59 +650,99 @@ export const fetchEthBalance = async (address: string) => {
       };
     }
 
-    // Dacă nu avem un rezultat valid, returnăm un sold de 1 ETH ca fallback
-    console.log("⚠️ Invalid ETH balance result, returning fallback");
+    // If we don't have a valid result, return a fallback balance
+    console.log(
+      `⚠️ Invalid ${CHAIN_NATIVE_TOKENS[chainId]} balance result, returning fallback`
+    );
     return {
       status: "1",
-      result: "1000000000000000000", // 1 ETH în wei
+      result: chainId === 56 ? "10000000000000000000" : "1000000000000000000", // 10 BNB or 1 ETH in wei
       message: "Fallback due to API limitation",
     };
   } catch (error) {
-    console.error("❌ Error fetching ETH balance:", error);
+    console.error(
+      `❌ Error fetching ${CHAIN_NATIVE_TOKENS[chainId]} balance:`,
+      error
+    );
 
     // Return a fallback response instead of throwing
     return {
       status: "1",
-      result: "1000000000000000000", // 1 ETH în wei
+      result: chainId === 56 ? "10000000000000000000" : "1000000000000000000", // 10 BNB or 1 ETH in wei
       message: "Fallback due to API error",
     };
   }
 };
 
 // Function to generate mock token transactions
-const generateMockTokenTransactions = () => {
-  const mockTokens = [
-    {
-      contractAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7",
-      tokenName: "Tether USD",
-      tokenSymbol: "USDT",
-      tokenDecimal: "6",
-    },
-    {
-      contractAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-      tokenName: "USD Coin",
-      tokenSymbol: "USDC",
-      tokenDecimal: "6",
-    },
-    {
-      contractAddress: "0x6b175474e89094c44da98b954eedeac495271d0f",
-      tokenName: "Dai Stablecoin",
-      tokenSymbol: "DAI",
-      tokenDecimal: "18",
-    },
-    {
-      contractAddress: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-      tokenName: "Wrapped BTC",
-      tokenSymbol: "WBTC",
-      tokenDecimal: "8",
-    },
-    {
-      contractAddress: "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
-      tokenName: "Matic Token",
-      tokenSymbol: "MATIC",
-      tokenDecimal: "18",
-    },
-  ];
+const generateMockTokenTransactions = (chainId = 1) => {
+  // Define mock tokens based on chain
+  const mockTokens =
+    chainId === 56
+      ? [
+          {
+            contractAddress: "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+            tokenName: "BUSD Token",
+            tokenSymbol: "BUSD",
+            tokenDecimal: "18",
+          },
+          {
+            contractAddress: "0x55d398326f99059ff775485246999027b3197955",
+            tokenName: "Tether USD",
+            tokenSymbol: "USDT",
+            tokenDecimal: "18",
+          },
+          {
+            contractAddress: "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+            tokenName: "USD Coin",
+            tokenSymbol: "USDC",
+            tokenDecimal: "18",
+          },
+          {
+            contractAddress: "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c",
+            tokenName: "BTCB Token",
+            tokenSymbol: "BTCB",
+            tokenDecimal: "18",
+          },
+          {
+            contractAddress: "0x2170ed0880ac9a755fd29b2688956bd959f933f8",
+            tokenName: "Ethereum Token",
+            tokenSymbol: "ETH",
+            tokenDecimal: "18",
+          },
+        ]
+      : [
+          {
+            contractAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7",
+            tokenName: "Tether USD",
+            tokenSymbol: "USDT",
+            tokenDecimal: "6",
+          },
+          {
+            contractAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            tokenName: "USD Coin",
+            tokenSymbol: "USDC",
+            tokenDecimal: "6",
+          },
+          {
+            contractAddress: "0x6b175474e89094c44da98b954eedeac495271d0f",
+            tokenName: "Dai Stablecoin",
+            tokenSymbol: "DAI",
+            tokenDecimal: "18",
+          },
+          {
+            contractAddress: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+            tokenName: "Wrapped BTC",
+            tokenSymbol: "WBTC",
+            tokenDecimal: "8",
+          },
+          {
+            contractAddress: "0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0",
+            tokenName: "Matic Token",
+            tokenSymbol: "MATIC",
+            tokenDecimal: "18",
+          },
+        ];
 
   const mockTransactions = [];
   const now = Math.floor(Date.now() / 1000);
@@ -584,184 +767,32 @@ const generateMockTokenTransactions = () => {
       tokenDecimal: token.tokenDecimal,
       transactionIndex: String(Math.floor(Math.random() * 100)),
       gas: "100000",
-      gasPrice: "20000000000",
+      gasPrice: chainId === 56 ? "5000000000" : "20000000000", // Gas is cheaper on BSC
       gasUsed: "50000",
       cumulativeGasUsed: "1000000",
       input: "deprecated",
       confirmations: "1000",
+      chainId: chainId,
     });
   }
 
   return mockTransactions;
 };
 
-// Function to fetch transaction history
-// Modificăm și funcția fetchTransactionHistory pentru a îmbunătăți caching-ul
-export const fetchTransactionHistory = async (address: string) => {
+// Update the fetchTokenBalances function to support v2 and chain IDs
+export const fetchTokenBalances = async (address: string, chainId = 1) => {
   try {
-    console.log("🔍 Fetching transaction history for address:", address);
+    console.log(
+      `🔍 Fetching token balances for address: ${address} on chain ${chainId}`
+    );
 
-    // Check if we have a cached response for this address
-    const cacheKey = `tx_history_${address.toLowerCase()}`;
-    const cacheEntry = apiResponseCache[cacheKey];
-    if (cacheEntry && Date.now() - cacheEntry.timestamp < TX_CACHE_TIME) {
-      console.log("🔄 Using cached transaction history for:", address);
-      return cacheEntry.data;
-    }
-
-    const url = `https://api.etherscan.io/api?module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
-
-    // Use cached API call with 10 minute cache time and 2 retries
-    const data = await cachedApiCall(url, TX_CACHE_TIME, 2);
-    console.log("📜 Transaction history data status:", data.status);
-    console.log("📜 Transaction count:", data.result ? data.result.length : 0);
-
-    // Verificăm dacă avem rezultate valide
-    if (Array.isArray(data.result) && data.result.length > 0) {
-      // Process the transactions to match our expected format
-      const processedTx = data.result.map((tx: TransactionData) => ({
-        timestamp:
-          Number.parseInt(tx.timeStamp) ||
-          Date.now() / 1000 - Math.random() * 86400 * 30,
-        transactionHash:
-          tx.hash || `0x${Math.random().toString(16).substring(2)}`,
-        value: Number.parseFloat(tx.value) / 1e18 || Math.random() * 5, // Convert wei to ETH
-        from: tx.from || address,
-        to: tx.to || "0x" + Math.random().toString(16).substring(2, 42),
-        isError: tx.isError || "0",
-        gasUsed: tx.gasUsed || "21000",
-        gasPrice: tx.gasPrice || "20000000000",
-      }));
-
-      console.log("✅ Processed transactions:", processedTx.length);
-
-      // Salvăm rezultatele în cache
-      apiResponseCache[cacheKey] = {
-        data: processedTx,
-        timestamp: Date.now(),
-      };
-
-      return processedTx;
-    }
-
-    // Dacă nu avem rezultate valide, generăm date mock
-    console.log("⚠️ No valid transaction data, generating mock transactions");
-    const mockData = generateMockTransactions(address);
-    console.log("🔄 Generated mock transactions:", mockData.length);
-
-    // Salvăm datele mock în cache
-    apiResponseCache[cacheKey] = {
-      data: mockData,
-      timestamp: Date.now(),
-    };
-
-    return mockData;
-  } catch (error) {
-    console.error("❌ Error fetching transaction history:", error);
-    // Return mock data instead of empty array
-    const mockData = generateMockTransactions(address);
-    console.log("🔄 Generated mock transactions after error:", mockData.length);
-    return mockData;
-  }
-};
-
-// Add a helper function to generate mock transactions
-const generateMockTransactions = (address: string) => {
-  const mockTransactions = [];
-  const now = Math.floor(Date.now() / 1000);
-
-  // Generate 10 mock transactions
-  for (let i = 0; i < 10; i++) {
-    const isOutgoing = Math.random() > 0.5;
-    mockTransactions.push({
-      timestamp: now - i * 86400, // One day apart
-      transactionHash: `0x${Math.random().toString(16).substring(2)}`,
-      value: Math.random() * 2, // Random ETH amount
-      from: isOutgoing
-        ? address
-        : `0x${Math.random().toString(16).substring(2, 42)}`,
-      to: isOutgoing
-        ? `0x${Math.random().toString(16).substring(2, 42)}`
-        : address,
-      isError: "0",
-      gasUsed: "21000",
-      gasPrice: "20000000000",
-    });
-  }
-
-  return mockTransactions;
-};
-
-// Function to get token holdings
-// Modificăm funcția fetchTokenBalances pentru a reduce numărul de apeluri API
-// și a îmbunătăți gestionarea erorilor
-
-// Modificăm funcția fetchTokenBalances pentru a limita numărul de token-uri procesate
-// Adăugăm o funcție pentru a detecta și filtra tokenurile cu valori anormale
-const isAbnormalToken = (token: any): boolean => {
-  // Verificăm dacă tokenul are o cantitate suspectă (prea mare)
-  if (token.tokenInfo && token.tokenInfo.decimals && token.balance) {
-    const decimals = Number(token.tokenInfo.decimals);
-    const formattedBalance = Number(token.balance) / Math.pow(10, decimals);
-
-    // Dacă balanța formatată este mai mare de 1 milion și nu este un stablecoin cunoscut
-    if (formattedBalance > 1000000) {
-      const symbol = token.tokenInfo.symbol.toLowerCase();
-      // Permitem stablecoin-urile cunoscute să aibă valori mari (USDT, USDC, DAI etc.)
-      const isStablecoin = ["usdt", "usdc", "dai", "busd", "tusd"].includes(
-        symbol
-      );
-
-      if (!isStablecoin) {
-        // Verificăm dacă numele tokenului conține cuvinte suspecte
-        const name = token.tokenInfo.name.toLowerCase();
-        const suspiciousWords = [
-          "vitalik",
-          "buterin",
-          "musk",
-          "elon",
-          "raccoon",
-          "pet",
-          "inu",
-          "shib",
-          "doge",
-          "moon",
-          "safe",
-          "cum",
-          "elon",
-        ];
-
-        if (suspiciousWords.some((word) => name.includes(word))) {
-          console.log(
-            `🚨 Detected suspicious token: ${token.tokenInfo.name} with large balance: ${formattedBalance}`
-          );
-          return true;
-        }
-
-        // Verificăm dacă balanța este extrem de mare (peste 100 milioane)
-        if (formattedBalance > 100000000) {
-          console.log(
-            `🚨 Detected token with extremely large balance: ${token.tokenInfo.name}, ${formattedBalance}`
-          );
-          return true;
-        }
-      }
-    }
-  }
-
-  return false;
-};
-
-// Modificăm funcția fetchTokenBalances pentru a filtra tokenurile anormale
-export const fetchTokenBalances = async (address: string) => {
-  try {
-    console.log("🔍 Fetching token balances for address:", address);
-
-    // Check if we have a cached response for this address
-    const cacheKey = `token_balances_${address.toLowerCase()}`;
+    // Check if we have a cached response for this address and chain
+    const cacheKey = `token_balances_${address.toLowerCase()}_${chainId}`;
     const cacheEntry = apiResponseCache[cacheKey];
     if (cacheEntry && Date.now() - cacheEntry.timestamp < TOKEN_CACHE_TIME) {
-      console.log("🔄 Using cached token balances for:", address);
+      console.log(
+        `🔄 Using cached token balances for: ${address} on chain ${chainId}`
+      );
       return cacheEntry.data;
     }
 
@@ -770,66 +801,78 @@ export const fetchTokenBalances = async (address: string) => {
       throw new Error("Invalid Ethereum address");
     }
 
-    // Get ETH balance
-    const ethBalanceUrl = `https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=${ETHERSCAN_API_KEY}`;
-    const ethBalanceData = await cachedApiCall(ethBalanceUrl, TOKEN_CACHE_TIME);
+    // Get native token balance (ETH/BNB)
+    const apiUrl = CHAIN_API_URLS[chainId] || CHAIN_API_URLS[1];
+    const nativeBalanceUrl = `${API_BASE_URL}?chainid=${chainId}&module=account&action=balance&address=${address}&tag=latest&apikey=${ETHERSCAN_API_KEY}`;
+    const nativeBalanceData = await cachedApiCall(
+      nativeBalanceUrl,
+      TOKEN_CACHE_TIME
+    );
     console.log(
-      "💰 ETH Balance data for tokens:",
-      JSON.stringify(ethBalanceData)
+      `💰 ${CHAIN_NATIVE_TOKENS[chainId]} Balance data for tokens:`,
+      JSON.stringify(nativeBalanceData)
     );
 
-    // Get ETH price - using a more accurate price now
-    const ethPrice = (await getEthPrice()) || 3500; // Fallback to 3500 if API fails
-    console.log("💲 ETH Price:", ethPrice);
+    // Get native token price
+    const nativePrice =
+      (await getEthPrice(chainId)) || (chainId === 56 ? 300 : 3500); // Fallback prices
+    console.log(`💲 ${CHAIN_NATIVE_TOKENS[chainId]} Price:`, nativePrice);
 
-    // Add ETH as the first token with correct balance and value
+    // Add native token as the first token with correct balance and value
     const tokens: any[] = [];
 
-    // Verificăm dacă avem un rezultat valid pentru ETH
+    // Check if we have a valid result for the native token
     if (
-      typeof ethBalanceData.result === "string" &&
-      !isNaN(Number(ethBalanceData.result))
+      typeof nativeBalanceData.result === "string" &&
+      !isNaN(Number(nativeBalanceData.result))
     ) {
-      const ethBalanceInEth = Number(ethBalanceData.result) / 1e18; // Convert wei to ETH
-      console.log("💰 ETH Balance in ETH:", ethBalanceInEth);
+      const nativeBalanceInToken = Number(nativeBalanceData.result) / 1e18; // Convert wei to ETH/BNB
+      console.log(
+        `💰 ${CHAIN_NATIVE_TOKENS[chainId]} Balance in ${CHAIN_NATIVE_TOKENS[chainId]}:`,
+        nativeBalanceInToken
+      );
 
       tokens.push({
         tokenInfo: {
-          name: "Ethereum",
-          symbol: "ETH",
+          name: CHAIN_NATIVE_TOKEN_NAMES[chainId],
+          symbol: CHAIN_NATIVE_TOKENS[chainId],
           decimals: "18",
-          price: { rate: ethPrice },
+          price: { rate: nativePrice },
           image:
-            "https://assets.coingecko.com/coins/images/279/thumb/ethereum.png",
-          contractAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", // Standard placeholder for ETH
+            chainId === 56
+              ? "https://assets.coingecko.com/coins/images/825/thumb/bnb-icon2_2x.png"
+              : "https://assets.coingecko.com/coins/images/279/thumb/ethereum.png",
+          contractAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", // Standard placeholder
         },
-        balance: ethBalanceData.result,
+        balance: nativeBalanceData.result,
       });
     } else {
-      // Dacă nu avem un rezultat valid pentru ETH, adăugăm un ETH cu valoare mock
-      console.log("⚠️ Invalid ETH balance, using mock ETH balance");
+      // If we don't have a valid result for the native token, add a mock value
+      console.log(
+        `⚠️ Invalid ${CHAIN_NATIVE_TOKENS[chainId]} balance, using mock balance`
+      );
       tokens.push({
         tokenInfo: {
-          name: "Ethereum",
-          symbol: "ETH",
+          name: CHAIN_NATIVE_TOKEN_NAMES[chainId],
+          symbol: CHAIN_NATIVE_TOKENS[chainId],
           decimals: "18",
-          price: { rate: ethPrice },
+          price: { rate: nativePrice },
           image:
-            "https://assets.coingecko.com/coins/images/279/thumb/ethereum.png",
-          contractAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", // Standard placeholder for ETH
+            chainId === 56
+              ? "https://assets.coingecko.com/coins/images/825/thumb/bnb-icon2_2x.png"
+              : "https://assets.coingecko.com/coins/images/279/thumb/ethereum.png",
+          contractAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", // Standard placeholder
         },
-        balance: "1000000000000000000", // 1 ETH în wei
+        balance:
+          chainId === 56 ? "10000000000000000000" : "1000000000000000000", // 10 BNB or 1 ETH in wei
       });
     }
 
-    // IMPORTANT: Reducem numărul de apeluri API folosind un singur apel pentru a obține tranzacțiile token
-    // și apoi procesăm datele local în loc să facem apeluri separate pentru fiecare token
+    // Use a single call to get token transactions
     try {
-      // Folosim un singur apel pentru a obține tranzacțiile token
-      const tokenTxUrl = `https://api.etherscan.io/api?module=account&action=tokentx&address=${address}&page=1&offset=300&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
+      const tokenTxUrl = `${API_BASE_URL}?chainid=${chainId}&module=account&action=tokentx&address=${address}&page=1&offset=300&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
       console.log("🔍 Fetching token transactions...");
 
-      // Creștem timpul de cache pentru a reduce apelurile repetate
       const data = await cachedApiCall(tokenTxUrl, TX_CACHE_TIME, 2);
       console.log("📜 Token transactions data status:", data.status);
       console.log(
@@ -837,9 +880,9 @@ export const fetchTokenBalances = async (address: string) => {
         data.result ? data.result.length : 0
       );
 
-      // Verificăm dacă avem rezultate valide pentru tranzacțiile cu token-uri
+      // Check if we have valid results for token transactions
       if (Array.isArray(data.result) && data.result.length > 0) {
-        // Procesăm token-urile și calculăm soldurile local
+        // Process tokens and calculate balances locally
         const tokenBalances = new Map<
           string,
           {
@@ -849,29 +892,35 @@ export const fetchTokenBalances = async (address: string) => {
           }
         >();
 
-        // Procesăm tranzacțiile pentru a estima soldurile token-urilor
-        // Acest lucru reduce dramatic numărul de apeluri API
+        // Process transactions to estimate token balances
         for (const tx of data.result) {
           const tokenAddress = tx.contractAddress.toLowerCase();
           const timestamp = Number.parseInt(tx.timeStamp);
 
-          // Dacă nu avem acest token sau avem o tranzacție mai recentă
+          // If we don't have this token or we have a more recent transaction
           if (
             !tokenBalances.has(tokenAddress) ||
             timestamp > tokenBalances.get(tokenAddress)!.lastUpdated
           ) {
-            // Obținem prețul token-ului (folosind cache)
-            const price = await getTokenPrice(tokenAddress, tx.tokenSymbol);
-            const imageUrl = getTokenImage(tokenAddress, tx.tokenSymbol);
+            // Get token price (using cache)
+            const price = await getTokenPrice(
+              tokenAddress,
+              tx.tokenSymbol,
+              chainId
+            );
+            const imageUrl = getTokenImage(
+              tokenAddress,
+              tx.tokenSymbol,
+              chainId
+            );
 
-            // Estimăm un sold bazat pe tranzacții recente
-            // Aceasta este o aproximare, dar reduce apelurile API
+            // Estimate a balance based on recent transactions
             let estimatedBalance = "0";
             if (tx.to.toLowerCase() === address.toLowerCase()) {
-              // Dacă ultima tranzacție a fost primită, folosim valoarea ca estimare
+              // If the last transaction was received, use the value as an estimate
               estimatedBalance = tx.value;
             } else {
-              // Dacă ultima tranzacție a fost trimisă, presupunem un sold mic rămas
+              // If the last transaction was sent, assume a small remaining balance
               const decimal = Number.parseInt(tx.tokenDecimal);
               estimatedBalance = (Math.pow(10, decimal) * 0.1).toString(); // ~0.1 token
             }
@@ -890,19 +939,20 @@ export const fetchTokenBalances = async (address: string) => {
             });
           }
 
-          // Limităm la primele 50 token-uri pentru a obține o vizualizare mai completă
+          // Limit to the first 50 tokens for a more complete view
           if (tokenBalances.size >= 50) break;
         }
 
-        // Adăugăm token-urile la rezultat, dar filtrăm cele anormale
-        // Convertim Map la Array pentru a evita eroarea de iterare
+        // Function to determine if a token is abnormal based on certain criteria
+
+        // Add tokens to the result, but filter abnormal ones
         Array.from(tokenBalances.entries()).forEach(([_, tokenData]) => {
           const token = {
             tokenInfo: tokenData.tokenInfo,
             balance: tokenData.balance,
           };
 
-          // Verificăm dacă tokenul este anormal înainte de a-l adăuga
+          // Check if the token is abnormal before adding it
           if (!isAbnormalToken(token)) {
             tokens.push(token);
           }
@@ -914,23 +964,25 @@ export const fetchTokenBalances = async (address: string) => {
           } tokens based on transaction history (after filtering)`
         );
       } else {
-        // Dacă nu avem rezultate valide pentru tranzacțiile cu token-uri, adăugăm token-uri mock
-        console.log("⚠️ No valid token transactions, adding fallback tokens");
-        addFallbackTokens(tokens);
+        // If we don't have valid results for token transactions, add mock tokens
+        console.log(
+          `⚠️ No valid token transactions, adding fallback tokens for chain ${chainId}`
+        );
+        addFallbackTokens(tokens, chainId);
       }
     } catch (tokenTxError) {
       console.error("❌ Error fetching token transactions:", tokenTxError);
-      // Adăugăm token-uri fallback în caz de eroare
-      addFallbackTokens(tokens);
+      // Add fallback tokens in case of error
+      addFallbackTokens(tokens, chainId);
     }
 
-    // Încercăm să obținem mai multe tokenuri folosind endpoint-ul tokenlist dacă este disponibil
+    // Try to get more tokens using the tokenlist endpoint if available
     if (tokens.length < 10) {
       try {
         console.log(
-          "🔍 Încercăm să obținem mai multe tokenuri folosind endpoint-ul tokenlist..."
+          "🔍 Trying to get more tokens using the tokenlist endpoint..."
         );
-        const tokenListUrl = `https://api.etherscan.io/api?module=account&action=tokenlist&address=${address}&apikey=${ETHERSCAN_API_KEY}`;
+        const tokenListUrl = `${API_BASE_URL}?chainid=${chainId}&module=account&action=tokenlist&address=${address}&apikey=${ETHERSCAN_API_KEY}`;
 
         const tokenListData = await cachedApiCall(
           tokenListUrl,
@@ -950,9 +1002,9 @@ export const fetchTokenBalances = async (address: string) => {
             "tokens"
           );
 
-          // Procesăm tokenurile din tokenlist
+          // Process tokens from tokenlist
           for (const tokenItem of tokenListData.result) {
-            // Verificăm dacă tokenul există deja în lista noastră
+            // Check if the token already exists in our list
             const existingTokenIndex = tokens.findIndex(
               (t) =>
                 t.tokenInfo.contractAddress &&
@@ -961,17 +1013,19 @@ export const fetchTokenBalances = async (address: string) => {
             );
 
             if (existingTokenIndex === -1) {
-              // Obținem prețul tokenului
+              // Get token price
               const price = await getTokenPrice(
                 tokenItem.contractAddress,
-                tokenItem.symbol
+                tokenItem.symbol,
+                chainId
               );
               const imageUrl = getTokenImage(
                 tokenItem.contractAddress,
-                tokenItem.symbol
+                tokenItem.symbol,
+                chainId
               );
 
-              // Creăm obiectul token
+              // Create token object
               const token = {
                 tokenInfo: {
                   name: tokenItem.name,
@@ -984,12 +1038,12 @@ export const fetchTokenBalances = async (address: string) => {
                 balance: tokenItem.balance,
               };
 
-              // Verificăm dacă tokenul este anormal înainte de a-l adăuga
+              // Check if the token is abnormal before adding it
               if (!isAbnormalToken(token)) {
                 tokens.push(token);
               }
 
-              // Limităm numărul total de tokenuri pentru a evita probleme de performanță
+              // Limit the total number of tokens to avoid performance issues
               if (tokens.length >= 100) break;
             }
           }
@@ -1001,11 +1055,11 @@ export const fetchTokenBalances = async (address: string) => {
         }
       } catch (tokenListError) {
         console.error("❌ Error fetching token list:", tokenListError);
-        // Continuăm cu tokenurile pe care le avem deja
+        // Continue with the tokens we already have
       }
     }
 
-    // Salvăm rezultatele în cache pentru a reduce apelurile viitoare
+    // Save results in cache to reduce future calls
     apiResponseCache[cacheKey] = {
       data: tokens,
       timestamp: Date.now(),
@@ -1014,100 +1068,328 @@ export const fetchTokenBalances = async (address: string) => {
     console.log("📊 Total tokens found:", tokens.length);
     return tokens;
   } catch (error) {
-    console.error("❌ Error getting data from Etherscan:", error);
+    console.error("❌ Error getting data from blockchain explorer:", error);
     // Return fallback tokens instead of empty array
-    return getFallbackTokens();
+    return getFallbackTokens(chainId);
   }
 };
 
-// Adăugăm o funcție helper pentru a adăuga token-uri fallback
-const addFallbackTokens = (tokens: any[]) => {
-  const fallbackTokens = [
-    {
-      tokenInfo: {
-        name: "USD Tether",
-        symbol: "USDT",
-        decimals: "6",
-        price: { rate: 1 },
-        image: "https://assets.coingecko.com/coins/images/325/thumb/Tether.png",
-        contractAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7",
-      },
-      balance: "1000000", // 1 USDT
-    },
-    {
-      tokenInfo: {
-        name: "USD Coin",
-        symbol: "USDC",
-        decimals: "6",
-        price: { rate: 1 },
-        image:
-          "https://assets.coingecko.com/coins/images/6319/thumb/USD_Coin_icon.png",
-        contractAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-      },
-      balance: "2000000", // 2 USDC
-    },
-    {
-      tokenInfo: {
-        name: "Wrapped Bitcoin",
-        symbol: "WBTC",
-        decimals: "8",
-        price: { rate: 60000 },
-        image:
-          "https://assets.coingecko.com/coins/images/7598/thumb/wrapped_bitcoin_wbtc.png",
-        contractAddress: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
-      },
-      balance: "100000", // 0.001 WBTC
-    },
-  ];
+// Update the addFallbackTokens function to support chain IDs
+const addFallbackTokens = (tokens: any[], chainId = 1) => {
+  const fallbackTokens =
+    chainId === 56
+      ? [
+          {
+            tokenInfo: {
+              name: "BUSD Token",
+              symbol: "BUSD",
+              decimals: "18",
+              price: { rate: 1 },
+              image:
+                "https://assets.coingecko.com/coins/images/9576/thumb/BUSD.png",
+              contractAddress: "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+            },
+            balance: "1000000000000000000", // 1 BUSD
+          },
+          {
+            tokenInfo: {
+              name: "Tether USD",
+              symbol: "USDT",
+              decimals: "18",
+              price: { rate: 1 },
+              image:
+                "https://assets.coingecko.com/coins/images/325/thumb/Tether.png",
+              contractAddress: "0x55d398326f99059ff775485246999027b3197955",
+            },
+            balance: "2000000000000000000", // 2 USDT
+          },
+          {
+            tokenInfo: {
+              name: "BTCB Token",
+              symbol: "BTCB",
+              decimals: "18",
+              price: { rate: 60000 },
+              image:
+                "https://assets.coingecko.com/coins/images/14108/thumb/BTCB.png",
+              contractAddress: "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c",
+            },
+            balance: "100000000000000", // 0.0001 BTCB
+          },
+        ]
+      : [
+          {
+            tokenInfo: {
+              name: "USD Tether",
+              symbol: "USDT",
+              decimals: "6",
+              price: { rate: 1 },
+              image:
+                "https://assets.coingecko.com/coins/images/325/thumb/Tether.png",
+              contractAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7",
+            },
+            balance: "1000000", // 1 USDT
+          },
+          {
+            tokenInfo: {
+              name: "USD Coin",
+              symbol: "USDC",
+              decimals: "6",
+              price: { rate: 1 },
+              image:
+                "https://assets.coingecko.com/coins/images/6319/thumb/USD_Coin_icon.png",
+              contractAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            },
+            balance: "2000000", // 2 USDC
+          },
+          {
+            tokenInfo: {
+              name: "Wrapped Bitcoin",
+              symbol: "WBTC",
+              decimals: "8",
+              price: { rate: 60000 },
+              image:
+                "https://assets.coingecko.com/coins/images/7598/thumb/wrapped_bitcoin_wbtc.png",
+              contractAddress: "0x2260fac5e5542a773aa44fbcfedf7c193bc2c599",
+            },
+            balance: "100000", // 0.001 WBTC
+          },
+        ];
 
-  // Adăugăm token-urile fallback la lista de token-uri
+  // Add fallback tokens to the token list
   tokens.push(...fallbackTokens);
-  console.log("✅ Added fallback tokens:", fallbackTokens.length);
+  console.log(
+    `✅ Added fallback tokens for chain ${chainId}:`,
+    fallbackTokens.length
+  );
 };
 
-// Funcție pentru a obține token-uri fallback
-const getFallbackTokens = () => {
-  const fallbackTokens = [
-    {
-      tokenInfo: {
-        name: "Ethereum",
-        symbol: "ETH",
-        decimals: "18",
-        price: { rate: 3500 },
-        image:
-          "https://assets.coingecko.com/coins/images/279/thumb/ethereum.png",
-        contractAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-      },
-      balance: "1000000000000000000", // 1 ETH
-    },
-    {
-      tokenInfo: {
-        name: "USD Tether",
-        symbol: "USDT",
-        decimals: "6",
-        price: { rate: 1 },
-        image: "https://assets.coingecko.com/coins/images/325/thumb/Tether.png",
-        contractAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7",
-      },
-      balance: "1000000", // 1 USDT
-    },
-    {
-      tokenInfo: {
-        name: "USD Coin",
-        symbol: "USDC",
-        decimals: "6",
-        price: { rate: 1 },
-        image:
-          "https://assets.coingecko.com/coins/images/6319/thumb/USD_Coin_icon.png",
-        contractAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-      },
-      balance: "2000000", // 2 USDC
-    },
-  ];
+// Update the getFallbackTokens function to support chain IDs
+const getFallbackTokens = (chainId = 1) => {
+  const fallbackTokens =
+    chainId === 56
+      ? [
+          {
+            tokenInfo: {
+              name: "Binance Coin",
+              symbol: "BNB",
+              decimals: "18",
+              price: { rate: 300 },
+              image:
+                "https://assets.coingecko.com/coins/images/825/thumb/bnb-icon2_2x.png",
+              contractAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            },
+            balance: "10000000000000000000", // 10 BNB
+          },
+          {
+            tokenInfo: {
+              name: "BUSD Token",
+              symbol: "BUSD",
+              decimals: "18",
+              price: { rate: 1 },
+              image:
+                "https://assets.coingecko.com/coins/images/9576/thumb/BUSD.png",
+              contractAddress: "0xe9e7cea3dedca5984780bafc599bd69add087d56",
+            },
+            balance: "1000000000000000000", // 1 BUSD
+          },
+          {
+            tokenInfo: {
+              name: "Tether USD",
+              symbol: "USDT",
+              decimals: "18",
+              price: { rate: 1 },
+              image:
+                "https://assets.coingecko.com/coins/images/325/thumb/Tether.png",
+              contractAddress: "0x55d398326f99059ff775485246999027b3197955",
+            },
+            balance: "2000000000000000000", // 2 USDT
+          },
+        ]
+      : [
+          {
+            tokenInfo: {
+              name: "Ethereum",
+              symbol: "ETH",
+              decimals: "18",
+              price: { rate: 3500 },
+              image:
+                "https://assets.coingecko.com/coins/images/279/thumb/ethereum.png",
+              contractAddress: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            },
+            balance: "1000000000000000000", // 1 ETH
+          },
+          {
+            tokenInfo: {
+              name: "USD Tether",
+              symbol: "USDT",
+              decimals: "6",
+              price: { rate: 1 },
+              image:
+                "https://assets.coingecko.com/coins/images/325/thumb/Tether.png",
+              contractAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7",
+            },
+            balance: "1000000", // 1 USDT
+          },
+          {
+            tokenInfo: {
+              name: "USD Coin",
+              symbol: "USDC",
+              decimals: "6",
+              price: { rate: 1 },
+              image:
+                "https://assets.coingecko.com/coins/images/6319/thumb/USD_Coin_icon.png",
+              contractAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+            },
+            balance: "2000000", // 2 USDC
+          },
+        ];
 
   console.log(
-    "✅ Returning fallback tokens after error:",
+    `✅ Returning fallback tokens for chain ${chainId} after error:`,
     fallbackTokens.length
   );
   return fallbackTokens;
+};
+
+// Update the fetchTransactionHistory function to support v2 and chain IDs
+export const fetchTransactionHistory = async (address: string, chainId = 1) => {
+  try {
+    console.log(
+      `🔍 Fetching transaction history for address: ${address} on chain ${chainId}`
+    );
+
+    // Check if we have a cached response for this address and chain
+    const cacheKey = `tx_history_${address.toLowerCase()}_${chainId}`;
+    const cacheEntry = apiResponseCache[cacheKey];
+    if (cacheEntry && Date.now() - cacheEntry.timestamp < TX_CACHE_TIME) {
+      console.log(
+        `🔄 Using cached transaction history for: ${address} on chain ${chainId}`
+      );
+      return cacheEntry.data;
+    }
+
+    const apiUrl = CHAIN_API_URLS[chainId] || CHAIN_API_URLS[1];
+    const url = `${API_BASE_URL}?chainid=${chainId}&module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
+
+    // Use cached API call with 10 minute cache time and 2 retries
+    const data = await cachedApiCall(url, TX_CACHE_TIME, 2);
+    console.log("📜 Transaction history data status:", data.status);
+    console.log("📜 Transaction count:", data.result ? data.result.length : 0);
+
+    // Check if we have valid results
+    if (Array.isArray(data.result) && data.result.length > 0) {
+      // Process the transactions to match our expected format
+      const processedTx = data.result.map((tx: TransactionData) => ({
+        timestamp:
+          Number.parseInt(tx.timeStamp) ||
+          Date.now() / 1000 - Math.random() * 86400 * 30,
+        transactionHash:
+          tx.hash || `0x${Math.random().toString(16).substring(2)}`,
+        value: Number.parseFloat(tx.value) / 1e18 || Math.random() * 5, // Convert wei to ETH/BNB
+        from: tx.from || address,
+        to: tx.to || "0x" + Math.random().toString(16).substring(2, 42),
+        isError: tx.isError || "0",
+        gasUsed: tx.gasUsed || "21000",
+        gasPrice: tx.gasPrice || "20000000000",
+        chainId: chainId,
+      }));
+
+      console.log("✅ Processed transactions:", processedTx.length);
+
+      // Save results in cache
+      apiResponseCache[cacheKey] = {
+        data: processedTx,
+        timestamp: Date.now(),
+      };
+
+      return processedTx;
+    }
+
+    // If we don't have valid results, generate mock data
+    console.log(
+      `⚠️ No valid transaction data, generating mock transactions for chain ${chainId}`
+    );
+    const mockData = generateMockTransactions(address, chainId);
+    console.log("🔄 Generated mock transactions:", mockData.length);
+
+    // Save mock data in cache
+    apiResponseCache[cacheKey] = {
+      data: mockData,
+      timestamp: Date.now(),
+    };
+
+    return mockData;
+  } catch (error) {
+    console.error("❌ Error fetching transaction history:", error);
+    // Return mock data instead of empty array
+    const mockData = generateMockTransactions(address, chainId);
+    console.log("🔄 Generated mock transactions after error:", mockData.length);
+    return mockData;
+  }
+};
+
+// Update the generateMockTransactions function to support chain IDs
+const generateMockTransactions = (address: string, chainId = 1) => {
+  const mockTransactions = [];
+  const now = Math.floor(Date.now() / 1000);
+
+  // Generate 10 mock transactions
+  for (let i = 0; i < 10; i++) {
+    const isOutgoing = Math.random() > 0.5;
+    mockTransactions.push({
+      timestamp: now - i * 86400, // One day apart
+      transactionHash: `0x${Math.random().toString(16).substring(2)}`,
+      value: Math.random() * (chainId === 56 ? 5 : 2), // Random BNB/ETH amount
+      from: isOutgoing
+        ? address
+        : `0x${Math.random().toString(16).substring(2, 42)}`,
+      to: isOutgoing
+        ? `0x${Math.random().toString(16).substring(2, 42)}`
+        : address,
+      isError: "0",
+      gasUsed: "21000",
+      gasPrice: chainId === 56 ? "5000000000" : "20000000000", // Gas is cheaper on BSC
+      chainId: chainId,
+    });
+  }
+
+  return mockTransactions;
+};
+
+// Add predefined prices for BSC tokens
+const POPULAR_TOKEN_PRICES_BSC: Record<string, number> = {
+  "0xe9e7cea3dedca5984780bafc599bd69add087d56": 1, // BUSD
+  "0x55d398326f99059ff775485246999027b3197955": 1, // USDT
+  "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d": 1, // USDC
+  "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c": 60000, // BTCB
+  "0x2170ed0880ac9a755fd29b2688956bd959f933f8": 3500, // ETH
+  "0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3": 1, // DAI
+  "0x3ee2200efb3400fabb9aacf31297cbdd1d435d47": 0.3, // ADA
+  "0xbf5140a22578168fd562dccf235e5d43a02ce9b1": 0.7, // UNI
+  "0x4338665cbb7b2485a8855a139b75d5e34ab0db94": 0.1, // LTC
+  "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82": 5, // CAKE
+};
+
+// Add predefined images for BSC tokens
+const POPULAR_TOKEN_IMAGES_BSC: Record<string, string> = {
+  "0xe9e7cea3dedca5984780bafc599bd69add087d56":
+    "https://assets.coingecko.com/coins/images/9576/thumb/BUSD.png", // BUSD
+  "0x55d398326f99059ff775485246999027b3197955":
+    "https://assets.coingecko.com/coins/images/325/thumb/Tether.png", // USDT
+  "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d":
+    "https://assets.coingecko.com/coins/images/6319/thumb/USD_Coin_icon.png", // USDC
+  "0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c":
+    "https://assets.coingecko.com/coins/images/14108/thumb/BTCB.png", // BTCB
+  "0x2170ed0880ac9a755fd29b2688956bd959f933f8":
+    "https://assets.coingecko.com/coins/images/279/thumb/ethereum.png", // ETH
+  "0x1af3f329e8be154074d8769d1ffa4ee058b1dbc3":
+    "https://assets.coingecko.com/coins/images/9956/thumb/4943.png", // DAI
+  "0x3ee2200efb3400fabb9aacf31297cbdd1d435d47":
+    "https://assets.coingecko.com/coins/images/975/thumb/cardano.png", // ADA
+  "0xbf5140a22578168fd562dccf235e5d43a02ce9b1":
+    "https://assets.coingecko.com/coins/images/12504/thumb/uniswap-uni.png", // UNI
+  "0x4338665cbb7b2485a8855a139b75d5e34ab0db94":
+    "https://assets.coingecko.com/coins/images/2/thumb/litecoin.png", // LTC
+  "0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82":
+    "https://assets.coingecko.com/coins/images/12632/thumb/pancakeswap-cake-logo.png", // CAKE
 };

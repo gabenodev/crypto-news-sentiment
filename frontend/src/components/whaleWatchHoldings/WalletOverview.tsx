@@ -2,6 +2,10 @@
 import React from "react";
 
 import { useState, useEffect, useRef, useMemo } from "react";
+import {
+  CHAIN_NATIVE_TOKENS,
+  CHAIN_NATIVE_TOKEN_NAMES,
+} from "../../utils/API/etherScanAPI";
 import { motion } from "framer-motion";
 import {
   FiDollarSign,
@@ -37,7 +41,7 @@ import {
 import { generateCryptoPlaceholder } from "../../utils/placeholderGenerator";
 import WalletLoadingState from "./components/WalletLoadingState";
 
-// Actualizăm interfața WalletOverviewProps pentru a include noile props
+// Update the interface to include chainId
 interface WalletOverviewProps {
   address: string;
   onLoadingChange?: (loading: boolean) => void;
@@ -50,6 +54,7 @@ interface WalletOverviewProps {
   error?: string | null;
   loadingStatus?: string;
   refreshData?: () => void;
+  chainId?: number;
 }
 
 interface TokenData {
@@ -210,7 +215,7 @@ const renderCustomizedLabel = ({
   );
 };
 
-// Modificăm componenta pentru a utiliza datele primite prin props
+// Update the component to use chainId
 const WalletOverview: React.FC<WalletOverviewProps> = ({
   address,
   onLoadingChange,
@@ -223,6 +228,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   error = null,
   loadingStatus = "Initializing...",
   refreshData,
+  chainId = 1,
 }) => {
   const [loading, setLoading] = useState(isLoading);
   const [stats, setStats] = useState<OverviewStats>({
@@ -268,15 +274,16 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     // Adăugăm ETH dacă nu există deja în holdings
     const ethExists = assets.some(
       (token) =>
-        token.tokenInfo.symbol.toLowerCase() === "eth" &&
+        token.tokenInfo.symbol.toLowerCase() ===
+          CHAIN_NATIVE_TOKENS[chainId].toLowerCase() &&
         !token.tokenInfo.name.toLowerCase().includes("defi")
     );
 
     if (!ethExists) {
       assets.push({
         tokenInfo: {
-          name: "Ethereum",
-          symbol: "ETH",
+          name: CHAIN_NATIVE_TOKEN_NAMES[chainId],
+          symbol: CHAIN_NATIVE_TOKENS[chainId],
           decimals: "18",
           price: { rate: stats.ethPrice },
         },
@@ -352,6 +359,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     stats.ethPrice,
     processedHoldings,
     activeTimeRange,
+    chainId,
   ]);
 
   // Custom tooltip for transaction activity
@@ -622,6 +630,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     address,
     onLoadingChange,
     onStatsUpdate,
+    chainId,
   ]);
 
   // Modificăm funcția assetDistributionData pentru a filtra tokenurile cu procent sub 1%
@@ -808,6 +817,13 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     return Object.values(gasByDay).sort((a, b) => a.date.localeCompare(b.date));
   }, [transactions, activeTimeRange]);
 
+  // Update the explorer URL based on the chain
+  const getExplorerUrl = (txHash: string) => {
+    return chainId === 56
+      ? `https://bscscan.com/tx/${txHash}`
+      : `https://etherscan.io/tx/${txHash}`;
+  };
+
   // Memorarea datelor pentru graficul "Portfolio Value Over Time"
 
   // Funcție pentru reîmprospătarea datelor
@@ -914,11 +930,11 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
               <FiTrendingUp className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
-              Ethereum
+              {CHAIN_NATIVE_TOKEN_NAMES[chainId]}
             </h3>
           </div>
           <p className="text-2xl font-bold text-gray-900 dark:text-dark-text-primary">
-            {stats.ethBalance.toFixed(4)} ETH
+            {stats.ethBalance.toFixed(4)} {CHAIN_NATIVE_TOKENS[chainId]}
           </p>
           <p className="text-sm text-gray-500 dark:text-dark-text-secondary mt-2">
             Value: {formatCurrency(stats.ethBalance * stats.ethPrice)}
@@ -1475,6 +1491,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg" ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
