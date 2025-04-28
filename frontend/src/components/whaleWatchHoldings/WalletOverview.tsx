@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   FiDollarSign,
@@ -237,7 +237,6 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   const [activeTimeRange, setActiveTimeRange] = useState<
     "7d" | "30d" | "90d" | "all"
   >("30d");
-  const [refreshKey, setRefreshKey] = useState(0); // Adăugat pentru a forța reîmprospătarea
   const [processedHoldings, setHoldings] = useState<TokenData[]>([]);
   const [showAllTokens, setShowAllTokens] = useState(false);
 
@@ -245,130 +244,114 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   const previousDataRef = useRef<string | null>(null);
 
   // Use refs to prevent duplicate requests and infinite loops
-  const isLoadingRef = useRef(false);
-  const previousAddressRef = useRef("");
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Prepare data functions - declared outside useEffect to avoid recreating them on every render
-  const prepareTransactionActivityData = useMemo(() => {
-    return () => {
-      if (!transactions || transactions.length === 0) {
-        return [];
-      }
+  // Memorarea datelor pentru graficul "Portfolio Value Over Time"
+  const valueOverTimeData = useMemo(() => {
+    // Generate deterministic data based on the wallet address and total value
+    const dataPoints =
+      activeTimeRange === "7d"
+        ? 7
+        : activeTimeRange === "30d"
+        ? 30
+        : activeTimeRange === "90d"
+        ? 90
+        : 180;
 
-      // Filter transactions based on time range
-      const now = Date.now();
-      const msInDay = 24 * 60 * 60 * 1000;
-      const filteredTransactions = transactions.filter((tx) => {
-        if (activeTimeRange === "all") return true;
-        const txDate = tx.timestamp * 1000;
-        const daysDiff = (now - txDate) / msInDay;
+    const result = [];
+    const now = new Date();
 
-        if (activeTimeRange === "7d") return daysDiff <= 7;
-        if (activeTimeRange === "30d") return daysDiff <= 30;
-        if (activeTimeRange === "90d") return daysDiff <= 90;
-        return true;
-      });
+    // Obținem lista de active din portofoliu
+    const assets = [...processedHoldings];
 
-      // Group transactions by day
-      const txByDay = filteredTransactions.reduce(
-        (acc: Record<string, number>, tx) => {
-          if (!tx || !tx.timestamp) return acc;
+    // Adăugăm ETH dacă nu există deja în holdings
+    const ethExists = assets.some(
+      (token) =>
+        token.tokenInfo.symbol.toLowerCase() === "eth" &&
+        !token.tokenInfo.name.toLowerCase().includes("defi")
+    );
 
-          const date = new Date(tx.timestamp * 1000)
-            .toISOString()
-            .split("T")[0];
-          acc[date] = (acc[date] || 0) + 1;
-          return acc;
+    if (!ethExists) {
+      assets.push({
+        tokenInfo: {
+          name: "Ethereum",
+          symbol: "ETH",
+          decimals: "18",
+          price: { rate: stats.ethPrice },
         },
-        {}
-      );
+        balance: (stats.ethBalance * 1e18).toString(),
+        formattedBalance: stats.ethBalance,
+        value: stats.ethBalance * stats.ethPrice,
+        percentage:
+          ((stats.ethBalance * stats.ethPrice) / stats.totalValue) * 100,
+      });
+    }
 
-      // Convert to array and sort by date
-      return Object.entries(txByDay)
-        .map(([date, count]) => ({ date, count }))
-        .sort((a, b) => a.date.localeCompare(b.date));
-    };
-  }, [transactions, activeTimeRange]);
+    // Generăm prețuri istorice pentru fiecare zi și calculăm valoarea totală
+    for (let i = dataPoints; i >= 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
 
-  const prepareGasUsageData = useMemo(() => {
-    return () => {
-      if (!transactions || transactions.length === 0) {
-        return [];
-      }
+      // Calculăm valoarea portofoliului pentru această zi
+      let portfolioValue = 0;
 
-      // Filter transactions based on time range
-      const now = Date.now();
-      const msInDay = 24 * 60 * 60 * 1000;
-      const filteredTransactions = transactions.filter((tx) => {
-        if (activeTimeRange === "all") return true;
-        const txDate = tx.timestamp * 1000;
-        const daysDiff = (now - txDate) / msInDay;
+      // Pentru fiecare activ, calculăm valoarea sa la data respectivă
+      assets.forEach((asset) => {
+        if (!asset.formattedBalance || !asset.tokenInfo.price?.rate) return;
 
-        if (activeTimeRange === "7d") return daysDiff <= 7;
-        if (activeTimeRange === "30d") return daysDiff <= 30;
-        if (activeTimeRange === "90d") return daysDiff <= 90;
-        return true;
+        // Simulăm prețul istoric pentru acest activ
+        // Folosim un model bazat pe volatilitatea tipică a activului
+        const currentPrice = asset.tokenInfo.price.rate;
+        const symbol = asset.tokenInfo.symbol.toLowerCase();
+
+        // Volatilitatea diferă în funcție de tipul de activ
+        let volatility;
+        if (symbol === "eth") volatility = 0.03; // ETH are volatilitate medie
+        else if (["usdt", "usdc", "dai", "busd", "tusd"].includes(symbol))
+          volatility = 0.002; // Stablecoins au volatilitate foarte mică
+        else volatility = 0.05; // Alte token-uri au volatilitate mai mare
+
+        // Generăm un preț istoric deterministic bazat pe data și simbol
+        // Folosim o funcție sinusoidală pentru a simula ciclurile de piață
+        const daysPassed = i;
+        const symbolHash = symbol
+          .split("")
+          .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+        const priceFactor =
+          1 +
+          Math.sin(daysPassed * 0.1 + symbolHash * 0.01) * volatility +
+          Math.cos(daysPassed * 0.05 + symbolHash * 0.02) * volatility * 0.5;
+
+        // Adăugăm un trend general descendent pe măsură ce mergem în trecut
+        // Acest lucru simulează creșterea generală a pieței crypto în timp
+        const trendFactor = 1 - (daysPassed / dataPoints) * 0.15;
+
+        const historicalPrice = currentPrice * priceFactor * trendFactor;
+
+        // Calculăm valoarea activului la acest preț istoric
+        // Presupunem că balanța a rămas constantă (o simplificare)
+        const assetValue = asset.formattedBalance * historicalPrice;
+
+        // Adăugăm la valoarea totală a portofoliului
+        portfolioValue += assetValue;
       });
 
-      // Group transactions by day and calculate gas used
-      const gasByDay: Record<string, { date: string; gas: number }> = {};
-
-      filteredTransactions.forEach((tx) => {
-        if (!tx.timestamp || !tx.gasUsed || !tx.gasPrice) return;
-
-        const date = new Date(tx.timestamp * 1000).toISOString().split("T")[0];
-        // Calculate gas in ETH
-        const gasUsed = (Number(tx.gasUsed) * Number(tx.gasPrice)) / 1e18;
-
-        if (!gasByDay[date]) {
-          gasByDay[date] = { date, gas: 0 };
-        }
-
-        gasByDay[date].gas += gasUsed;
+      // Adăugăm data și valoarea portofoliului la rezultat
+      result.push({
+        date: dateStr,
+        value: portfolioValue,
       });
+    }
 
-      // Convert to array and sort by date
-      return Object.values(gasByDay).sort((a, b) =>
-        a.date.localeCompare(b.date)
-      );
-    };
-  }, [transactions, activeTimeRange]);
-
-  const prepareValueOverTimeData = useMemo(() => {
-    return () => {
-      // In a real app, this would fetch historical value data
-      // For now, we'll generate simulated data
-      const dataPoints =
-        activeTimeRange === "7d"
-          ? 7
-          : activeTimeRange === "30d"
-          ? 30
-          : activeTimeRange === "90d"
-          ? 90
-          : 180;
-      const result = [];
-      const baseValue = stats.totalValue * 0.8;
-      const now = new Date();
-
-      for (let i = dataPoints; i >= 0; i--) {
-        const date = new Date(now);
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split("T")[0];
-
-        // Add some random variation to simulate price changes
-        const randomFactor = 0.8 + Math.random() * 0.4;
-        const value = baseValue * randomFactor;
-
-        result.push({
-          date: dateStr,
-          value: value,
-        });
-      }
-
-      return result;
-    };
-  }, [stats.totalValue, activeTimeRange]);
+    return result;
+  }, [
+    stats.totalValue,
+    stats.ethBalance,
+    stats.ethPrice,
+    processedHoldings,
+    activeTimeRange,
+  ]);
 
   // Custom tooltip for transaction activity
   const TransactionActivityTooltip = ({ active, payload, label }: any) => {
@@ -625,18 +608,20 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       console.error("Eroare la procesarea datelor:", err);
     } finally {
       setLoading(false);
-      if (onLoadingChange) onLoadingChange(false);
+      if (onLoadingChange) {
+        onLoadingChange(false);
+      }
     }
-  }, [holdings, transactions, ethBalance, ethPrice, isLoading, address]);
-
-  // Modificăm funcția handleRefresh pentru a utiliza funcția primită prin props
-  const handleRefresh = useCallback(() => {
-    if (refreshData) {
-      // Resetăm referința pentru a forța procesarea datelor
-      previousDataRef.current = null;
-      refreshData();
-    }
-  }, [refreshData]);
+  }, [
+    holdings,
+    transactions,
+    ethBalance,
+    ethPrice,
+    isLoading,
+    address,
+    onLoadingChange,
+    onStatsUpdate,
+  ]);
 
   // Modificăm funcția assetDistributionData pentru a filtra tokenurile cu procent sub 1%
   // și pentru a îmbunătăți afișarea numelor pe grafic
@@ -823,38 +808,6 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   }, [transactions, activeTimeRange]);
 
   // Memorarea datelor pentru graficul "Portfolio Value Over Time"
-  const valueOverTimeData = useMemo(() => {
-    // In a real app, this would fetch historical value data
-    // For now, we'll generate simulated data
-    const dataPoints =
-      activeTimeRange === "7d"
-        ? 7
-        : activeTimeRange === "30d"
-        ? 30
-        : activeTimeRange === "90d"
-        ? 90
-        : 180;
-    const result = [];
-    const baseValue = stats.totalValue * 0.8;
-    const now = new Date();
-
-    for (let i = dataPoints; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      const dateStr = date.toISOString().split("T")[0];
-
-      // Add some random variation to simulate price changes
-      const randomFactor = 0.8 + Math.random() * 0.4;
-      const value = baseValue * randomFactor;
-
-      result.push({
-        date: dateStr,
-        value: value,
-      });
-    }
-
-    return result;
-  }, [stats.totalValue, activeTimeRange]);
 
   // Funcție pentru reîmprospătarea datelor
 
@@ -1516,6 +1469,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                         <img
                           src={
                             generateCryptoPlaceholder(token.tokenInfo.symbol) ||
+                            "/placeholder.svg" ||
+                            "/placeholder.svg" ||
+                            "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
                             "/placeholder.svg" ||
