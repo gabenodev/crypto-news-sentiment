@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
@@ -50,10 +50,9 @@ const POPULAR_WALLETS = [
 
 const WalletHoldingsPage: React.FC = () => {
   const [address, setAddress] = useState("");
-  const [submittedAddress, setSubmittedAddress] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+
+  const [isLoading] = useState(false);
   const [recentWallets, setRecentWallets] = useState<string[]>([]);
-  const [copySuccess, setCopySuccess] = useState(false);
   const navigate = useNavigate();
 
   // Load recent wallets from localStorage on component mount
@@ -62,22 +61,6 @@ const WalletHoldingsPage: React.FC = () => {
     if (savedWallets) {
       setRecentWallets(JSON.parse(savedWallets));
     }
-  }, []);
-
-  // Function to add a wallet to the recent list
-  const addToRecentWallets = (walletAddress: string) => {
-    const updatedWallets = [
-      walletAddress,
-      ...recentWallets.filter((w) => w !== walletAddress),
-    ].slice(0, 5); // Keep only the last 5 wallets
-
-    setRecentWallets(updatedWallets);
-    localStorage.setItem("recentWallets", JSON.stringify(updatedWallets));
-  };
-
-  // Use useCallback to prevent recreating the function on each render
-  const handleLoadingChange = useCallback((loading: boolean) => {
-    setIsLoading(loading);
   }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -92,12 +75,6 @@ const WalletHoldingsPage: React.FC = () => {
   const selectWallet = (walletAddress: string) => {
     // Navigate to the wallet details page
     navigate(`/wallet-holdings/${walletAddress}`);
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopySuccess(true);
-    setTimeout(() => setCopySuccess(false), 2000);
   };
 
   return (
