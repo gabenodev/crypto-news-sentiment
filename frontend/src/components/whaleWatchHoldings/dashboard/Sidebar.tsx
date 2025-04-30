@@ -7,7 +7,7 @@ import { generateWalletPlaceholder } from "../../../utils/placeholderGenerator";
 import ChainSelector from "./ChainSelector";
 import PortfolioSummary from "./PortfolioSummary";
 import AddressCard from "./AddressCard";
-import type { SidebarProps } from "../types";
+import type { SidebarProps } from "./types";
 
 const Sidebar: React.FC<SidebarProps> = ({
   address,

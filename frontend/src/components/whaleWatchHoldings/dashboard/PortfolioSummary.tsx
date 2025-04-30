@@ -1,6 +1,6 @@
 import React from "react";
 import { CHAIN_NATIVE_TOKENS } from "../../../utils/API/etherScanAPI";
-import type { PortfolioSummaryProps } from "../types";
+import type { PortfolioSummaryProps } from "./types";
 
 const PortfolioSummary: React.FC<PortfolioSummaryProps> = ({
   walletStats,

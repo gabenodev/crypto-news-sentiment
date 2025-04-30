@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import WalletOverview from "../WalletOverview";
 import WalletHoldings from "../WalletHoldings";
 import WalletTransactionHistory from "../WalletTransactionHistory";
-import type { MainContentProps } from "../types";
+import type { MainContentProps } from "./types";
 
 const MainContent: React.FC<MainContentProps> = ({
   activeTab,

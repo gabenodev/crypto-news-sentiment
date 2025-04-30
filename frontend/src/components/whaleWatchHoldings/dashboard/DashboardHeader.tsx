@@ -3,7 +3,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { FiArrowLeft } from "react-icons/fi";
-import type { DashboardHeaderProps } from "../types";
+import type { DashboardHeaderProps } from "./types";
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   error,

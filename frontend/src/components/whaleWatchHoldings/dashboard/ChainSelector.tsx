@@ -2,8 +2,8 @@
 
 import React from "react";
 import { FiGlobe, FiChevronDown, FiCheck } from "react-icons/fi";
-import type { ChainSelectorProps } from "../types";
-import { AVAILABLE_CHAINS } from "../utils/constants";
+import type { ChainSelectorProps } from "./types";
+import { AVAILABLE_CHAINS } from "./utils/constants";
 
 // Add this at the top of the file, after the imports
 declare global {

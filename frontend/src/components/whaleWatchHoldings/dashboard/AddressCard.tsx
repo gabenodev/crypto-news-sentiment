@@ -2,7 +2,7 @@
 
 import React from "react";
 import { FiCopy, FiExternalLink } from "react-icons/fi";
-import type { AddressCardProps } from "../types";
+import type { AddressCardProps } from "./types";
 
 const AddressCard: React.FC<AddressCardProps> = ({
   address,

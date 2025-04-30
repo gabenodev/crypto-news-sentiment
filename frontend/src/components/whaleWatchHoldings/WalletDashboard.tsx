@@ -20,8 +20,8 @@ import MainContent from "./dashboard/MainContent";
 import InvalidAddressError from "./dashboard/InvalidAddressError";
 
 // Import types and constants
-import type { TabType } from "./types";
-import { KNOWN_WALLETS } from "./utils/constants";
+import type { TabType } from "./dashboard/types";
+import { KNOWN_WALLETS } from "./dashboard/utils/constants";
 
 // Add this to make the refreshWalletData function available globally
 // Using the same declaration as in ChainSelector.tsx
