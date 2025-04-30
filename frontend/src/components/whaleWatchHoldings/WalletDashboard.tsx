@@ -124,6 +124,42 @@ const WalletDashboard: React.FC = () => {
   // Add a ref to track if we're already fetching data
   const isFetchingRef = useRef(false);
 
+  // Calculate total value function - memoize with useCallback
+  const calculateTotalValue = useCallback(
+    (holdings: any[], ethBalance: number, ethPrice: number) => {
+      let total = 0;
+
+      // Verificăm dacă ETH există deja în holdings pentru a evita dublarea
+      const nativeTokenExists = holdings.some(
+        (token) =>
+          token.tokenInfo &&
+          token.tokenInfo.symbol &&
+          token.tokenInfo.symbol.toLowerCase() ===
+            CHAIN_NATIVE_TOKENS[selectedChain].toLowerCase() &&
+          token.tokenInfo.name &&
+          !token.tokenInfo.name.toLowerCase().includes("defi")
+      );
+
+      // Adăugăm valoarea ETH doar dacă nu există deja în holdings
+      if (!nativeTokenExists) {
+        total += ethBalance * ethPrice; // Folosim ethPrice din parametru
+      }
+
+      // Adăugăm valorile token-urilor
+      for (const token of holdings) {
+        if (token && token.tokenInfo && token.tokenInfo.price?.rate) {
+          const decimals = Number(token.tokenInfo.decimals || 0);
+          const tokenBalance =
+            Number(token.balance || 0) / Math.pow(10, decimals);
+          total += tokenBalance * token.tokenInfo.price.rate;
+        }
+      }
+
+      return total;
+    },
+    [selectedChain]
+  );
+
   // Update the data fetching useEffect to include chainId
   useEffect(() => {
     if (address && isValidAddress && !isFetchingRef.current) {
@@ -288,43 +324,7 @@ const WalletDashboard: React.FC = () => {
 
       fetchAllData();
     }
-  }, [address, isValidAddress, refreshKey, selectedChain]);
-
-  // Calculate total value function - memoize with useCallback
-  const calculateTotalValue = useCallback(
-    (holdings: any[], ethBalance: number, ethPrice: number) => {
-      let total = 0;
-
-      // Verificăm dacă ETH există deja în holdings pentru a evita dublarea
-      const nativeTokenExists = holdings.some(
-        (token) =>
-          token.tokenInfo &&
-          token.tokenInfo.symbol &&
-          token.tokenInfo.symbol.toLowerCase() ===
-            CHAIN_NATIVE_TOKENS[selectedChain].toLowerCase() &&
-          token.tokenInfo.name &&
-          !token.tokenInfo.name.toLowerCase().includes("defi")
-      );
-
-      // Adăugăm valoarea ETH doar dacă nu există deja în holdings
-      if (!nativeTokenExists) {
-        total += ethBalance * ethPrice; // Folosim ethPrice din parametru
-      }
-
-      // Adăugăm valorile token-urilor
-      for (const token of holdings) {
-        if (token && token.tokenInfo && token.tokenInfo.price?.rate) {
-          const decimals = Number(token.tokenInfo.decimals || 0);
-          const tokenBalance =
-            Number(token.balance || 0) / Math.pow(10, decimals);
-          total += tokenBalance * token.tokenInfo.price.rate;
-        }
-      }
-
-      return total;
-    },
-    [selectedChain]
-  );
+  }, [address, isValidAddress, refreshKey, selectedChain, calculateTotalValue]);
 
   // Handle loading state changes
   const handleLoadingChange = (loading: boolean) => {
