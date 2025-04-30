@@ -288,7 +288,7 @@ const WalletDashboard: React.FC = () => {
 
       fetchAllData();
     }
-  }, [address, isValidAddress, refreshKey, selectedChain, calculateTotalValue]);
+  }, [address, isValidAddress, refreshKey, selectedChain]);
 
   // Calculate total value function - memoize with useCallback
   const calculateTotalValue = useCallback(
