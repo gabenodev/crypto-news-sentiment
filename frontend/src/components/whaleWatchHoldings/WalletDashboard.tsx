@@ -2,25 +2,8 @@
 
 import React from "react";
 import { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  FiHome,
-  FiPieChart,
-  FiActivity,
-  FiArrowLeft,
-  FiCopy,
-  FiExternalLink,
-  FiClock,
-  FiGlobe,
-  FiChevronDown,
-  FiCheck,
-} from "react-icons/fi";
-import WalletOverview from "./WalletOverview";
-import WalletHoldings from "./WalletHoldings";
-import WalletTransactionHistory from "./WalletTransactionHistory";
+import { useParams } from "react-router-dom";
 import { isValidEthereumAddress } from "../../utils/API/etherScanAPI";
-import { generateWalletPlaceholder } from "../../utils/placeholderGenerator";
 import {
   fetchEthBalance,
   fetchTokenBalances,
@@ -30,35 +13,15 @@ import {
   CHAIN_NATIVE_TOKENS,
 } from "../../utils/API/etherScanAPI";
 
-// Popular wallets with names
-const KNOWN_WALLETS: Record<string, { name: string; description: string }> = {
-  "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045": {
-    name: "Vitalik Buterin",
-    description: "Ethereum Co-founder",
-  },
-  "0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe": {
-    name: "Ethereum Foundation",
-    description: "Non-profit organization",
-  },
-  "0x28C6c06298d514Db089934071355E5743bf21d60": {
-    name: "Binance",
-    description: "Cryptocurrency exchange",
-  },
-  "0x503828976D22510aad0201ac7EC88293211D23Da": {
-    name: "Coinbase",
-    description: "Popular exchange",
-  },
-  "0x2910543Af39abA0Cd09dBb2D50200b3E800A63D2": {
-    name: "Kraken",
-    description: "Top exchange",
-  },
-  "0x9F4cda013E354b8fC285BF4b9A60460cEe7f7Ea9": {
-    name: "US Government Seized",
-    description: "Seized by US government",
-  },
-};
+// Import dashboard components
+import Sidebar from "./dashboard/Sidebar";
+import DashboardHeader from "./dashboard/DashboardHeader";
+import MainContent from "./dashboard/MainContent";
+import InvalidAddressError from "./dashboard/InvalidAddressError";
 
-type TabType = "overview" | "holdings" | "transactions";
+// Import types and constants
+import type { TabType } from "./types";
+import { KNOWN_WALLETS } from "./utils/constants";
 
 const WalletDashboard: React.FC = () => {
   const { address = "" } = useParams<{ address: string }>();
@@ -78,13 +41,6 @@ const WalletDashboard: React.FC = () => {
   // Ref for dropdown to handle clicks outside
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Add state for available chains with better icons
-  const availableChains = [
-    { id: 1, name: "Ethereum", icon: "Ξ", color: "#627EEA" },
-    { id: 56, name: "BSC", icon: "B", color: "#F3BA2F" },
-    // You can add more chains here in the future
-  ];
-
   // Adăugăm state-uri pentru a stoca datele la nivel de Dashboard
   const [holdings, setHoldings] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<any[]>([]);
@@ -100,7 +56,6 @@ const WalletDashboard: React.FC = () => {
   // Get wallet info if it's a known wallet
   const walletInfo = KNOWN_WALLETS[address] || null;
 
-  // Adăugăm după declararea state-urilor, înainte de useEffect-uri
   // Funcție pentru a reîmprospăta datele
   const refreshData = () => {
     setRefreshKey((prev) => prev + 1);
@@ -169,7 +124,6 @@ const WalletDashboard: React.FC = () => {
   // Add a ref to track if we're already fetching data
   const isFetchingRef = useRef(false);
 
-  // Înlocuim useEffect-ul care face fetch-ul datelor pentru a include și obținerea prețului ETH
   // Update the data fetching useEffect to include chainId
   useEffect(() => {
     if (address && isValidAddress && !isFetchingRef.current) {
@@ -336,7 +290,7 @@ const WalletDashboard: React.FC = () => {
     }
   }, [address, isValidAddress, refreshKey, selectedChain]);
 
-  // Modificăm funcția calculateTotalValue pentru a folosi prețul ETH primit ca parametru
+  // Calculate total value function
   const calculateTotalValue = (
     holdings: any[],
     ethBalance: number,
@@ -386,457 +340,54 @@ const WalletDashboard: React.FC = () => {
     }));
   };
 
-  // Copy address to clipboard
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(address);
-    setCopySuccess(true);
-    setTimeout(() => setCopySuccess(false), 2000);
-  };
-
-  // Handle chain change
-  const handleChainChange = (chainId: number) => {
-    if (chainId !== selectedChain) {
-      setSelectedChain(chainId);
-      setIsLoading(true);
-      setLoadingStatus(`Switching to ${CHAIN_NAMES[chainId]}...`);
-      // Close the dropdown after selection
-      setDropdownOpen(false);
-      // The useEffect will trigger a data refresh
-    }
-  };
-
-  // Get the currently selected chain
-  const selectedChainData =
-    availableChains.find((chain) => chain.id === selectedChain) ||
-    availableChains[0];
-
   // If address is invalid, show error
   if (!isValidAddress) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-red-50 dark:bg-error/20 border border-red-200 dark:border-error/50 rounded-xl p-6 text-center">
-          <div className="text-error text-5xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-error mb-2">
-            Invalid Ethereum Address
-          </h2>
-          <p className="text-error/90 mb-6">
-            The address "{address}" is not a valid Ethereum address. Please
-            check the address and try again.
-          </p>
-          <Link
-            to="/wallet-holdings"
-            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-teal-500 to-green-500 hover:from-teal-600 hover:to-green-600 text-white rounded-lg transition-colors"
-          >
-            <FiArrowLeft className="mr-2" />
-            Back to Wallet Search
-          </Link>
-        </div>
-      </div>
-    );
+    return <InvalidAddressError address={address} />;
   }
 
-  // Function to truncate address for display
-  const truncateAddress = (addr: string) => {
-    if (!addr) return "";
-    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
-  };
-
-  // Get explorer URL based on selected chain
-  const getExplorerUrl = (address: string) => {
-    return selectedChain === 56
-      ? `https://bscscan.com/address/${address}`
-      : `https://etherscan.io/address/${address}`;
-  };
-
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-dark-primary">
-      {/* Main content */}
+    <div className="flex flex-col w-full min-h-screen">
       <div className="flex-grow flex flex-col md:flex-row relative">
-        {/* Sidebar - more compact layout */}
-        <div
-          className="hidden lg:block lg:w-80 bg-white dark:bg-dark-primary shadow-lg fixed left-0 top-[57px] z-40 overflow-y-auto border-r border-gray-200 dark:border-gray-700"
-          style={{ height: "calc(100vh - 57px)" }}
-        >
-          <div className="flex flex-col h-full pb-4">
-            {/* Wallet header - more compact */}
-            <div className="px-4 py-4 flex items-center border-b border-gray-200 dark:border-gray-700">
-              <div className="h-12 w-12 rounded-full overflow-hidden bg-gradient-to-br from-teal-400/30 to-teal-600/30 p-0.5 mr-3">
-                <img
-                  src={
-                    generateWalletPlaceholder(address, 48) || "/placeholder.svg"
-                  }
-                  alt="Wallet"
-                  className="w-full h-full object-cover rounded-full"
-                />
-              </div>
-              <div>
-                <h1 className="text-base font-bold text-gray-900 dark:text-dark-text-primary">
-                  {walletInfo ? walletInfo.name : "Anonymous Wallet"}
-                </h1>
-                <p className="text-xs text-gray-500 dark:text-dark-text-secondary">
-                  {walletInfo ? walletInfo.description : "Blockchain address"}
-                </p>
-              </div>
-            </div>
-
-            {/* Custom Chain selector dropdown */}
-            <div className="px-4 py-3">
-              <div className="bg-gray-50 dark:bg-dark-secondary rounded-lg p-2 mb-3 border border-gray-200 dark:border-gray-700 shadow-inner w-full">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm text-gray-500 dark:text-dark-text-secondary flex items-center">
-                    <FiGlobe
-                      className="mr-2 text-teal-500 dark:text-teal-400"
-                      size={14}
-                    />
-                    Blockchain
-                  </span>
-                </div>
-
-                {/* Custom dropdown */}
-                <div className="relative mt-2" ref={dropdownRef}>
-                  {/* Dropdown trigger button */}
-                  <button
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="w-full flex items-center justify-between p-2.5 rounded-md bg-white dark:bg-dark-tertiary border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-dark-text-primary hover:bg-gray-50 dark:hover:bg-dark-tertiary/80 transition-colors"
-                  >
-                    <div className="flex items-center">
-                      <div
-                        className="flex items-center justify-center w-6 h-6 rounded-full mr-2"
-                        style={{
-                          backgroundColor: `${selectedChainData.color}20`,
-                        }}
-                      >
-                        <span
-                          className="text-sm font-medium"
-                          style={{ color: selectedChainData.color }}
-                        >
-                          {selectedChainData.icon}
-                        </span>
-                      </div>
-                      <span className="font-medium">
-                        {selectedChainData.name}
-                      </span>
-                    </div>
-                    <FiChevronDown
-                      className={`transition-transform duration-200 ${
-                        dropdownOpen ? "transform rotate-180" : ""
-                      }`}
-                      size={16}
-                    />
-                  </button>
-
-                  {/* Dropdown menu */}
-                  {dropdownOpen && (
-                    <div className="absolute z-50 w-full mt-1 bg-white dark:bg-dark-tertiary rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1 max-h-60 overflow-auto">
-                      {availableChains.map((chain) => (
-                        <button
-                          key={chain.id}
-                          onClick={() => handleChainChange(chain.id)}
-                          className={`
-                            w-full flex items-center px-3 py-2 text-sm
-                            ${
-                              selectedChain === chain.id
-                                ? "bg-gray-100 dark:bg-dark-secondary text-teal-600 dark:text-teal-400"
-                                : "hover:bg-gray-50 dark:hover:bg-dark-secondary/50 text-gray-700 dark:text-dark-text-primary"
-                            }
-                          `}
-                        >
-                          <div
-                            className="flex items-center justify-center w-6 h-6 rounded-full mr-2"
-                            style={{ backgroundColor: `${chain.color}20` }}
-                          >
-                            <span
-                              className="text-sm font-medium"
-                              style={{ color: chain.color }}
-                            >
-                              {chain.icon}
-                            </span>
-                          </div>
-                          <span className="flex-grow text-left">
-                            {chain.name}
-                          </span>
-                          {selectedChain === chain.id && (
-                            <FiCheck
-                              className="text-teal-500 dark:text-teal-400"
-                              size={16}
-                            />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Portfolio value card - more compact */}
-            <div className="px-4 pt-3">
-              <div className="bg-gray-50 dark:bg-dark-secondary rounded-lg p-3 mb-3 border border-gray-200 dark:border-gray-700 shadow-inner w-full">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm text-gray-500 dark:text-dark-text-secondary">
-                    Portfolio Value
-                  </span>
-                </div>
-                <p className="text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-1">
-                  $
-                  {walletStats.totalValue.toLocaleString("en-US", {
-                    maximumFractionDigits: 2,
-                  })}
-                </p>
-                <div className="flex justify-between mt-1 text-sm">
-                  <span className="text-gray-600 dark:text-dark-text-primary flex items-center">
-                    <span className="inline-block w-2 h-2 rounded-full bg-teal-400 mr-2"></span>
-                    {walletStats.ethBalance.toFixed(4)}{" "}
-                    {CHAIN_NATIVE_TOKENS[selectedChain]}
-                  </span>
-                  <span className="text-teal-600 dark:text-teal-400">
-                    {walletStats.tokenCount} tokens
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Address card - more compact */}
-            <div className="px-4 pb-2">
-              <div className="bg-gray-50 dark:bg-dark-tertiary rounded-lg p-3 mb-3 border border-gray-200 dark:border-gray-700 w-full">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm text-gray-500 dark:text-dark-text-secondary">
-                    Address
-                  </span>
-                  <div className="flex items-center">
-                    <button
-                      onClick={copyToClipboard}
-                      className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 p-1 transition-colors"
-                      title="Copy address"
-                    >
-                      <FiCopy size={14} />
-                    </button>
-                    <a
-                      href={getExplorerUrl(address)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 p-1 ml-1 transition-colors"
-                      title={`View on ${
-                        selectedChain === 56 ? "BscScan" : "Etherscan"
-                      }`}
-                    >
-                      <FiExternalLink size={14} />
-                    </a>
-                  </div>
-                </div>
-                <div className="bg-white dark:bg-dark-secondary rounded-lg px-2 py-1.5 font-mono text-xs text-gray-700 dark:text-dark-text-primary break-all">
-                  {address}
-                  {copySuccess && (
-                    <span className="text-xs text-teal-500 dark:text-teal-400 ml-2">
-                      Copied!
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Navigation - more compact */}
-            <nav className="px-4 mb-4">
-              <ul className="space-y-1">
-                <li>
-                  <button
-                    onClick={() => setActiveTab("overview")}
-                    className={`w-full flex items-center px-3 py-2 rounded-lg transition-all ${
-                      activeTab === "overview"
-                        ? "bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border-l-2 border-teal-500 dark:border-teal-400"
-                        : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary hover:text-gray-900 dark:hover:text-dark-text-primary"
-                    }`}
-                  >
-                    <FiHome
-                      className={`mr-2 ${
-                        activeTab === "overview"
-                          ? "text-teal-600 dark:text-teal-400"
-                          : ""
-                      }`}
-                      size={16}
-                    />
-                    Overview
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => setActiveTab("holdings")}
-                    className={`w-full flex items-center px-3 py-2 rounded-lg transition-all ${
-                      activeTab === "holdings"
-                        ? "bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border-l-2 border-teal-500 dark:border-teal-400"
-                        : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary hover:text-gray-900 dark:hover:text-dark-text-primary"
-                    }`}
-                  >
-                    <FiPieChart
-                      className={`mr-2 ${
-                        activeTab === "holdings"
-                          ? "text-teal-600 dark:text-teal-400"
-                          : ""
-                      }`}
-                      size={16}
-                    />
-                    Holdings
-                  </button>
-                </li>
-                <li>
-                  <button
-                    onClick={() => setActiveTab("transactions")}
-                    className={`w-full flex items-center px-3 py-2 rounded-lg transition-all ${
-                      activeTab === "transactions"
-                        ? "bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border-l-2 border-teal-500 dark:border-teal-400"
-                        : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary hover:text-gray-900 dark:hover:text-dark-text-primary"
-                    }`}
-                  >
-                    <FiActivity
-                      className={`mr-2 ${
-                        activeTab === "transactions"
-                          ? "text-teal-600 dark:text-teal-400"
-                          : ""
-                      }`}
-                      size={16}
-                    />
-                    Transactions
-                  </button>
-                </li>
-              </ul>
-            </nav>
-
-            {/* Recent wallets - more compact */}
-            {recentWallets.length > 0 && (
-              <div className="px-4 mt-auto">
-                <h3 className="text-xs font-medium text-gray-500 dark:text-dark-text-secondary mb-2 flex items-center">
-                  <FiClock
-                    className="mr-2 text-teal-500 dark:text-teal-400"
-                    size={14}
-                  />
-                  Recent Wallets
-                </h3>
-                <ul className="space-y-1">
-                  {recentWallets
-                    .filter((w) => w !== address)
-                    .slice(0, 3)
-                    .map((wallet) => (
-                      <li key={wallet} className="group">
-                        <Link
-                          to={`/wallet-holdings/${wallet}`}
-                          className="flex items-center p-2 rounded-lg bg-gray-50 dark:bg-dark-tertiary hover:bg-gray-100 dark:hover:bg-dark-secondary transition-all group-hover:border-l border-teal-500 dark:border-teal-400"
-                        >
-                          <div className="w-6 h-6 rounded-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-dark-tertiary dark:to-dark-secondary p-0.5 mr-2">
-                            <img
-                              src={
-                                generateWalletPlaceholder(wallet, 24) ||
-                                "/placeholder.svg"
-                              }
-                              alt="Wallet"
-                              className="w-full h-full object-cover rounded-full"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-gray-700 dark:text-dark-text-primary truncate group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-                              {truncateAddress(wallet)}
-                            </p>
-                          </div>
-                        </Link>
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Sidebar */}
+        <Sidebar
+          address={address}
+          walletInfo={walletInfo}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          walletStats={walletStats}
+          recentWallets={recentWallets}
+          selectedChain={selectedChain}
+          setSelectedChain={setSelectedChain}
+          dropdownOpen={dropdownOpen}
+          setDropdownOpen={setDropdownOpen}
+          dropdownRef={dropdownRef}
+          copySuccess={copySuccess}
+          setCopySuccess={setCopySuccess}
+        />
 
         {/* Main content area */}
         <div className="w-full lg:ml-80 flex-1 p-4 pt-4 mt-0">
-          <div className="mb-4">
-            <Link
-              to="/wallet-holdings"
-              className="inline-flex items-center text-teal-600 hover:text-teal-700 dark:text-teal-400 dark:hover:text-teal-300 transition-colors"
-            >
-              <FiArrowLeft className="mr-2" />
-              <span>Back to Wallet Search</span>
-            </Link>
-          </div>
-          {error && (
-            <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg">
-              <p className="text-red-700 dark:text-red-400 flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 mr-2"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                {error}
-              </p>
-              <p className="mt-2 text-sm text-red-600 dark:text-red-300">
-                {selectedChain === 56 ? "BscScan" : "Etherscan"} API may be
-                temporarily unavailable or has reached its rate limit. Try again
-                later or check another wallet.
-              </p>
-              <button
-                onClick={refreshData}
-                className="mt-3 px-4 py-2 bg-red-100 dark:bg-red-800/30 text-red-700 dark:text-red-300 rounded-md hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors"
-              >
-                Try Again
-              </button>
-            </div>
-          )}
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className="mb-16" // Reduced bottom margin to account for footer
-          >
-            {activeTab === "overview" && (
-              <WalletOverview
-                address={address}
-                onLoadingChange={handleLoadingChange}
-                onStatsUpdate={handleStatsUpdate}
-                holdings={holdings}
-                transactions={transactions}
-                ethBalance={ethBalance}
-                ethPrice={ethPrice}
-                isLoading={isLoading}
-                error={error}
-                loadingStatus={loadingStatus}
-                refreshData={refreshData}
-                chainId={selectedChain}
-              />
-            )}
-            {activeTab === "holdings" && (
-              <WalletHoldings
-                address={address}
-                onLoadingChange={handleLoadingChange}
-                onStatsUpdate={handleStatsUpdate}
-                holdings={holdings}
-                ethBalance={ethBalance}
-                ethPrice={ethPrice}
-                isLoading={isLoading}
-                error={error}
-                loadingStatus={loadingStatus}
-                refreshData={refreshData}
-                chainId={selectedChain}
-              />
-            )}
-            {activeTab === "transactions" && (
-              <WalletTransactionHistory
-                address={address}
-                onLoadingChange={handleLoadingChange}
-                transactions={transactions}
-                isLoading={isLoading}
-                error={error}
-                loadingStatus={loadingStatus}
-                refreshData={refreshData}
-                chainId={selectedChain}
-              />
-            )}
-          </motion.div>
+          <DashboardHeader
+            address={address}
+            error={error}
+            refreshData={refreshData}
+          />
+
+          <MainContent
+            activeTab={activeTab}
+            address={address}
+            onLoadingChange={handleLoadingChange}
+            onStatsUpdate={handleStatsUpdate}
+            holdings={holdings}
+            transactions={transactions}
+            ethBalance={ethBalance}
+            ethPrice={ethPrice}
+            isLoading={isLoading}
+            error={error}
+            loadingStatus={loadingStatus}
+            refreshData={refreshData}
+            chainId={selectedChain}
+          />
         </div>
       </div>
     </div>

@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { motion } from "framer-motion";
 import { FiDatabase, FiDollarSign, FiPieChart } from "react-icons/fi";
@@ -22,7 +24,7 @@ const WalletLoadingState: React.FC<WalletLoadingStateProps> = ({
           }}
           transition={{
             duration: 2,
-            repeat: Infinity,
+            repeat: Number.POSITIVE_INFINITY,
             repeatType: "reverse",
           }}
           className="absolute inset-0 rounded-full bg-gradient-to-r from-teal-400 to-green-500 opacity-70 blur-md"
@@ -35,7 +37,7 @@ const WalletLoadingState: React.FC<WalletLoadingStateProps> = ({
             animate={{ rotate: 360 }}
             transition={{
               duration: 8,
-              repeat: Infinity,
+              repeat: Number.POSITIVE_INFINITY,
               ease: "linear",
             }}
           >
@@ -50,7 +52,7 @@ const WalletLoadingState: React.FC<WalletLoadingStateProps> = ({
             animate={{ rotate: -360 }}
             transition={{
               duration: 12,
-              repeat: Infinity,
+              repeat: Number.POSITIVE_INFINITY,
               ease: "linear",
             }}
           >
@@ -65,7 +67,7 @@ const WalletLoadingState: React.FC<WalletLoadingStateProps> = ({
             animate={{ rotate: 360 }}
             transition={{
               duration: 10,
-              repeat: Infinity,
+              repeat: Number.POSITIVE_INFINITY,
               ease: "linear",
             }}
           >
@@ -82,7 +84,7 @@ const WalletLoadingState: React.FC<WalletLoadingStateProps> = ({
           animate={{ scale: [1, 1.1, 1] }}
           transition={{
             duration: 2,
-            repeat: Infinity,
+            repeat: Number.POSITIVE_INFINITY,
             repeatType: "reverse",
           }}
         >
@@ -118,7 +120,7 @@ const WalletLoadingState: React.FC<WalletLoadingStateProps> = ({
           className="h-full bg-gradient-to-r from-teal-400 to-green-500"
           initial={{ width: "0%" }}
           animate={{ width: "100%" }}
-          transition={{ duration: 2, repeat: Infinity }}
+          transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
         />
       </div>
 
@@ -126,17 +128,29 @@ const WalletLoadingState: React.FC<WalletLoadingStateProps> = ({
       <div className="flex space-x-2 mt-2">
         <motion.div
           animate={{ opacity: [0, 1, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, delay: 0 }}
+          transition={{
+            duration: 1.5,
+            repeat: Number.POSITIVE_INFINITY,
+            delay: 0,
+          }}
           className="w-2 h-2 rounded-full bg-teal-500"
         />
         <motion.div
           animate={{ opacity: [0, 1, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, delay: 0.3 }}
+          transition={{
+            duration: 1.5,
+            repeat: Number.POSITIVE_INFINITY,
+            delay: 0.3,
+          }}
           className="w-2 h-2 rounded-full bg-teal-500"
         />
         <motion.div
           animate={{ opacity: [0, 1, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, delay: 0.6 }}
+          transition={{
+            duration: 1.5,
+            repeat: Number.POSITIVE_INFINITY,
+            delay: 0.6,
+          }}
           className="w-2 h-2 rounded-full bg-teal-500"
         />
       </div>
