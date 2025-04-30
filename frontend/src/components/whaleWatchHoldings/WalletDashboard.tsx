@@ -13,6 +13,8 @@ import {
   FiExternalLink,
   FiClock,
   FiGlobe,
+  FiChevronDown,
+  FiCheck,
 } from "react-icons/fi";
 import WalletOverview from "./WalletOverview";
 import WalletHoldings from "./WalletHoldings";
@@ -71,11 +73,16 @@ const WalletDashboard: React.FC = () => {
   });
   // Add state for selected chain
   const [selectedChain, setSelectedChain] = useState<number>(1); // Default to Ethereum (1)
+  // Add state for dropdown open/closed
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  // Ref for dropdown to handle clicks outside
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Add state for available chains
+  // Add state for available chains with better icons
   const availableChains = [
-    { id: 1, name: "Ethereum", icon: "🔷" },
-    { id: 56, name: "BSC", icon: "🟡" },
+    { id: 1, name: "Ethereum", icon: "Ξ", color: "#627EEA" },
+    { id: 56, name: "BSC", icon: "B", color: "#F3BA2F" },
+    // You can add more chains here in the future
   ];
 
   // Adăugăm state-uri pentru a stoca datele la nivel de Dashboard
@@ -98,6 +105,23 @@ const WalletDashboard: React.FC = () => {
   const refreshData = () => {
     setRefreshKey((prev) => prev + 1);
   };
+
+  // Handle clicks outside of dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Load recent wallets from localStorage on component mount
   useEffect(() => {
@@ -375,9 +399,16 @@ const WalletDashboard: React.FC = () => {
       setSelectedChain(chainId);
       setIsLoading(true);
       setLoadingStatus(`Switching to ${CHAIN_NAMES[chainId]}...`);
+      // Close the dropdown after selection
+      setDropdownOpen(false);
       // The useEffect will trigger a data refresh
     }
   };
+
+  // Get the currently selected chain
+  const selectedChainData =
+    availableChains.find((chain) => chain.id === selectedChain) ||
+    availableChains[0];
 
   // If address is invalid, show error
   if (!isValidAddress) {
@@ -421,39 +452,35 @@ const WalletDashboard: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-dark-primary">
       {/* Main content */}
       <div className="flex-grow flex flex-col md:flex-row relative">
-        {/* Sidebar - cu border pe toată lungimea și componente centrate */}
+        {/* Sidebar - more compact layout */}
         <div
-          className="hidden lg:block lg:w-96 bg-white dark:bg-dark-primary shadow-lg fixed left-0 top-[57px] z-40 overflow-y-auto border-r border-gray-200 dark:border-gray-700"
+          className="hidden lg:block lg:w-80 bg-white dark:bg-dark-primary shadow-lg fixed left-0 top-[57px] z-40 overflow-y-auto border-r border-gray-200 dark:border-gray-700"
           style={{ height: "calc(100vh - 57px)" }}
         >
-          <div className="flex flex-col h-full pb-8">
-            {/* Spațiu gol pentru a muta conținutul în jos */}
-            <div className="h-8"></div>
-
-            {/* Wallet header - centrat și mutat mai jos */}
-            <div className="px-5 pb-6 flex justify-center border-b border-gray-200 dark:border-gray-700">
-              <div className="flex flex-col items-center">
-                <div className="h-16 w-16 rounded-full overflow-hidden bg-gradient-to-br from-teal-400/30 to-teal-600/30 p-0.5 mb-3">
-                  <img
-                    src={
-                      generateWalletPlaceholder(address, 64) ||
-                      "/placeholder.svg"
-                    }
-                    alt="Wallet"
-                    className="w-full h-full object-cover rounded-full"
-                  />
-                </div>
-                <h1 className="text-lg font-bold text-gray-900 dark:text-dark-text-primary text-center">
+          <div className="flex flex-col h-full pb-4">
+            {/* Wallet header - more compact */}
+            <div className="px-4 py-4 flex items-center border-b border-gray-200 dark:border-gray-700">
+              <div className="h-12 w-12 rounded-full overflow-hidden bg-gradient-to-br from-teal-400/30 to-teal-600/30 p-0.5 mr-3">
+                <img
+                  src={
+                    generateWalletPlaceholder(address, 48) || "/placeholder.svg"
+                  }
+                  alt="Wallet"
+                  className="w-full h-full object-cover rounded-full"
+                />
+              </div>
+              <div>
+                <h1 className="text-base font-bold text-gray-900 dark:text-dark-text-primary">
                   {walletInfo ? walletInfo.name : "Anonymous Wallet"}
                 </h1>
-                <p className="text-xs text-gray-500 dark:text-dark-text-secondary text-center">
+                <p className="text-xs text-gray-500 dark:text-dark-text-secondary">
                   {walletInfo ? walletInfo.description : "Blockchain address"}
                 </p>
               </div>
             </div>
 
-            {/* Chain selector */}
-            <div className="px-5 py-3 flex justify-center">
+            {/* Custom Chain selector dropdown */}
+            <div className="px-4 py-3">
               <div className="bg-gray-50 dark:bg-dark-secondary rounded-lg p-2 mb-3 border border-gray-200 dark:border-gray-700 shadow-inner w-full">
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-sm text-gray-500 dark:text-dark-text-secondary flex items-center">
@@ -464,42 +491,99 @@ const WalletDashboard: React.FC = () => {
                     Blockchain
                   </span>
                 </div>
-                <div className="flex space-x-2 mt-2">
-                  {availableChains.map((chain) => (
-                    <button
-                      key={chain.id}
-                      onClick={() => handleChainChange(chain.id)}
-                      className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-                        selectedChain === chain.id
-                          ? "bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 border-l-2 border-teal-500 dark:border-teal-400"
-                          : "bg-white dark:bg-dark-tertiary text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary/80"
-                      }`}
-                    >
-                      <span className="flex items-center justify-center">
-                        <span className="mr-2">{chain.icon}</span>
-                        {chain.name}
+
+                {/* Custom dropdown */}
+                <div className="relative mt-2" ref={dropdownRef}>
+                  {/* Dropdown trigger button */}
+                  <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="w-full flex items-center justify-between p-2.5 rounded-md bg-white dark:bg-dark-tertiary border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-dark-text-primary hover:bg-gray-50 dark:hover:bg-dark-tertiary/80 transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <div
+                        className="flex items-center justify-center w-6 h-6 rounded-full mr-2"
+                        style={{
+                          backgroundColor: `${selectedChainData.color}20`,
+                        }}
+                      >
+                        <span
+                          className="text-sm font-medium"
+                          style={{ color: selectedChainData.color }}
+                        >
+                          {selectedChainData.icon}
+                        </span>
+                      </div>
+                      <span className="font-medium">
+                        {selectedChainData.name}
                       </span>
-                    </button>
-                  ))}
+                    </div>
+                    <FiChevronDown
+                      className={`transition-transform duration-200 ${
+                        dropdownOpen ? "transform rotate-180" : ""
+                      }`}
+                      size={16}
+                    />
+                  </button>
+
+                  {/* Dropdown menu */}
+                  {dropdownOpen && (
+                    <div className="absolute z-50 w-full mt-1 bg-white dark:bg-dark-tertiary rounded-md shadow-lg border border-gray-200 dark:border-gray-700 py-1 max-h-60 overflow-auto">
+                      {availableChains.map((chain) => (
+                        <button
+                          key={chain.id}
+                          onClick={() => handleChainChange(chain.id)}
+                          className={`
+                            w-full flex items-center px-3 py-2 text-sm
+                            ${
+                              selectedChain === chain.id
+                                ? "bg-gray-100 dark:bg-dark-secondary text-teal-600 dark:text-teal-400"
+                                : "hover:bg-gray-50 dark:hover:bg-dark-secondary/50 text-gray-700 dark:text-dark-text-primary"
+                            }
+                          `}
+                        >
+                          <div
+                            className="flex items-center justify-center w-6 h-6 rounded-full mr-2"
+                            style={{ backgroundColor: `${chain.color}20` }}
+                          >
+                            <span
+                              className="text-sm font-medium"
+                              style={{ color: chain.color }}
+                            >
+                              {chain.icon}
+                            </span>
+                          </div>
+                          <span className="flex-grow text-left">
+                            {chain.name}
+                          </span>
+                          {selectedChain === chain.id && (
+                            <FiCheck
+                              className="text-teal-500 dark:text-teal-400"
+                              size={16}
+                            />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Portfolio value card - centrat */}
-            <div className="px-5 flex justify-center">
-              <div className="bg-gray-50 dark:bg-dark-secondary rounded-lg p-4 mb-5 border border-gray-200 dark:border-gray-700 shadow-inner w-full">
+            {/* Portfolio value card - more compact */}
+            <div className="px-4 pt-3">
+              <div className="bg-gray-50 dark:bg-dark-secondary rounded-lg p-3 mb-3 border border-gray-200 dark:border-gray-700 shadow-inner w-full">
                 <div className="flex justify-between items-center mb-1">
                   <span className="text-sm text-gray-500 dark:text-dark-text-secondary">
                     Portfolio Value
                   </span>
                 </div>
-                <p className="text-2xl font-bold text-gray-900 dark:text-dark-text-primary mb-1">
+                <p className="text-xl font-bold text-gray-900 dark:text-dark-text-primary mb-1">
                   $
                   {walletStats.totalValue.toLocaleString("en-US", {
                     maximumFractionDigits: 2,
                   })}
                 </p>
-                <div className="flex justify-between mt-2 text-sm">
+                <div className="flex justify-between mt-1 text-sm">
                   <span className="text-gray-600 dark:text-dark-text-primary flex items-center">
                     <span className="inline-block w-2 h-2 rounded-full bg-teal-400 mr-2"></span>
                     {walletStats.ethBalance.toFixed(4)}{" "}
@@ -512,10 +596,10 @@ const WalletDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Address card - centrat */}
-            <div className="px-5 flex justify-center">
-              <div className="bg-gray-50 dark:bg-dark-tertiary rounded-lg p-4 mb-5 border border-gray-200 dark:border-gray-700 w-full">
-                <div className="flex justify-between items-center mb-2">
+            {/* Address card - more compact */}
+            <div className="px-4 pb-2">
+              <div className="bg-gray-50 dark:bg-dark-tertiary rounded-lg p-3 mb-3 border border-gray-200 dark:border-gray-700 w-full">
+                <div className="flex justify-between items-center mb-1">
                   <span className="text-sm text-gray-500 dark:text-dark-text-secondary">
                     Address
                   </span>
@@ -540,7 +624,7 @@ const WalletDashboard: React.FC = () => {
                     </a>
                   </div>
                 </div>
-                <div className="bg-white dark:bg-dark-secondary rounded-lg px-3 py-2 font-mono text-xs text-gray-700 dark:text-dark-text-primary break-all">
+                <div className="bg-white dark:bg-dark-secondary rounded-lg px-2 py-1.5 font-mono text-xs text-gray-700 dark:text-dark-text-primary break-all">
                   {address}
                   {copySuccess && (
                     <span className="text-xs text-teal-500 dark:text-teal-400 ml-2">
@@ -551,25 +635,25 @@ const WalletDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Navigation - centrat */}
-            <nav className="px-5 mb-6">
+            {/* Navigation - more compact */}
+            <nav className="px-4 mb-4">
               <ul className="space-y-1">
                 <li>
                   <button
                     onClick={() => setActiveTab("overview")}
-                    className={`w-full flex items-center px-4 py-3 rounded-lg transition-all ${
+                    className={`w-full flex items-center px-3 py-2 rounded-lg transition-all ${
                       activeTab === "overview"
                         ? "bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border-l-2 border-teal-500 dark:border-teal-400"
                         : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary hover:text-gray-900 dark:hover:text-dark-text-primary"
                     }`}
                   >
                     <FiHome
-                      className={`mr-3 ${
+                      className={`mr-2 ${
                         activeTab === "overview"
                           ? "text-teal-600 dark:text-teal-400"
                           : ""
                       }`}
-                      size={18}
+                      size={16}
                     />
                     Overview
                   </button>
@@ -577,19 +661,19 @@ const WalletDashboard: React.FC = () => {
                 <li>
                   <button
                     onClick={() => setActiveTab("holdings")}
-                    className={`w-full flex items-center px-4 py-3 rounded-lg transition-all ${
+                    className={`w-full flex items-center px-3 py-2 rounded-lg transition-all ${
                       activeTab === "holdings"
                         ? "bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border-l-2 border-teal-500 dark:border-teal-400"
                         : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary hover:text-gray-900 dark:hover:text-dark-text-primary"
                     }`}
                   >
                     <FiPieChart
-                      className={`mr-3 ${
+                      className={`mr-2 ${
                         activeTab === "holdings"
                           ? "text-teal-600 dark:text-teal-400"
                           : ""
                       }`}
-                      size={18}
+                      size={16}
                     />
                     Holdings
                   </button>
@@ -597,19 +681,19 @@ const WalletDashboard: React.FC = () => {
                 <li>
                   <button
                     onClick={() => setActiveTab("transactions")}
-                    className={`w-full flex items-center px-4 py-3 rounded-lg transition-all ${
+                    className={`w-full flex items-center px-3 py-2 rounded-lg transition-all ${
                       activeTab === "transactions"
                         ? "bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-300 border-l-2 border-teal-500 dark:border-teal-400"
                         : "text-gray-700 dark:text-dark-text-primary hover:bg-gray-100 dark:hover:bg-dark-tertiary hover:text-gray-900 dark:hover:text-dark-text-primary"
                     }`}
                   >
                     <FiActivity
-                      className={`mr-3 ${
+                      className={`mr-2 ${
                         activeTab === "transactions"
                           ? "text-teal-600 dark:text-teal-400"
                           : ""
                       }`}
-                      size={18}
+                      size={16}
                     />
                     Transactions
                   </button>
@@ -617,17 +701,17 @@ const WalletDashboard: React.FC = () => {
               </ul>
             </nav>
 
-            {/* Recent wallets - centrat */}
+            {/* Recent wallets - more compact */}
             {recentWallets.length > 0 && (
-              <div className="px-5 mt-auto">
-                <h3 className="text-sm font-medium text-gray-500 dark:text-dark-text-secondary mb-3 flex items-center">
+              <div className="px-4 mt-auto">
+                <h3 className="text-xs font-medium text-gray-500 dark:text-dark-text-secondary mb-2 flex items-center">
                   <FiClock
                     className="mr-2 text-teal-500 dark:text-teal-400"
                     size={14}
                   />
                   Recent Wallets
                 </h3>
-                <ul className="space-y-2">
+                <ul className="space-y-1">
                   {recentWallets
                     .filter((w) => w !== address)
                     .slice(0, 3)
@@ -637,10 +721,10 @@ const WalletDashboard: React.FC = () => {
                           to={`/wallet-holdings/${wallet}`}
                           className="flex items-center p-2 rounded-lg bg-gray-50 dark:bg-dark-tertiary hover:bg-gray-100 dark:hover:bg-dark-secondary transition-all group-hover:border-l border-teal-500 dark:border-teal-400"
                         >
-                          <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-dark-tertiary dark:to-dark-secondary p-0.5 mr-3">
+                          <div className="w-6 h-6 rounded-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-dark-tertiary dark:to-dark-secondary p-0.5 mr-2">
                             <img
                               src={
-                                generateWalletPlaceholder(wallet, 28) ||
+                                generateWalletPlaceholder(wallet, 24) ||
                                 "/placeholder.svg"
                               }
                               alt="Wallet"
@@ -662,7 +746,7 @@ const WalletDashboard: React.FC = () => {
         </div>
 
         {/* Main content area */}
-        <div className="w-full lg:ml-96 flex-1 p-4 pt-4 mt-0">
+        <div className="w-full lg:ml-80 flex-1 p-4 pt-4 mt-0">
           <div className="mb-4">
             <Link
               to="/wallet-holdings"
