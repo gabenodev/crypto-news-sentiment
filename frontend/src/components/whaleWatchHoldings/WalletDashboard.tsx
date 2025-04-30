@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
 import { isValidEthereumAddress } from "../../utils/API/etherScanAPI";
 import {
@@ -51,7 +51,7 @@ const WalletDashboard: React.FC = () => {
   const [loadingStatus, setLoadingStatus] = useState("Loading...");
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [hideFooter, setHideFooter] = useState(true); // State pentru a ascunde footer-ul
+  const [hideFooter] = useState(true); // State pentru a ascunde footer-ul
 
   // Get wallet info if it's a known wallet
   const walletInfo = KNOWN_WALLETS[address] || null;
@@ -288,44 +288,43 @@ const WalletDashboard: React.FC = () => {
 
       fetchAllData();
     }
-  }, [address, isValidAddress, refreshKey, selectedChain]);
+  }, [address, isValidAddress, refreshKey, selectedChain, calculateTotalValue]);
 
-  // Calculate total value function
-  const calculateTotalValue = (
-    holdings: any[],
-    ethBalance: number,
-    ethPrice: number
-  ) => {
-    let total = 0;
+  // Calculate total value function - memoize with useCallback
+  const calculateTotalValue = useCallback(
+    (holdings: any[], ethBalance: number, ethPrice: number) => {
+      let total = 0;
 
-    // Verificăm dacă ETH există deja în holdings pentru a evita dublarea
-    const nativeTokenExists = holdings.some(
-      (token) =>
-        token.tokenInfo &&
-        token.tokenInfo.symbol &&
-        token.tokenInfo.symbol.toLowerCase() ===
-          CHAIN_NATIVE_TOKENS[selectedChain].toLowerCase() &&
-        token.tokenInfo.name &&
-        !token.tokenInfo.name.toLowerCase().includes("defi")
-    );
+      // Verificăm dacă ETH există deja în holdings pentru a evita dublarea
+      const nativeTokenExists = holdings.some(
+        (token) =>
+          token.tokenInfo &&
+          token.tokenInfo.symbol &&
+          token.tokenInfo.symbol.toLowerCase() ===
+            CHAIN_NATIVE_TOKENS[selectedChain].toLowerCase() &&
+          token.tokenInfo.name &&
+          !token.tokenInfo.name.toLowerCase().includes("defi")
+      );
 
-    // Adăugăm valoarea ETH doar dacă nu există deja în holdings
-    if (!nativeTokenExists) {
-      total += ethBalance * ethPrice; // Folosim ethPrice din parametru
-    }
-
-    // Adăugăm valorile token-urilor
-    for (const token of holdings) {
-      if (token && token.tokenInfo && token.tokenInfo.price?.rate) {
-        const decimals = Number(token.tokenInfo.decimals || 0);
-        const tokenBalance =
-          Number(token.balance || 0) / Math.pow(10, decimals);
-        total += tokenBalance * token.tokenInfo.price.rate;
+      // Adăugăm valoarea ETH doar dacă nu există deja în holdings
+      if (!nativeTokenExists) {
+        total += ethBalance * ethPrice; // Folosim ethPrice din parametru
       }
-    }
 
-    return total;
-  };
+      // Adăugăm valorile token-urilor
+      for (const token of holdings) {
+        if (token && token.tokenInfo && token.tokenInfo.price?.rate) {
+          const decimals = Number(token.tokenInfo.decimals || 0);
+          const tokenBalance =
+            Number(token.balance || 0) / Math.pow(10, decimals);
+          total += tokenBalance * token.tokenInfo.price.rate;
+        }
+      }
+
+      return total;
+    },
+    [selectedChain]
+  );
 
   // Handle loading state changes
   const handleLoadingChange = (loading: boolean) => {

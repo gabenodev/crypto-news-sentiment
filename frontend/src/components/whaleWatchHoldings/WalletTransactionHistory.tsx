@@ -66,9 +66,6 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const transactionsPerPage = 10;
 
-  // Use refs to prevent duplicate requests and infinite loops
-  const isLoadingRef = useRef(false);
-  const previousAddressRef = useRef("");
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup effect

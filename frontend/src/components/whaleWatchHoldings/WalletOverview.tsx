@@ -817,15 +817,6 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     return Object.values(gasByDay).sort((a, b) => a.date.localeCompare(b.date));
   }, [transactions, activeTimeRange]);
 
-  // Update the explorer URL based on the chain
-  const getExplorerUrl = (txHash: string) => {
-    return chainId === 56
-      ? `https://bscscan.com/tx/${txHash}`
-      : `https://etherscan.io/tx/${txHash}`;
-  };
-
-  // Memorarea datelor pentru graficul "Portfolio Value Over Time"
-
   // Funcție pentru reîmprospătarea datelor
 
   if (loading) {

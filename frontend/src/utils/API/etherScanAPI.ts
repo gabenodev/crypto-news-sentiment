@@ -6,12 +6,6 @@ const ETHERSCAN_API_KEY = "RP1AAGBP2YNUWFTAFP6KWT7GRRKC5BG5MM";
 // Base URL for the v2 API that supports all chains
 const API_BASE_URL = "https://api.etherscan.io/v2/api";
 
-// Define API base URLs for different chains
-const CHAIN_API_URLS: Record<number, string> = {
-  1: "https://api.etherscan.io", // Ethereum Mainnet
-  56: "https://api.bscscan.com", // Binance Smart Chain
-};
-
 // Define chain names for display
 export const CHAIN_NAMES: Record<number, string> = {
   1: "Ethereum",
@@ -30,23 +24,6 @@ export const CHAIN_NATIVE_TOKEN_NAMES: Record<number, string> = {
   56: "Binance Coin",
 };
 
-// Interfaces for data types
-interface TokenBalance {
-  tokenAddress: string;
-  tokenName: string;
-  tokenSymbol: string;
-  tokenDecimal: string;
-  balance: string;
-}
-
-interface TokenTransaction {
-  contractAddress: string;
-  tokenName: string;
-  tokenSymbol: string;
-  tokenDecimal: string;
-  value: string;
-}
-
 // TokenInfo interface
 interface TokenInfo {
   name: string;
@@ -57,11 +34,6 @@ interface TokenInfo {
   };
   image?: string;
   contractAddress?: string;
-}
-
-interface ProcessedToken {
-  tokenInfo: TokenInfo;
-  balance: string;
 }
 
 interface TransactionData {
@@ -372,10 +344,9 @@ export const getEthPrice = async (chainId = 1): Promise<number | null> => {
     }
 
     // If we don't find the price in the backend API, try with the blockchain explorer API
-    const apiUrl = CHAIN_API_URLS[chainId] || CHAIN_API_URLS[1];
     const action = chainId === 56 ? "bnbprice" : "ethprice";
 
-    const url = `${apiUrl}/v2/api?chainid=${chainId}&module=stats&action=${action}&apikey=${ETHERSCAN_API_KEY}`;
+    const url = `${API_BASE_URL}/v2/api?chainid=${chainId}&module=stats&action=${action}&apikey=${ETHERSCAN_API_KEY}`;
     const response = await cachedApiCall(url, 5 * 60 * 1000);
 
     if (response.status === "1" && response.result) {
@@ -419,62 +390,6 @@ export const getEthPrice = async (chainId = 1): Promise<number | null> => {
     );
     // Return an approximate price in case of error
     return chainId === 56 ? 300 : 3500;
-  }
-};
-
-// Verifică dacă API key-ul este valid sau dacă trebuie să folosim date mock
-// Modificăm funcția isApiKeyValid pentru a verifica specific endpoint-ul ethprice
-const isApiKeyValid = async (): Promise<boolean> => {
-  try {
-    // Test call to verify if the API key is valid for ethprice
-    const testUrl = `${API_BASE_URL}?chainid=1&module=stats&action=ethprice&apikey=${ETHERSCAN_API_KEY}`;
-    const response = await fetch(testUrl);
-    const data = await response.json();
-
-    // If we get status "1", the API key is valid for this endpoint
-    return data.status === "1";
-  } catch (error) {
-    console.error("Error checking API key validity:", error);
-    return false;
-  }
-};
-
-// Adăugăm o funcție nouă pentru a verifica dacă un endpoint specific este disponibil
-const isEndpointAvailable = async (
-  module: string,
-  action: string
-): Promise<boolean> => {
-  try {
-    // Test call to check endpoint availability
-    let testUrl = `${API_BASE_URL}?chainid=1&module=${module}&action=${action}&apikey=${ETHERSCAN_API_KEY}`;
-
-    // For endpoints that require parameters, add dummy values
-    if (action === "balance" || action === "tokenbalance") {
-      testUrl +=
-        "&address=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045&tag=latest";
-    } else if (action === "txlist" || action === "tokentx") {
-      testUrl +=
-        "&address=0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045&page=1&offset=1";
-    }
-
-    const response = await fetch(testUrl);
-    const data = await response.json();
-
-    // Check if the response indicates an API key error
-    if (data.message && data.message.includes("Invalid API Key")) {
-      console.warn(
-        `Endpoint ${module}/${action} is not available with this API key`
-      );
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error(
-      `Error checking endpoint availability for ${module}/${action}:`,
-      error
-    );
-    return false;
   }
 };
 
@@ -630,7 +545,6 @@ export const fetchEthBalance = async (address: string, chainId = 1) => {
       address,
       `on chain ${chainId}`
     );
-    const apiUrl = CHAIN_API_URLS[chainId] || CHAIN_API_URLS[1]; // Default to Ethereum if chain not supported
 
     const url = `${API_BASE_URL}?chainid=${chainId}&module=account&action=balance&address=${address}&tag=latest&apikey=${ETHERSCAN_API_KEY}`;
 
@@ -802,7 +716,6 @@ export const fetchTokenBalances = async (address: string, chainId = 1) => {
     }
 
     // Get native token balance (ETH/BNB)
-    const apiUrl = CHAIN_API_URLS[chainId] || CHAIN_API_URLS[1];
     const nativeBalanceUrl = `${API_BASE_URL}?chainid=${chainId}&module=account&action=balance&address=${address}&tag=latest&apikey=${ETHERSCAN_API_KEY}`;
     const nativeBalanceData = await cachedApiCall(
       nativeBalanceUrl,
@@ -1267,8 +1180,6 @@ export const fetchTransactionHistory = async (address: string, chainId = 1) => {
       );
       return cacheEntry.data;
     }
-
-    const apiUrl = CHAIN_API_URLS[chainId] || CHAIN_API_URLS[1];
     const url = `${API_BASE_URL}?chainid=${chainId}&module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&page=1&offset=50&sort=desc&apikey=${ETHERSCAN_API_KEY}`;
 
     // Use cached API call with 10 minute cache time and 2 retries

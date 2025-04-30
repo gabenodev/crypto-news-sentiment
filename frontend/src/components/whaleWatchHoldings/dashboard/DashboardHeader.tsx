@@ -6,7 +6,6 @@ import { FiArrowLeft } from "react-icons/fi";
 import type { DashboardHeaderProps } from "../types";
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({
-  address,
   error,
   refreshData,
 }) => {

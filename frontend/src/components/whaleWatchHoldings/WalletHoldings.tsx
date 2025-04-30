@@ -23,9 +23,6 @@ import {
 import { generateCryptoPlaceholder } from "../../utils/placeholderGenerator";
 import WalletLoadingState from "./components/WalletLoadingState";
 
-// Import the chain constants
-import { CHAIN_NATIVE_TOKENS } from "../../utils/API/etherScanAPI";
-
 // Update the WalletHoldingsProps interface to include chainId
 interface WalletHoldingsProps {
   address?: string;
@@ -56,28 +53,6 @@ interface TokenData {
   formattedBalance?: number;
   value?: number;
   percentage?: number;
-}
-
-// Interface for stats data
-interface StatsData {
-  totalValue: number;
-  tokenCount: number;
-  topToken: {
-    name: string;
-    symbol: string;
-    value: number;
-    percentage: number;
-  } | null;
-  topGainer: {
-    name: string;
-    symbol: string;
-    price: number;
-  } | null;
-  topLoser: {
-    name: string;
-    symbol: string;
-    price: number;
-  } | null;
 }
 
 // Colors for the pie chart - using teal and green theme
@@ -221,22 +196,19 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   error = null,
   loadingStatus = "Initializing...",
   refreshData,
-  chainId = 1,
 }: WalletHoldingsProps) => {
   const [loading, setLoading] = useState(isLoading);
   const [localError, setLocalError] = useState<string | null>(error);
   const [processedHoldings, setProcessedHoldings] = useState<TokenData[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "bar">("list");
   const [selectedToken, setSelectedToken] = useState<TokenData | null>(null);
   const [sortBy, setSortBy] = useState<"value" | "name" | "balance">("value");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [, setShowFilterMenu] = useState(false);
 
   // Use useRef to prevent duplicate requests
-  const previousAddressRef = useRef("");
   const isInitialMount = useRef(true);
-  const isLoadingRef = useRef(false);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const previousHoldingsRef = useRef("");
   const selectedTokenRef = useRef<string | null>(null);
@@ -326,9 +298,9 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
     }
     previousHoldingsRef.current = holdingsString;
 
+    const currentSelectedSymbol = selectedTokenRef.current || null;
     try {
       // Salvăm simbolul tokenului selectat curent (dacă există)
-      const currentSelectedSymbol = selectedToken?.tokenInfo.symbol || null;
       if (currentSelectedSymbol) {
         selectedTokenRef.current = currentSelectedSymbol;
       }
@@ -390,25 +362,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
               : 0,
         }))
         .sort((a, b) => (b.value || 0) - (a.value || 0));
-
-      // Calculăm statisticile
-      const topToken =
-        dataWithPercentages.length > 0
-          ? {
-              name: dataWithPercentages[0].tokenInfo.name,
-              symbol: dataWithPercentages[0].tokenInfo.symbol,
-              value: dataWithPercentages[0].value || 0,
-              percentage: dataWithPercentages[0].percentage || 0,
-            }
-          : null;
-
-      const updatedStats = {
-        totalValue,
-        tokenCount: dataWithPercentages.length,
-        topToken,
-        topGainer: null,
-        topLoser: null,
-      };
 
       setProcessedHoldings(dataWithPercentages);
       setLocalError(null);
@@ -548,26 +501,6 @@ const WalletHoldings: React.FC<WalletHoldingsProps> = ({
   const handleRetry = () => {
     if (refreshData) {
       refreshData();
-    }
-  };
-
-  // Update formatEthValue function to use the correct token symbol
-  const formatNativeTokenValue = (value: number) => {
-    try {
-      if (value === 0) return `0 ${CHAIN_NATIVE_TOKENS[chainId]}`;
-
-      // Format with 6 decimal places for small values, fewer for larger values
-      const formattedValue = value.toLocaleString("en-US", {
-        maximumFractionDigits: value < 0.01 ? 6 : value < 1 ? 4 : 2,
-      });
-
-      return `${formattedValue} ${CHAIN_NATIVE_TOKENS[chainId]}`;
-    } catch (error) {
-      console.error(
-        `Error formatting ${CHAIN_NATIVE_TOKENS[chainId]} value:`,
-        error
-      );
-      return `${value} ${CHAIN_NATIVE_TOKENS[chainId]}`;
     }
   };
 
