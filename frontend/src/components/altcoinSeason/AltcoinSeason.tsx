@@ -1,29 +1,30 @@
-"use client"
-import { useState } from "react"
-import AltcoinChart from "./AltcoinChart"
-import type { CoinData, SortConfigType } from "./types"
-import useAltcoinSeasonData from "./hooks/useAltcoinSeasonData"
-import useFilteredCoins from "./hooks/useFilteredCoins"
-import { formatMarketCap } from "./utils/formatters"
-import { FaChartLine } from "react-icons/fa"
+"use client";
+import React from "react";
+import { useState } from "react";
+import AltcoinChart from "./AltcoinChart";
+import type { CoinData, SortConfigType } from "./types";
+import useAltcoinSeasonData from "./hooks/useAltcoinSeasonData";
+import useFilteredCoins from "./hooks/useFilteredCoins";
+import { formatMarketCap } from "./utils/formatters";
+import { FaChartLine } from "react-icons/fa";
 
 // Component imports
-import StatusCard from "./components/StatusCard"
-import MetricsCards from "./components/MetricsCards"
-import SearchFilter from "./components/SearchFilter"
-import CoinList from "./components/CoinList"
-import LoadingState from "./components/LoadingState"
+import StatusCard from "./components/StatusCard";
+import MetricsCards from "./components/MetricsCards";
+import SearchFilter from "./components/SearchFilter";
+import CoinList from "./components/CoinList";
+import LoadingState from "./components/LoadingState";
 
 const AltcoinSeason = () => {
   // State management
-  const [selectedCoin, setSelectedCoin] = useState<CoinData | null>(null)
-  const [searchTerm, setSearchTerm] = useState<string>("")
+  const [selectedCoin, setSelectedCoin] = useState<CoinData | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [sortConfig, setSortConfig] = useState<SortConfigType>({
     key: "priceChange",
     direction: "desc",
-  })
-  const [showEnhancedInfo, setShowEnhancedInfo] = useState<boolean>(false)
-  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false)
+  });
+  const [showEnhancedInfo, setShowEnhancedInfo] = useState<boolean>(false);
+  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
 
   // Custom hooks
   const {
@@ -36,23 +37,23 @@ const AltcoinSeason = () => {
     enhancedIndex,
     seasonStatus,
     enhancedStatus,
-  } = useAltcoinSeasonData()
+  } = useAltcoinSeasonData();
 
   const filteredAndSortedCoins = useFilteredCoins({
     outperformingCoins,
     searchTerm,
     sortConfig,
-  })
+  });
 
   const handleSort = (key: "priceChange" | "marketCap" | "name" | "rank") => {
     setSortConfig((prev) => ({
       key,
       direction: prev.key === key && prev.direction === "desc" ? "asc" : "desc",
-    }))
-  }
+    }));
+  };
 
   if (loading) {
-    return <LoadingState />
+    return <LoadingState />;
   }
 
   return (
@@ -64,12 +65,15 @@ const AltcoinSeason = () => {
             Altcoin Season Index
           </h1>
           <p className="text-gray-600 dark:text-dark-text-primary max-w-3xl mx-auto text-lg">
-            Track whether we're in an Altcoin Season or Bitcoin Season based on market performance
+            Track whether we're in an Altcoin Season or Bitcoin Season based on
+            market performance
           </p>
         </div>
 
         {/* Main Content Area */}
-        <div className={`flex flex-col ${selectedCoin ? "lg:flex-row" : ""} gap-8`}>
+        <div
+          className={`flex flex-col ${selectedCoin ? "lg:flex-row" : ""} gap-8`}
+        >
           {/* Left Card */}
           <div
             className={`bg-white dark:bg-dark-secondary rounded-2xl shadow-xl overflow-hidden border border-gray-200/50 dark:border-gray-700/50 ${
@@ -125,7 +129,10 @@ const AltcoinSeason = () => {
           {selectedCoin ? (
             <div className="lg:flex-1 min-w-0">
               <div className="sticky top-20 h-[calc(100vh-32px)] overflow-y-auto">
-                <AltcoinChart coin={selectedCoin} onClose={() => setSelectedCoin(null)} />
+                <AltcoinChart
+                  coin={selectedCoin}
+                  onClose={() => setSelectedCoin(null)}
+                />
               </div>
             </div>
           ) : (
@@ -134,9 +141,12 @@ const AltcoinSeason = () => {
                 <div className="w-20 h-20 bg-teal-100 dark:bg-teal-900/30 rounded-full flex items-center justify-center mb-4">
                   <FaChartLine className="text-teal-500 text-2xl" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Select a Coin</h3>
+                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+                  Select a Coin
+                </h3>
                 <p className="text-gray-600 dark:text-gray-400 max-w-xs">
-                  Click on any coin from the list to view its detailed price chart and performance metrics.
+                  Click on any coin from the list to view its detailed price
+                  chart and performance metrics.
                 </p>
               </div>
             </div>
@@ -144,7 +154,7 @@ const AltcoinSeason = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default AltcoinSeason
+export default AltcoinSeason;

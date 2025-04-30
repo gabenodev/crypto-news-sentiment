@@ -1,9 +1,12 @@
-"use client"
-import type React from "react"
+"use client";
+import React from "react";
 
-import { useState, useEffect, useRef, useMemo } from "react"
-import { CHAIN_NATIVE_TOKENS, CHAIN_NATIVE_TOKEN_NAMES } from "../../utils/API/etherScanAPI"
-import { motion } from "framer-motion"
+import { useState, useEffect, useRef, useMemo } from "react";
+import {
+  CHAIN_NATIVE_TOKENS,
+  CHAIN_NATIVE_TOKEN_NAMES,
+} from "../../utils/API/etherScanAPI";
+import { motion } from "framer-motion";
 import {
   FiDollarSign,
   FiActivity,
@@ -16,7 +19,7 @@ import {
   FiInfo,
   FiTrendingDown,
   FiZap,
-} from "react-icons/fi"
+} from "react-icons/fi";
 import {
   BarChart,
   Bar,
@@ -34,76 +37,76 @@ import {
   Area,
   AreaChart,
   ReferenceLine,
-} from "recharts"
-import { generateCryptoPlaceholder } from "../../utils/placeholderGenerator"
-import WalletLoadingState from "./components/WalletLoadingState"
+} from "recharts";
+import { generateCryptoPlaceholder } from "../../utils/placeholderGenerator";
+import WalletLoadingState from "./components/WalletLoadingState";
 
 // Update the interface to include chainId
 interface WalletOverviewProps {
-  address: string
-  onLoadingChange?: (loading: boolean) => void
-  onStatsUpdate?: (stats: any) => void
-  holdings?: TokenData[]
-  transactions?: TransactionData[]
-  ethBalance?: number
-  ethPrice?: number
-  isLoading?: boolean
-  error?: string | null
-  loadingStatus?: string
-  refreshData?: () => void
-  chainId?: number
+  address: string;
+  onLoadingChange?: (loading: boolean) => void;
+  onStatsUpdate?: (stats: any) => void;
+  holdings?: TokenData[];
+  transactions?: TransactionData[];
+  ethBalance?: number;
+  ethPrice?: number;
+  isLoading?: boolean;
+  error?: string | null;
+  loadingStatus?: string;
+  refreshData?: () => void;
+  chainId?: number;
 }
 
 interface TokenData {
   tokenInfo: {
-    name: string
-    symbol: string
-    decimals: string
+    name: string;
+    symbol: string;
+    decimals: string;
     price?: {
-      rate: number
-    }
-    image?: string
-    contractAddress?: string
-  }
-  balance: string
-  formattedBalance?: number
-  value?: number
-  percentage?: number
+      rate: number;
+    };
+    image?: string;
+    contractAddress?: string;
+  };
+  balance: string;
+  formattedBalance?: number;
+  value?: number;
+  percentage?: number;
 }
 
 interface TransactionData {
-  timestamp: number
-  transactionHash: string
-  value: number
-  from: string
-  to: string
-  isError?: string
-  gasUsed?: string
-  gasPrice?: string
+  timestamp: number;
+  transactionHash: string;
+  value: number;
+  from: string;
+  to: string;
+  isError?: string;
+  gasUsed?: string;
+  gasPrice?: string;
 }
 
 interface OverviewStats {
-  totalValue: number
-  ethBalance: number
-  ethPrice: number
-  tokenCount: number
-  transactionCount: number
-  lastActivity: number | null
-  incomingValue: number
-  outgoingValue: number
+  totalValue: number;
+  ethBalance: number;
+  ethPrice: number;
+  tokenCount: number;
+  transactionCount: number;
+  lastActivity: number | null;
+  incomingValue: number;
+  outgoingValue: number;
 }
 
 interface AssetDistributionItem {
-  name: string
-  symbol: string
-  value: number
-  percentage: number
+  name: string;
+  symbol: string;
+  value: number;
+  percentage: number;
   smallTokens?: Array<{
-    name: string
-    symbol: string
-    value: number
-    percentage: number
-  }>
+    name: string;
+    symbol: string;
+    value: number;
+    percentage: number;
+  }>;
 }
 
 // Colors for charts - using teal and green theme
@@ -118,18 +121,18 @@ const COLORS = [
   "#0891b2",
   "#06b6d4",
   "#22d3ee",
-]
+];
 
 // Helper functions
 const getTotalValueFontSize = (value: number): string => {
   if (value > 1000000) {
-    return "text-xl"
+    return "text-xl";
   } else if (value > 10000) {
-    return "text-2xl"
+    return "text-2xl";
   } else {
-    return "text-3xl"
+    return "text-3xl";
   }
-}
+};
 
 const formatCurrency = (value: number): string => {
   return new Intl.NumberFormat("en-US", {
@@ -137,20 +140,20 @@ const formatCurrency = (value: number): string => {
     currency: "USD",
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
-  }).format(value)
-}
+  }).format(value);
+};
 
 const formatDate = (timestamp: number | null): string => {
-  if (!timestamp) return "N/A"
-  const date = new Date(timestamp * 1000)
+  if (!timestamp) return "N/A";
+  const date = new Date(timestamp * 1000);
   return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  })
-}
+  });
+};
 
 // Custom tooltip component with improved styling for dark mode
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -161,26 +164,38 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         {payload.map((item: any) => (
           <p key={item.dataKey} className="text-sm">
             {`${item.name}: ${
-              item.dataKey === "gas" ? `${(item.value * 1000000).toFixed(6)} Gwei` : formatCurrency(item.value)
+              item.dataKey === "gas"
+                ? `${(item.value * 1000000).toFixed(6)} Gwei`
+                : formatCurrency(item.value)
             }`}
           </p>
         ))}
       </div>
-    )
+    );
   }
 
-  return null
-}
+  return null;
+};
 
 // Custom pie chart label component to avoid overlapping
-const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent, index, name, value }: any) => {
-  const RADIAN = Math.PI / 180
-  const radius = innerRadius + (outerRadius - innerRadius) * 1.1
-  const x = cx + radius * Math.cos(-midAngle * RADIAN)
-  const y = cy + radius * Math.sin(-midAngle * RADIAN)
+const renderCustomizedLabel = ({
+  cx,
+  cy,
+  midAngle,
+  innerRadius,
+  outerRadius,
+  percent,
+  index,
+  name,
+  value,
+}: any) => {
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) * 1.1;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
   // Shorten name for display
-  const displayName = name.length > 6 ? name.substring(0, 6) + "..." : name
+  const displayName = name.length > 6 ? name.substring(0, 6) + "..." : name;
 
   return (
     <text
@@ -197,8 +212,8 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
     >
       {`${displayName} (${(percent * 100).toFixed(1)}%)`}
     </text>
-  )
-}
+  );
+};
 
 // Update the component to use chainId
 const WalletOverview: React.FC<WalletOverviewProps> = ({
@@ -215,7 +230,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   refreshData,
   chainId = 1,
 }) => {
-  const [loading, setLoading] = useState(isLoading)
+  const [loading, setLoading] = useState(isLoading);
   const [stats, setStats] = useState<OverviewStats>({
     totalValue: 0,
     ethBalance: ethBalance,
@@ -225,35 +240,44 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     lastActivity: null,
     incomingValue: 0,
     outgoingValue: 0,
-  })
-  const [activeTimeRange, setActiveTimeRange] = useState<"7d" | "30d" | "90d" | "all">("30d")
-  const [processedHoldings, setHoldings] = useState<TokenData[]>([])
-  const [showAllTokens, setShowAllTokens] = useState(false)
+  });
+  const [activeTimeRange, setActiveTimeRange] = useState<
+    "7d" | "30d" | "90d" | "all"
+  >("30d");
+  const [processedHoldings, setHoldings] = useState<TokenData[]>([]);
+  const [showAllTokens, setShowAllTokens] = useState(false);
 
   // Adaugă această referință pentru a urmări dacă datele s-au schimbat
-  const previousDataRef = useRef<string | null>(null)
+  const previousDataRef = useRef<string | null>(null);
 
   // Use refs to prevent duplicate requests and infinite loops
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Memorarea datelor pentru graficul "Portfolio Value Over Time"
   const valueOverTimeData = useMemo(() => {
     // Generate deterministic data based on the wallet address and total value
     const dataPoints =
-      activeTimeRange === "7d" ? 7 : activeTimeRange === "30d" ? 30 : activeTimeRange === "90d" ? 90 : 180
+      activeTimeRange === "7d"
+        ? 7
+        : activeTimeRange === "30d"
+        ? 30
+        : activeTimeRange === "90d"
+        ? 90
+        : 180;
 
-    const result = []
-    const now = new Date()
+    const result = [];
+    const now = new Date();
 
     // Obținem lista de active din portofoliu
-    const assets = [...processedHoldings]
+    const assets = [...processedHoldings];
 
     // Adăugăm ETH dacă nu există deja în holdings
     const ethExists = assets.some(
       (token) =>
-        token.tokenInfo.symbol.toLowerCase() === CHAIN_NATIVE_TOKENS[chainId].toLowerCase() &&
-        !token.tokenInfo.name.toLowerCase().includes("defi"),
-    )
+        token.tokenInfo.symbol.toLowerCase() ===
+          CHAIN_NATIVE_TOKENS[chainId].toLowerCase() &&
+        !token.tokenInfo.name.toLowerCase().includes("defi")
+    );
 
     if (!ethExists) {
       assets.push({
@@ -266,68 +290,77 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         balance: (stats.ethBalance * 1e18).toString(),
         formattedBalance: stats.ethBalance,
         value: stats.ethBalance * stats.ethPrice,
-        percentage: ((stats.ethBalance * stats.ethPrice) / stats.totalValue) * 100,
-      })
+        percentage:
+          ((stats.ethBalance * stats.ethPrice) / stats.totalValue) * 100,
+      });
     }
 
     // Generăm prețuri istorice pentru fiecare zi și calculăm valoarea totală
     for (let i = dataPoints; i >= 0; i--) {
-      const date = new Date(now)
-      date.setDate(date.getDate() - i)
-      const dateStr = date.toISOString().split("T")[0]
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split("T")[0];
 
       // Calculăm valoarea portofoliului pentru această zi
-      let portfolioValue = 0
+      let portfolioValue = 0;
 
       // Pentru fiecare activ, calculăm valoarea sa la data respectivă
       assets.forEach((asset) => {
-        if (!asset.formattedBalance || !asset.tokenInfo.price?.rate) return
+        if (!asset.formattedBalance || !asset.tokenInfo.price?.rate) return;
 
         // Simulăm prețul istoric pentru acest activ
         // Folosim un model bazat pe volatilitatea tipică a activului
-        const currentPrice = asset.tokenInfo.price.rate
-        const symbol = asset.tokenInfo.symbol.toLowerCase()
+        const currentPrice = asset.tokenInfo.price.rate;
+        const symbol = asset.tokenInfo.symbol.toLowerCase();
 
         // Volatilitatea diferă în funcție de tipul de activ
-        let volatility
-        if (symbol === "eth")
-          volatility = 0.05 // Mărită de la 0.03 la 0.05
+        let volatility;
+        if (symbol === "eth") volatility = 0.05; // Mărită de la 0.03 la 0.05
         else if (["usdt", "usdc", "dai", "busd", "tusd"].includes(symbol))
-          volatility = 0.003 // Mărită de la 0.002 la 0.003
-        else volatility = 0.08 // Mărită de la 0.05 la 0.08
+          volatility = 0.003; // Mărită de la 0.002 la 0.003
+        else volatility = 0.08; // Mărită de la 0.05 la 0.08
 
         // Generăm un preț istoric deterministic bazat pe data și simbol
         // Folosim o funcție sinusoidală pentru a simula ciclurile de piață
-        const daysPassed = i
-        const symbolHash = symbol.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)
+        const daysPassed = i;
+        const symbolHash = symbol
+          .split("")
+          .reduce((acc, char) => acc + char.charCodeAt(0), 0);
         const priceFactor =
           1 +
           Math.sin(daysPassed * 0.1 + symbolHash * 0.01) * volatility +
-          Math.cos(daysPassed * 0.05 + symbolHash * 0.02) * volatility * 0.5
+          Math.cos(daysPassed * 0.05 + symbolHash * 0.02) * volatility * 0.5;
 
         // Adăugăm un trend general descendent pe măsură ce mergem în trecut
         // Acest lucru simulează creșterea generală a pieței crypto în timp
-        const trendFactor = 1 - (daysPassed / dataPoints) * 0.25 // Mărit de la 0.15 la 0.25
+        const trendFactor = 1 - (daysPassed / dataPoints) * 0.25; // Mărit de la 0.15 la 0.25
 
-        const historicalPrice = currentPrice * priceFactor * trendFactor
+        const historicalPrice = currentPrice * priceFactor * trendFactor;
 
         // Calculăm valoarea activului la acest preț istoric
         // Presupunem că balanța a rămas constantă (o simplificare)
-        const assetValue = asset.formattedBalance * historicalPrice
+        const assetValue = asset.formattedBalance * historicalPrice;
 
         // Adăugăm la valoarea totală a portofoliului
-        portfolioValue += assetValue
-      })
+        portfolioValue += assetValue;
+      });
 
       // Adăugăm data și valoarea portofoliului la rezultat
       result.push({
         date: dateStr,
         value: portfolioValue,
-      })
+      });
     }
 
-    return result
-  }, [stats.totalValue, stats.ethBalance, stats.ethPrice, processedHoldings, activeTimeRange, chainId])
+    return result;
+  }, [
+    stats.totalValue,
+    stats.ethBalance,
+    stats.ethPrice,
+    processedHoldings,
+    activeTimeRange,
+    chainId,
+  ]);
 
   // Custom tooltip for transaction activity
   const TransactionActivityTooltip = ({ active, payload, label }: any) => {
@@ -341,47 +374,53 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
             })}
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-            <span className="font-medium">Transactions:</span> {payload[0].value}
+            <span className="font-medium">Transactions:</span>{" "}
+            {payload[0].value}
           </p>
         </div>
-      )
+      );
     }
-    return null
-  }
+    return null;
+  };
 
   // Fetch wallet data
   useEffect(() => {
     // Clear any existing retry timeout when component unmounts or address changes
     return () => {
       if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current)
-        retryTimeoutRef.current = null
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
       }
-    }
-  }, [address])
+    };
+  }, [address]);
 
   // Înlocuim useEffect-ul care face fetch cu unul care procesează datele primite
   // Add a ref to track if we've already processed the data
-  const dataProcessedRef = useRef(false)
+  const dataProcessedRef = useRef(false);
 
   // Adaugăm o funcție pentru a verifica și corecta valorile anormale
   // Add a function to check and correct abnormal values
-  const normalizeTokenValue = (token: TokenData, totalPortfolioValue: number): TokenData => {
-    if (!token || !token.tokenInfo) return token
+  const normalizeTokenValue = (
+    token: TokenData,
+    totalPortfolioValue: number
+  ): TokenData => {
+    if (!token || !token.tokenInfo) return token;
 
     // Make sure formattedBalance is always defined
-    const formattedBalance = token.formattedBalance || 0
+    const formattedBalance = token.formattedBalance || 0;
 
     // Check if the token has a suspicious value
     if (token.value && token.value > 1000000000) {
       // Over 1 billion USD
-      const symbol = token.tokenInfo.symbol.toLowerCase()
+      const symbol = token.tokenInfo.symbol.toLowerCase();
       // Allow known stablecoins to have large values
-      const isStablecoin = ["usdt", "usdc", "dai", "busd", "tusd"].includes(symbol)
+      const isStablecoin = ["usdt", "usdc", "dai", "busd", "tusd"].includes(
+        symbol
+      );
 
       if (!isStablecoin) {
         // Check if token name contains suspicious words
-        const name = token.tokenInfo.name.toLowerCase()
+        const name = token.tokenInfo.name.toLowerCase();
         const suspiciousWords = [
           "vitalik",
           "buterin",
@@ -394,17 +433,22 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           "doge",
           "moon",
           "safe",
-        ]
+        ];
 
-        if (suspiciousWords.some((word) => name.includes(word)) || token.value > totalPortfolioValue * 0.9) {
-          console.log(`🚨 Correcting suspicious token value: ${token.tokenInfo.name} from ${token.value} to 0`)
+        if (
+          suspiciousWords.some((word) => name.includes(word)) ||
+          token.value > totalPortfolioValue * 0.9
+        ) {
+          console.log(
+            `🚨 Correcting suspicious token value: ${token.tokenInfo.name} from ${token.value} to 0`
+          );
           // Reset value and percentage for suspicious tokens
           return {
             ...token,
             formattedBalance,
             value: 0,
             percentage: 0,
-          }
+          };
         }
       }
     }
@@ -412,120 +456,138 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     return {
       ...token,
       formattedBalance,
-    }
-  }
+    };
+  };
 
   // Modificăm useEffect pentru a aplica normalizarea
   useEffect(() => {
     if (isLoading) {
-      setLoading(true)
-      dataProcessedRef.current = false
-      return
+      setLoading(true);
+      dataProcessedRef.current = false;
+      return;
     }
 
     // Folosim o referință pentru a verifica dacă datele s-au schimbat cu adevărat
     const holdingsKey =
       holdings && holdings.length
-        ? JSON.stringify(holdings.map((h) => h.tokenInfo?.contractAddress + h.balance))
-        : "empty-holdings"
+        ? JSON.stringify(
+            holdings.map((h) => h.tokenInfo?.contractAddress + h.balance)
+          )
+        : "empty-holdings";
 
     const transactionsKey =
-      transactions && transactions.length > 0 ? transactions[0].transactionHash : "empty-transactions"
+      transactions && transactions.length > 0
+        ? transactions[0].transactionHash
+        : "empty-transactions";
 
-    const dataKey = `${holdingsKey}-${transactionsKey}-${ethBalance}`
+    const dataKey = `${holdingsKey}-${transactionsKey}-${ethBalance}`;
 
     // Verificăm dacă datele sunt identice cu cele procesate anterior
     if (previousDataRef.current === dataKey || dataProcessedRef.current) {
-      setLoading(false)
-      if (onLoadingChange) onLoadingChange(false)
-      return
+      setLoading(false);
+      if (onLoadingChange) onLoadingChange(false);
+      return;
     }
 
     // Actualizăm referința cu noile date
-    previousDataRef.current = dataKey
-    dataProcessedRef.current = true
+    previousDataRef.current = dataKey;
+    dataProcessedRef.current = true;
 
     try {
       // Procesăm datele primite
-      let totalTokenValue = 0
+      let totalTokenValue = 0;
       let processedTokens = holdings.map((token: TokenData) => {
         if (!token || !token.tokenInfo) {
           return {
             ...token,
             formattedBalance: 0,
             value: 0,
-          }
+          };
         }
 
-        const decimals = Number(token.tokenInfo.decimals) || 0
-        const formattedBalance = Number(token.balance) / Math.pow(10, decimals)
-        const value = token.tokenInfo.price?.rate ? formattedBalance * token.tokenInfo.price.rate : 0
+        const decimals = Number(token.tokenInfo.decimals) || 0;
+        const formattedBalance = Number(token.balance) / Math.pow(10, decimals);
+        const value = token.tokenInfo.price?.rate
+          ? formattedBalance * token.tokenInfo.price.rate
+          : 0;
 
         // Adăugăm la totalTokenValue doar dacă valoarea nu este suspectă
         if (value < 1000000000) {
           // Sub 1 miliard USD
-          totalTokenValue += value
+          totalTokenValue += value;
         }
 
         return {
           ...token,
           formattedBalance,
           value,
-        }
-      })
+        };
+      });
 
       // Normalize suspicious token values
-      processedTokens = processedTokens.map((token) => normalizeTokenValue(token, totalTokenValue)) as {
-        formattedBalance: number
-        value: number
+      processedTokens = processedTokens.map((token) =>
+        normalizeTokenValue(token, totalTokenValue)
+      ) as {
+        formattedBalance: number;
+        value: number;
         tokenInfo: {
-          name: string
-          symbol: string
-          decimals: string
-          price?: { rate: number }
-          image?: string
-          contractAddress?: string
-        }
-        balance: string
-        percentage?: number
-      }[]
+          name: string;
+          symbol: string;
+          decimals: string;
+          price?: { rate: number };
+          image?: string;
+          contractAddress?: string;
+        };
+        balance: string;
+        percentage?: number;
+      }[];
 
       // Recalculăm totalTokenValue după normalizare
-      totalTokenValue = processedTokens.reduce((sum, token) => sum + (token.value || 0), 0)
+      totalTokenValue = processedTokens.reduce(
+        (sum, token) => sum + (token.value || 0),
+        0
+      );
 
       // Calculăm valorile pentru statistici
-      let incomingValue = 0
-      let outgoingValue = 0
+      let incomingValue = 0;
+      let outgoingValue = 0;
 
       if (transactions && transactions.length) {
         transactions.forEach((tx: TransactionData) => {
           if (tx.to && tx.to.toLowerCase() === address.toLowerCase()) {
-            incomingValue += tx.value || 0
-          } else if (tx.from && tx.from.toLowerCase() === address.toLowerCase()) {
-            outgoingValue += tx.value || 0
+            incomingValue += tx.value || 0;
+          } else if (
+            tx.from &&
+            tx.from.toLowerCase() === address.toLowerCase()
+          ) {
+            outgoingValue += tx.value || 0;
           }
-        })
+        });
       }
 
       // Verificăm dacă există deja un token ETH pentru a evita numărarea dublă
       const ethToken = processedTokens.find(
         (token) =>
-          token.tokenInfo?.symbol?.toLowerCase() === "eth" && !token.tokenInfo?.name?.toLowerCase().includes("defi"),
-      )
+          token.tokenInfo?.symbol?.toLowerCase() === "eth" &&
+          !token.tokenInfo?.name?.toLowerCase().includes("defi")
+      );
 
       // Calculăm valoarea ETH
-      const ethValue = ethBalance * ethPrice
+      const ethValue = ethBalance * ethPrice;
 
       // Calculăm valoarea totală a portofoliului, evitând dublarea ETH
-      const totalPortfolioValue = totalTokenValue + (ethToken ? 0 : ethValue)
+      const totalPortfolioValue = totalTokenValue + (ethToken ? 0 : ethValue);
 
       // Adăugăm procentajele la fiecare token
       const tokensWithPercentages = processedTokens
         .map((token) => ({
           ...token,
-          percentage: token.value && totalPortfolioValue > 0 ? (token.value / totalPortfolioValue) * 100 : 0,
+          percentage:
+            token.value && totalPortfolioValue > 0
+              ? (token.value / totalPortfolioValue) * 100
+              : 0,
         }))
-        .sort((a, b) => (b.value || 0) - (a.value || 0))
+        .sort((a, b) => (b.value || 0) - (a.value || 0));
 
       // Actualizăm statisticile
       const updatedStats = {
@@ -534,13 +596,14 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         ethPrice,
         tokenCount: processedTokens.length,
         transactionCount: transactions?.length || 0,
-        lastActivity: transactions?.length > 0 ? transactions[0].timestamp : null,
+        lastActivity:
+          transactions?.length > 0 ? transactions[0].timestamp : null,
         incomingValue,
         outgoingValue,
-      }
+      };
 
-      setStats(updatedStats)
-      setHoldings(tokensWithPercentages)
+      setStats(updatedStats);
+      setHoldings(tokensWithPercentages);
 
       // Actualizăm statisticile în componenta părinte
       if (onStatsUpdate) {
@@ -548,17 +611,27 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           totalValue: totalPortfolioValue,
           tokenCount: processedTokens.length,
           ethBalance,
-        })
+        });
       }
     } catch (err) {
-      console.error("Eroare la procesarea datelor:", err)
+      console.error("Eroare la procesarea datelor:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
       if (onLoadingChange) {
-        onLoadingChange(false)
+        onLoadingChange(false);
       }
     }
-  }, [holdings, transactions, ethBalance, ethPrice, isLoading, address, onLoadingChange, onStatsUpdate, chainId])
+  }, [
+    holdings,
+    transactions,
+    ethBalance,
+    ethPrice,
+    isLoading,
+    address,
+    onLoadingChange,
+    onStatsUpdate,
+    chainId,
+  ]);
 
   // Modificăm funcția assetDistributionData pentru a filtra tokenurile cu procent sub 1%
   // și pentru a îmbunătăți afișarea numelor pe grafic
@@ -566,43 +639,45 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
   // Înlocuiește funcția assetDistributionData existentă cu aceasta:
   const assetDistributionData = useMemo(() => {
     if (!stats || stats.totalValue === 0 || processedHoldings.length === 0) {
-      return [] as AssetDistributionItem[]
+      return [] as AssetDistributionItem[];
     }
 
     // Verificăm dacă ETH există deja în holdings
     const ethTokenExists = processedHoldings.some(
-      (token) => token.tokenInfo.symbol.toLowerCase() === "eth" && !token.tokenInfo.name.toLowerCase().includes("defi"),
-    )
+      (token) =>
+        token.tokenInfo.symbol.toLowerCase() === "eth" &&
+        !token.tokenInfo.name.toLowerCase().includes("defi")
+    );
 
     // Calculăm valoarea ETH
-    const ethValue = stats.ethBalance * stats.ethPrice
+    const ethValue = stats.ethBalance * stats.ethPrice;
 
     // Creăm un array cu toate tokenurile
-    const allAssets: AssetDistributionItem[] = []
+    const allAssets: AssetDistributionItem[] = [];
 
     // Valoarea totală a tokenurilor mici (<1%)
-    let smallTokensValue = 0
+    let smallTokensValue = 0;
     // Array pentru a ține evidența tokenurilor mici
-    const smallTokens: AssetDistributionItem[] = []
+    const smallTokens: AssetDistributionItem[] = [];
 
     // Adăugăm ETH doar dacă are valoare și nu există deja în holdings
     if (ethValue > 0 && !ethTokenExists) {
-      const ethPercentage = (ethValue / stats.totalValue) * 100
+      const ethPercentage = (ethValue / stats.totalValue) * 100;
       if (ethPercentage >= 1) {
         allAssets.push({
           name: "ETH",
           symbol: "ETH",
           value: ethValue,
           percentage: ethPercentage,
-        })
+        });
       } else {
-        smallTokensValue += ethValue
+        smallTokensValue += ethValue;
         smallTokens.push({
           name: "ETH",
           symbol: "ETH",
           value: ethValue,
           percentage: ethPercentage,
-        })
+        });
       }
     }
 
@@ -610,7 +685,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
     processedHoldings.forEach((token) => {
       if (token.value && token.value > 0) {
         // Calculăm procentul
-        const percentage = (token.value / stats.totalValue) * 100
+        const percentage = (token.value / stats.totalValue) * 100;
 
         // Verificăm dacă tokenul are procent >= 1%
         if (percentage >= 1) {
@@ -619,127 +694,135 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
             symbol: token.tokenInfo.symbol,
             value: token.value,
             percentage: percentage,
-          })
+          });
         } else {
           // Adăugăm valoarea la tokenurile mici
-          smallTokensValue += token.value
+          smallTokensValue += token.value;
           smallTokens.push({
             name: token.tokenInfo.name,
             symbol: token.tokenInfo.symbol,
             value: token.value,
             percentage: percentage,
-          })
+          });
         }
       }
-    })
+    });
 
     // Sortăm tokenurile după valoare (descrescător)
-    allAssets.sort((a, b) => b.value - a.value)
+    allAssets.sort((a, b) => b.value - a.value);
 
     // Luăm primele 6 active pentru afișare individuală
-    const topAssets = allAssets.slice(0, 6)
+    const topAssets = allAssets.slice(0, 6);
 
     // Combinăm restul activelor semnificative într-o categorie "Others"
-    const otherSignificantAssets = allAssets.slice(6)
-    const otherSignificantValue = otherSignificantAssets.reduce((sum, asset) => sum + asset.value, 0)
+    const otherSignificantAssets = allAssets.slice(6);
+    const otherSignificantValue = otherSignificantAssets.reduce(
+      (sum, asset) => sum + asset.value,
+      0
+    );
 
     // Valoarea totală pentru "Others" (tokenuri semnificative > 6 + tokenuri mici < 1%)
-    const otherValue = otherSignificantValue + smallTokensValue
+    const otherValue = otherSignificantValue + smallTokensValue;
 
     // Adăugăm categoria "Others" doar dacă există active suplimentare
     if (otherValue > 0) {
-      const otherPercentage = (otherValue / stats.totalValue) * 100
+      const otherPercentage = (otherValue / stats.totalValue) * 100;
       topAssets.push({
         name: "Others",
         symbol: "OTHERS",
         value: otherValue,
         percentage: otherPercentage,
         smallTokens: [...otherSignificantAssets, ...smallTokens], // Păstrăm referința la tokenurile incluse în "Others"
-      })
+      });
     }
 
-    return topAssets
-  }, [stats, processedHoldings])
+    return topAssets;
+  }, [stats, processedHoldings]);
 
   // Memorarea datelor pentru graficul de activitate a tranzacțiilor
   const transactionActivityData = useMemo(() => {
     if (!transactions || transactions.length === 0) {
-      return []
+      return [];
     }
 
     // Filter transactions based on time range
-    const now = Date.now()
-    const msInDay = 24 * 60 * 60 * 1000
+    const now = Date.now();
+    const msInDay = 24 * 60 * 60 * 1000;
     const filteredTransactions = transactions.filter((tx) => {
-      if (activeTimeRange === "all") return true
-      const txDate = tx.timestamp * 1000
-      const daysDiff = (now - txDate) / msInDay
+      if (activeTimeRange === "all") return true;
+      const txDate = tx.timestamp * 1000;
+      const daysDiff = (now - txDate) / msInDay;
 
-      if (activeTimeRange === "7d") return daysDiff <= 7
-      if (activeTimeRange === "30d") return daysDiff <= 30
-      if (activeTimeRange === "90d") return daysDiff <= 90
-      return true
-    })
+      if (activeTimeRange === "7d") return daysDiff <= 7;
+      if (activeTimeRange === "30d") return daysDiff <= 30;
+      if (activeTimeRange === "90d") return daysDiff <= 90;
+      return true;
+    });
 
     // Group transactions by day
-    const txByDay = filteredTransactions.reduce((acc: Record<string, number>, tx) => {
-      if (!tx || !tx.timestamp) return acc
+    const txByDay = filteredTransactions.reduce(
+      (acc: Record<string, number>, tx) => {
+        if (!tx || !tx.timestamp) return acc;
 
-      const date = new Date(tx.timestamp * 1000).toISOString().split("T")[0]
-      acc[date] = (acc[date] || 0) + 1
-      return acc
-    }, {})
+        const date = new Date(tx.timestamp * 1000).toISOString().split("T")[0];
+        acc[date] = (acc[date] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
 
     // Convert to array and sort by date
     return Object.entries(txByDay)
       .map(([date, count]) => ({ date, count }))
-      .sort((a, b) => a.date.localeCompare(b.date))
-  }, [transactions, activeTimeRange])
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }, [transactions, activeTimeRange]);
 
   // Memorarea datelor pentru graficul de utilizare a gazului
   const gasUsageData = useMemo(() => {
     if (!transactions || transactions.length === 0) {
-      return []
+      return [];
     }
 
     // Filter transactions based on time range
-    const now = Date.now()
-    const msInDay = 24 * 60 * 60 * 1000
+    const now = Date.now();
+    const msInDay = 24 * 60 * 60 * 1000;
     const filteredTransactions = transactions.filter((tx) => {
-      if (activeTimeRange === "all") return true
-      const txDate = tx.timestamp * 1000
-      const daysDiff = (now - txDate) / msInDay
+      if (activeTimeRange === "all") return true;
+      const txDate = tx.timestamp * 1000;
+      const daysDiff = (now - txDate) / msInDay;
 
-      if (activeTimeRange === "7d") return daysDiff <= 7
-      if (activeTimeRange === "30d") return daysDiff <= 30
-      if (activeTimeRange === "90d") return daysDiff <= 90
-      return true
-    })
+      if (activeTimeRange === "7d") return daysDiff <= 7;
+      if (activeTimeRange === "30d") return daysDiff <= 30;
+      if (activeTimeRange === "90d") return daysDiff <= 90;
+      return true;
+    });
 
     // Group transactions by day and calculate gas used
-    const gasByDay: Record<string, { date: string; gas: number }> = {}
+    const gasByDay: Record<string, { date: string; gas: number }> = {};
 
     filteredTransactions.forEach((tx) => {
-      if (!tx.timestamp || !tx.gasUsed || !tx.gasPrice) return
+      if (!tx.timestamp || !tx.gasUsed || !tx.gasPrice) return;
 
-      const date = new Date(tx.timestamp * 1000).toISOString().split("T")[0]
-      const gasUsed = (Number(tx.gasUsed) * Number(tx.gasPrice)) / 1e18
+      const date = new Date(tx.timestamp * 1000).toISOString().split("T")[0];
+      const gasUsed = (Number(tx.gasUsed) * Number(tx.gasPrice)) / 1e18;
 
       if (!gasByDay[date]) {
-        gasByDay[date] = { date, gas: 0 }
+        gasByDay[date] = { date, gas: 0 };
       }
 
-      gasByDay[date].gas += gasUsed
-    })
+      gasByDay[date].gas += gasUsed;
+    });
 
     // Convert to array and sort by date
-    return Object.values(gasByDay).sort((a, b) => a.date.localeCompare(b.date))
-  }, [transactions, activeTimeRange])
+    return Object.values(gasByDay).sort((a, b) => a.date.localeCompare(b.date));
+  }, [transactions, activeTimeRange]);
 
   // Update the explorer URL based on the chain
   const getExplorerUrl = (txHash: string) => {
-    return chainId === 56 ? `https://bscscan.com/tx/${txHash}` : `https://etherscan.io/tx/${txHash}`
-  }
+    return chainId === 56
+      ? `https://bscscan.com/tx/${txHash}`
+      : `https://etherscan.io/tx/${txHash}`;
+  };
 
   // Memorarea datelor pentru graficul "Portfolio Value Over Time"
 
@@ -750,7 +833,7 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       <div className="flex justify-center items-center py-8">
         <WalletLoadingState status={loadingStatus} />
       </div>
-    )
+    );
   }
 
   return (
@@ -786,18 +869,24 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
             <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg mr-3">
               <FiDollarSign className="h-5 w-5 text-teal-600 dark:text-teal-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">Portfolio Value</h3>
+            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
+              Portfolio Value
+            </h3>
           </div>
           <p
             className={`${getTotalValueFontSize(
-              stats.totalValue,
+              stats.totalValue
             )} font-bold text-gray-900 dark:text-dark-text-primary break-all`}
           >
             {formatCurrency(stats.totalValue)}
           </p>
           <div className="flex justify-between mt-2 text-sm">
-            <span className="text-gray-500 dark:text-dark-text-secondary">{stats.ethBalance.toFixed(4)} ETH</span>
-            <span className="text-teal-600 dark:text-teal-400">+{stats.tokenCount} tokens</span>
+            <span className="text-gray-500 dark:text-dark-text-secondary">
+              {stats.ethBalance.toFixed(4)} ETH
+            </span>
+            <span className="text-teal-600 dark:text-teal-400">
+              +{stats.tokenCount} tokens
+            </span>
           </div>
         </motion.div>
 
@@ -811,15 +900,21 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
             <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg mr-3">
               <FiActivity className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">Transactions</h3>
+            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
+              Transactions
+            </h3>
           </div>
-          <p className="text-2xl font-bold text-gray-900 dark:text-dark-text-primary">{stats.transactionCount}</p>
+          <p className="text-2xl font-bold text-gray-900 dark:text-dark-text-primary">
+            {stats.transactionCount}
+          </p>
           <div className="flex justify-between mt-2 text-sm">
             <span className="text-green-600 dark:text-green-400 flex items-center">
-              <FiArrowDownLeft className="mr-1" /> In: {formatCurrency(stats.incomingValue)}
+              <FiArrowDownLeft className="mr-1" /> In:{" "}
+              {formatCurrency(stats.incomingValue)}
             </span>
             <span className="text-red-600 dark:text-red-400 flex items-center">
-              <FiArrowUpRight className="mr-1" /> Out: {formatCurrency(stats.outgoingValue)}
+              <FiArrowUpRight className="mr-1" /> Out:{" "}
+              {formatCurrency(stats.outgoingValue)}
             </span>
           </div>
         </motion.div>
@@ -843,7 +938,11 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           </p>
           <p className="text-sm text-gray-500 dark:text-dark-text-secondary mt-2">
             Value: {formatCurrency(stats.ethBalance * stats.ethPrice)}
-            {stats.ethPrice > 0 && <span className="ml-1 text-xs">(@${stats.ethPrice.toLocaleString()})</span>}
+            {stats.ethPrice > 0 && (
+              <span className="ml-1 text-xs">
+                (@${stats.ethPrice.toLocaleString()})
+              </span>
+            )}
           </p>
         </motion.div>
 
@@ -857,13 +956,17 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
             <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg mr-3">
               <FiClock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">Last Activity</h3>
+            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
+              Last Activity
+            </h3>
           </div>
           <p className="text-lg font-medium text-gray-900 dark:text-dark-text-primary">
             {formatDate(stats.lastActivity)}
           </p>
           <p className="text-sm text-gray-500 dark:text-dark-text-secondary mt-2">
-            {stats.transactionCount > 0 ? `From ${stats.transactionCount} transactions` : "No transactions"}
+            {stats.transactionCount > 0
+              ? `From ${stats.transactionCount} transactions`
+              : "No transactions"}
           </p>
         </motion.div>
       </div>
@@ -877,12 +980,17 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
       >
         <div className="flex items-center mb-4">
           <FiTrendingUp className="h-5 w-5 text-teal-500 mr-2" />
-          <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">Portfolio Value Over Time</h3>
+          <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
+            Portfolio Value Over Time
+          </h3>
         </div>
 
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={valueOverTimeData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <AreaChart
+              data={valueOverTimeData}
+              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+            >
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.8} />
@@ -894,8 +1002,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                 tick={{ fill: "#A0A0A0" }}
                 axisLine={{ stroke: "rgba(160, 160, 160, 0.2)" }}
                 tickFormatter={(value) => {
-                  const date = new Date(value)
-                  return `${date.getMonth() + 1}/${date.getDate()}`
+                  const date = new Date(value);
+                  return `${date.getMonth() + 1}/${date.getDate()}`;
                 }}
               />
               <YAxis
@@ -907,7 +1015,11 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                 padding={{ top: 10, bottom: 10 }}
                 allowDataOverflow={false}
               />
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(160, 160, 160, 0.2)" />
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                stroke="rgba(160, 160, 160, 0.2)"
+              />
               <RechartsTooltip content={<CustomTooltip />} />
               <Area
                 type="monotone"
@@ -934,7 +1046,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         >
           <div className="flex items-center mb-4">
             <FiPieChart className="h-5 w-5 text-teal-500 mr-2" />
-            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">Asset Distribution</h3>
+            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
+              Asset Distribution
+            </h3>
           </div>
 
           <div className="h-[300px]">
@@ -954,7 +1068,10 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                     isAnimationActive={true}
                   >
                     {assetDistributionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
                     ))}
                   </Pie>
                   {/* Removed tooltip to disable hover effect */}
@@ -967,7 +1084,11 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                     wrapperStyle={{ right: -10, top: 0 }}
                     formatter={(value, entry, index) => {
                       // Adapt text color based on theme
-                      return <span className="text-gray-900 dark:text-white text-xs">{value}</span>
+                      return (
+                        <span className="text-gray-900 dark:text-white text-xs">
+                          {value}
+                        </span>
+                      );
                     }}
                   />
                 </PieChart>
@@ -975,7 +1096,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
             ) : (
               <div className="flex flex-col items-center justify-center h-full bg-gray-50 dark:bg-dark-tertiary rounded-lg">
                 <FiAlertCircle className="h-10 w-10 text-dark-text-secondary mb-2" />
-                <p className="text-gray-500 dark:text-dark-text-secondary">No asset data available</p>
+                <p className="text-gray-500 dark:text-dark-text-secondary">
+                  No asset data available
+                </p>
               </div>
             )}
           </div>
@@ -990,32 +1113,54 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
         >
           <div className="flex items-center mb-4">
             <FiActivity className="h-5 w-5 text-green-500 mr-2" />
-            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">Transaction Activity</h3>
+            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
+              Transaction Activity
+            </h3>
           </div>
 
           <div className="h-[300px]">
             {transactionActivityData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={transactionActivityData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(160, 160, 160, 0.2)" />
+                <BarChart
+                  data={transactionActivityData}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    vertical={false}
+                    stroke="rgba(160, 160, 160, 0.2)"
+                  />
                   <XAxis
                     dataKey="date"
                     tick={{ fill: "#A0A0A0" }}
                     axisLine={{ stroke: "rgba(160, 160, 160, 0.2)" }}
                     tickFormatter={(value) => {
-                      const date = new Date(value)
-                      return `${date.getMonth() + 1}/${date.getDate()}`
+                      const date = new Date(value);
+                      return `${date.getMonth() + 1}/${date.getDate()}`;
                     }}
                   />
-                  <YAxis tick={{ fill: "#A0A0A0" }} axisLine={{ stroke: "rgba(160, 160, 160, 0.2)" }} />
-                  <RechartsTooltip content={<TransactionActivityTooltip />} cursor={{ fill: "rgba(0, 0, 0, 0.1)" }} />
-                  <Bar dataKey="count" name="Transactions" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <YAxis
+                    tick={{ fill: "#A0A0A0" }}
+                    axisLine={{ stroke: "rgba(160, 160, 160, 0.2)" }}
+                  />
+                  <RechartsTooltip
+                    content={<TransactionActivityTooltip />}
+                    cursor={{ fill: "rgba(0, 0, 0, 0.1)" }}
+                  />
+                  <Bar
+                    dataKey="count"
+                    name="Transactions"
+                    fill="#10b981"
+                    radius={[4, 4, 0, 0]}
+                  />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="flex flex-col items-center justify-center h-full bg-gray-50 dark:bg-dark-tertiary rounded-lg">
                 <FiAlertCircle className="h-10 w-10 text-dark-text-secondary mb-2" />
-                <p className="text-gray-500 dark:text-dark-text-secondary">No transaction data available</p>
+                <p className="text-gray-500 dark:text-dark-text-secondary">
+                  No transaction data available
+                </p>
               </div>
             )}
           </div>
@@ -1034,13 +1179,17 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
             <div className="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg mr-3">
               <FiInfo className="h-5 w-5 text-teal-600 dark:text-teal-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">Portfolio Insights</h3>
+            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
+              Portfolio Insights
+            </h3>
           </div>
 
           <div className="space-y-4">
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-500 dark:text-dark-text-secondary">Diversification Score</span>
+                <span className="text-gray-500 dark:text-dark-text-secondary">
+                  Diversification Score
+                </span>
                 <span className="font-medium text-teal-600 dark:text-teal-400">
                   {Math.min(100, Math.round(stats.tokenCount * 10))}%
                 </span>
@@ -1049,26 +1198,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                 <div
                   className="bg-gradient-to-r from-teal-500 to-green-500 h-2 rounded-full"
                   style={{
-                    width: `${Math.min(100, Math.round(stats.tokenCount * 10))}%`,
-                  }}
-                ></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-500 dark:text-dark-text-secondary">ETH Dominance</span>
-                <span className="font-medium text-blue-600 dark:text-blue-400">
-                  {Math.min(100, Math.round(((stats.ethBalance * stats.ethPrice) / stats.totalValue) * 100))}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-dark-tertiary rounded-full h-2">
-                <div
-                  className="bg-blue-500 h-2 rounded-full"
-                  style={{
                     width: `${Math.min(
                       100,
-                      Math.round(((stats.ethBalance * stats.ethPrice) / stats.totalValue) * 100),
+                      Math.round(stats.tokenCount * 10)
                     )}%`,
                   }}
                 ></div>
@@ -1077,9 +1209,48 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
 
             <div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-500 dark:text-dark-text-secondary">Activity Level</span>
+                <span className="text-gray-500 dark:text-dark-text-secondary">
+                  ETH Dominance
+                </span>
+                <span className="font-medium text-blue-600 dark:text-blue-400">
+                  {Math.min(
+                    100,
+                    Math.round(
+                      ((stats.ethBalance * stats.ethPrice) / stats.totalValue) *
+                        100
+                    )
+                  )}
+                  %
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-dark-tertiary rounded-full h-2">
+                <div
+                  className="bg-blue-500 h-2 rounded-full"
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      Math.round(
+                        ((stats.ethBalance * stats.ethPrice) /
+                          stats.totalValue) *
+                          100
+                      )
+                    )}%`,
+                  }}
+                ></div>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-500 dark:text-dark-text-secondary">
+                  Activity Level
+                </span>
                 <span className="font-medium text-purple-600 dark:text-purple-400">
-                  {stats.transactionCount > 100 ? "High" : stats.transactionCount > 20 ? "Medium" : "Low"}
+                  {stats.transactionCount > 100
+                    ? "High"
+                    : stats.transactionCount > 20
+                    ? "Medium"
+                    : "Low"}
                 </span>
               </div>
               <div className="w-full bg-gray-200 dark:bg-dark-tertiary rounded-full h-2">
@@ -1102,20 +1273,25 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
             <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg mr-3">
               <FiTrendingDown className="h-5 w-5 text-green-600 dark:text-green-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">Gas Usage</h3>
+            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
+              Gas Usage
+            </h3>
           </div>
 
           <div className="h-[150px]">
             {gasUsageData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={gasUsageData} margin={{ top: 5, right: 5, left: 15, bottom: 5 }}>
+                <LineChart
+                  data={gasUsageData}
+                  margin={{ top: 5, right: 5, left: 15, bottom: 5 }}
+                >
                   <XAxis
                     dataKey="date"
                     tick={{ fill: "#A0A0A0", fontSize: 10 }}
                     axisLine={{ stroke: "rgba(160, 160, 160, 0.2)" }}
                     tickFormatter={(value) => {
-                      const date = new Date(value)
-                      return `${date.getMonth() + 1}/${date.getDate()}`
+                      const date = new Date(value);
+                      return `${date.getMonth() + 1}/${date.getDate()}`;
                     }}
                   />
                   <YAxis
@@ -1134,14 +1310,25 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                   />
                   <RechartsTooltip
                     content={<CustomTooltip />}
-                    formatter={(value: number) => [(value * 1000000).toFixed(6) + " Gwei", "Gas Used"]}
+                    formatter={(value: number) => [
+                      (value * 1000000).toFixed(6) + " Gwei",
+                      "Gas Used",
+                    ]}
                   />
-                  <Line type="monotone" dataKey="gas" name="Gas Used" stroke="#10b981" dot={false} />
+                  <Line
+                    type="monotone"
+                    dataKey="gas"
+                    name="Gas Used"
+                    stroke="#10b981"
+                    dot={false}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
               <div className="flex flex-col items-center justify-center h-full">
-                <p className="text-sm text-gray-500 dark:text-dark-text-secondary">No gas data available</p>
+                <p className="text-sm text-gray-500 dark:text-dark-text-secondary">
+                  No gas data available
+                </p>
               </div>
             )}
           </div>
@@ -1157,41 +1344,59 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
             <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg mr-3">
               <FiZap className="h-5 w-5 text-amber-600 dark:text-amber-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">Activity Summary</h3>
+            <h3 className="text-lg font-medium text-gray-800 dark:text-dark-text-primary">
+              Activity Summary
+            </h3>
           </div>
 
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-dark-text-secondary">Total Transactions</span>
-              <span className="font-medium text-gray-900 dark:text-dark-text-primary">{stats.transactionCount}</span>
+              <span className="text-sm text-gray-600 dark:text-dark-text-secondary">
+                Total Transactions
+              </span>
+              <span className="font-medium text-gray-900 dark:text-dark-text-primary">
+                {stats.transactionCount}
+              </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-dark-text-secondary">Incoming</span>
+              <span className="text-sm text-gray-600 dark:text-dark-text-secondary">
+                Incoming
+              </span>
               <span className="font-medium text-green-600 dark:text-green-400">
                 {Math.round(
-                  (transactions.filter((tx) => tx.to?.toLowerCase() === address.toLowerCase()).length /
+                  (transactions.filter(
+                    (tx) => tx.to?.toLowerCase() === address.toLowerCase()
+                  ).length /
                     stats.transactionCount) *
-                    100,
+                    100
                 )}
                 %
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-dark-text-secondary">Outgoing</span>
+              <span className="text-sm text-gray-600 dark:text-dark-text-secondary">
+                Outgoing
+              </span>
               <span className="font-medium text-red-600 dark:text-red-400">
                 {Math.round(
-                  (transactions.filter((tx) => tx.from?.toLowerCase() === address.toLowerCase()).length /
+                  (transactions.filter(
+                    (tx) => tx.from?.toLowerCase() === address.toLowerCase()
+                  ).length /
                     stats.transactionCount) *
-                    100,
+                    100
                 )}
                 %
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600 dark:text-dark-text-secondary">First Transaction</span>
+              <span className="text-sm text-gray-600 dark:text-dark-text-secondary">
+                First Transaction
+              </span>
               <span className="font-medium text-gray-900 dark:text-dark-text-primary">
                 {transactions.length > 0
-                  ? new Date(Math.min(...transactions.map((tx) => tx.timestamp * 1000))).toLocaleDateString()
+                  ? new Date(
+                      Math.min(...transactions.map((tx) => tx.timestamp * 1000))
+                    ).toLocaleDateString()
                   : "N/A"}
               </span>
             </div>
@@ -1220,7 +1425,8 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
           <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
             <span className="flex items-center">
               <FiInfo className="mr-1" size={12} />
-              Note: Due to API limitations, not all tokens may be displayed. For a complete view, check on
+              Note: Due to API limitations, not all tokens may be displayed. For
+              a complete view, check on
               <a
                 href={`https://etherscan.io/address/${address}#tokentxns`}
                 target="_blank"
@@ -1272,8 +1478,14 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-dark-secondary divide-y divide-gray-200 dark:divide-dark-tertiary">
-                {(showAllTokens ? processedHoldings : processedHoldings.slice(0, 5)).map((token, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-dark-tertiary/50 transition-colors">
+                {(showAllTokens
+                  ? processedHoldings
+                  : processedHoldings.slice(0, 5)
+                ).map((token, idx) => (
+                  <tr
+                    key={idx}
+                    className="hover:bg-gray-50 dark:hover:bg-dark-tertiary/50 transition-colors"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <img
@@ -1324,7 +1536,9 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <div className="text-sm font-medium text-gray-900 dark:text-dark-text-primary">
-                        {token.tokenInfo.price?.rate ? formatCurrency(token.tokenInfo.price.rate) : "—"}
+                        {token.tokenInfo.price?.rate
+                          ? formatCurrency(token.tokenInfo.price.rate)
+                          : "—"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -1338,11 +1552,13 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
                           (token.percentage || 0) >= 5
                             ? "text-green-600 dark:text-green-400"
                             : (token.percentage || 0) >= 1
-                              ? "text-teal-600 dark:text-teal-400"
-                              : "text-gray-600 dark:text-gray-400"
+                            ? "text-teal-600 dark:text-teal-400"
+                            : "text-gray-600 dark:text-gray-400"
                         }`}
                       >
-                        {token.percentage ? token.percentage.toFixed(2) + "%" : "—"}
+                        {token.percentage
+                          ? token.percentage.toFixed(2) + "%"
+                          : "—"}
                       </div>
                     </td>
                   </tr>
@@ -1352,19 +1568,22 @@ const WalletOverview: React.FC<WalletOverviewProps> = ({
             {!showAllTokens && processedHoldings.length > 5 && (
               <div className="mt-4 text-center">
                 <p className="text-sm text-gray-500 dark:text-dark-text-secondary">
-                  {processedHoldings.length - 5} more tokens not shown. Click "Show All" to see all tokens.
+                  {processedHoldings.length - 5} more tokens not shown. Click
+                  "Show All" to see all tokens.
                 </p>
               </div>
             )}
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-500 dark:text-dark-text-secondary">No tokens found for this wallet</p>
+            <p className="text-gray-500 dark:text-dark-text-secondary">
+              No tokens found for this wallet
+            </p>
           </div>
         )}
       </motion.div>
     </div>
-  )
-}
+  );
+};
 
-export default WalletOverview
+export default WalletOverview;

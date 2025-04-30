@@ -1,9 +1,12 @@
-"use client"
-import { motion } from "framer-motion"
-import { FaRocket } from "react-icons/fa"
-import type { LoadingStateProps } from "../types"
+"use client";
+import React from "react";
+import { motion } from "framer-motion";
+import { FaRocket } from "react-icons/fa";
+import type { LoadingStateProps } from "../types";
 
-const LoadingState = ({ message = "Analyzing Market Data" }: LoadingStateProps) => {
+const LoadingState = ({
+  message = "Analyzing Market Data",
+}: LoadingStateProps) => {
   return (
     <div className="min-h-screen flex justify-center items-center bg-primary dark:bg-gray-900">
       <div className="flex flex-col items-center justify-center p-8 rounded-xl bg-white dark:bg-gray-800 shadow-xl max-w-md mx-auto">
@@ -39,9 +42,12 @@ const LoadingState = ({ message = "Analyzing Market Data" }: LoadingStateProps) 
             <FaRocket className="text-white text-4xl" />
           </motion.div>
         </div>
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">{message}</h2>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+          {message}
+        </h2>
         <p className="text-gray-600 dark:text-gray-300 text-center mb-4">
-          We're calculating the Altcoin Season Index by comparing performance against Bitcoin...
+          We're calculating the Altcoin Season Index by comparing performance
+          against Bitcoin...
         </p>
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mb-4 overflow-hidden">
           <motion.div
@@ -53,7 +59,7 @@ const LoadingState = ({ message = "Analyzing Market Data" }: LoadingStateProps) 
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default LoadingState
+export default LoadingState;

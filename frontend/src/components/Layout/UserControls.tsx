@@ -1,5 +1,6 @@
-import { FaUserCircle } from "react-icons/fa"
-import NightToggle from "../Layout/NightToggle"
+import React from "react";
+import { FaUserCircle } from "react-icons/fa";
+import NightToggle from "../Layout/NightToggle";
 
 const UserControls = (): JSX.Element => (
   <>
@@ -8,6 +9,6 @@ const UserControls = (): JSX.Element => (
     </button>
     <NightToggle />
   </>
-)
+);
 
-export default UserControls
+export default UserControls;

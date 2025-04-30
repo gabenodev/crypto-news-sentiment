@@ -1,22 +1,23 @@
-"use client"
-import { Link } from "react-router-dom"
-import useTrendingCoins from "../../hooks/homepage/useTrendingCoins"
-import { ClipLoader } from "react-spinners"
-import { motion } from "framer-motion"
-import type { TrendingCoin } from "../../types"
+"use client";
+import React from "react";
+import { Link } from "react-router-dom";
+import useTrendingCoins from "../../hooks/homepage/useTrendingCoins";
+import { ClipLoader } from "react-spinners";
+import { motion } from "framer-motion";
+import type { TrendingCoin } from "../../types";
 
 function TrendingCoins(): JSX.Element {
-  const { trendingCoins, loading } = useTrendingCoins()
+  const { trendingCoins, loading } = useTrendingCoins();
 
   const formatPrice = (price: number | undefined): string => {
-    if (!price) return "—"
+    if (!price) return "—";
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: price < 1 ? 6 : 2,
       maximumFractionDigits: price < 1 ? 8 : 2,
-    }).format(price)
-  }
+    }).format(price);
+  };
 
   return (
     <motion.div
@@ -41,7 +42,9 @@ function TrendingCoins(): JSX.Element {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-green-500">
               Trending Coins
             </span>
-            <span className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">(24h)</span>
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-1">
+              (24h)
+            </span>
           </h3>
         </div>
 
@@ -73,8 +76,8 @@ function TrendingCoins(): JSX.Element {
                           className="w-9 h-9 rounded-full border-2 border-white dark:border-gray-700 shadow-sm"
                           loading="lazy"
                           onError={(e) => {
-                            const target = e.target as HTMLImageElement
-                            target.src = "/placeholder.svg"
+                            const target = e.target as HTMLImageElement;
+                            target.src = "/placeholder.svg";
                           }}
                         />
                       </div>
@@ -93,13 +96,20 @@ function TrendingCoins(): JSX.Element {
                       </span>
                       <span
                         className={`block text-sm font-medium ${
-                          (coin.item.data?.price_change_percentage_24h?.usd ?? 0) >= 0
+                          (coin.item.data?.price_change_percentage_24h?.usd ??
+                            0) >= 0
                             ? "text-emerald-500"
                             : "text-rose-500"
                         }`}
                       >
-                        {(coin.item.data?.price_change_percentage_24h?.usd ?? 0) >= 0 ? "+" : ""}
-                        {(coin.item.data?.price_change_percentage_24h?.usd ?? 0).toFixed(2)}%
+                        {(coin.item.data?.price_change_percentage_24h?.usd ??
+                          0) >= 0
+                          ? "+"
+                          : ""}
+                        {(
+                          coin.item.data?.price_change_percentage_24h?.usd ?? 0
+                        ).toFixed(2)}
+                        %
                       </span>
                     </div>
                   </Link>
@@ -110,7 +120,7 @@ function TrendingCoins(): JSX.Element {
         </div>
       </div>
     </motion.div>
-  )
+  );
 }
 
-export default TrendingCoins
+export default TrendingCoins;

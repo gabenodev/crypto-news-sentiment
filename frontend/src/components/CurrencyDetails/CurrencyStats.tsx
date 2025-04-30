@@ -1,6 +1,7 @@
-"use client"
-import { useEffect, useState } from "react"
-import { useParams } from "react-router-dom"
+"use client";
+import React from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import {
   FaLink,
   FaReddit,
@@ -21,42 +22,46 @@ import {
   FaGithub,
   FaTwitter,
   FaGlobe,
-} from "react-icons/fa"
-import { CgWebsite } from "react-icons/cg"
-import { motion } from "framer-motion"
-import { Tab } from "@headlessui/react"
-import type { CoinDetail } from "../../types"
+} from "react-icons/fa";
+import { CgWebsite } from "react-icons/cg";
+import { motion } from "framer-motion";
+import { Tab } from "@headlessui/react";
+import type { CoinDetail } from "../../types";
 
 function CurrencyStats(): JSX.Element {
-  const { coinId } = useParams<{ coinId: string }>()
-  const [coinData, setCoinData] = useState<CoinDetail | null>(null)
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
-  const [expanded, setExpanded] = useState<boolean>(false)
-  const [activeTab, setActiveTab] = useState<number>(0)
+  const { coinId } = useParams<{ coinId: string }>();
+  const [coinData, setCoinData] = useState<CoinDetail | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<number>(0);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        setLoading(true)
-        const response = await fetch(`https://sentimentxv2-project.vercel.app/api/coin-data?coinId=${coinId}`)
+        setLoading(true);
+        const response = await fetch(
+          `https://sentimentxv2-project.vercel.app/api/coin-data?coinId=${coinId}`
+        );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch data")
+          throw new Error("Failed to fetch data");
         }
 
-        const data = await response.json()
-        setCoinData(data)
-        setLoading(false)
+        const data = await response.json();
+        setCoinData(data);
+        setLoading(false);
       } catch (error) {
-        console.error("Error fetching coin data:", error)
-        setError("There was an error fetching the coin data. Please try again.")
-        setLoading(false)
+        console.error("Error fetching coin data:", error);
+        setError(
+          "There was an error fetching the coin data. Please try again."
+        );
+        setLoading(false);
       }
     }
 
-    fetchData()
-  }, [coinId])
+    fetchData();
+  }, [coinId]);
 
   if (loading) {
     return (
@@ -64,14 +69,16 @@ function CurrencyStats(): JSX.Element {
         <div className="max-w-md w-full">
           <div className="flex flex-col items-center">
             <div className="w-16 h-16 border-4 border-t-teal-500 border-b-teal-500 border-l-transparent border-r-transparent rounded-full animate-spin mb-4"></div>
-            <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300">Loading cryptocurrency data</h2>
+            <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300">
+              Loading cryptocurrency data
+            </h2>
             <p className="text-gray-500 dark:text-gray-400 mt-2 text-center">
               Fetching the latest information for {coinId}...
             </p>
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -82,8 +89,12 @@ function CurrencyStats(): JSX.Element {
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
               <FaInfoCircle className="text-red-500 text-3xl" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-dark-text-primary mb-2">Error Loading Data</h2>
-            <p className="text-gray-600 dark:text-gray-300 text-center mb-6">{error}</p>
+            <h2 className="text-xl font-semibold text-gray-800 dark:text-dark-text-primary mb-2">
+              Error Loading Data
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 text-center mb-6">
+              {error}
+            </p>
             <button
               onClick={() => window.location.reload()}
               className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-colors"
@@ -93,55 +104,61 @@ function CurrencyStats(): JSX.Element {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (!coinData) {
-    return <></>
+    return <></>;
   }
 
   const formatPrice = (price: number): string => {
     if (price < 0.0001) {
-      return price.toFixed(8)
+      return price.toFixed(8);
     }
-    return price.toLocaleString()
-  }
+    return price.toLocaleString();
+  };
 
   const formatMarketCap = (cap: number): string => {
-    if (cap >= 1e12) return `$${(cap / 1e12).toFixed(2)}T`
-    if (cap >= 1e9) return `$${(cap / 1e9).toFixed(2)}B`
-    if (cap >= 1e6) return `$${(cap / 1e6).toFixed(2)}M`
-    return `$${cap.toLocaleString()}`
-  }
+    if (cap >= 1e12) return `$${(cap / 1e12).toFixed(2)}T`;
+    if (cap >= 1e9) return `$${(cap / 1e9).toFixed(2)}B`;
+    if (cap >= 1e6) return `$${(cap / 1e6).toFixed(2)}M`;
+    return `$${cap.toLocaleString()}`;
+  };
 
   const formatSupply = (supply: number | null): string => {
-    if (!supply) return "N/A"
-    if (supply >= 1e9) return `${(supply / 1e9).toFixed(2)}B`
-    if (supply >= 1e6) return `${(supply / 1e6).toFixed(2)}M`
-    if (supply >= 1e3) return `${(supply / 1e3).toFixed(2)}K`
-    return supply.toLocaleString()
-  }
+    if (!supply) return "N/A";
+    if (supply >= 1e9) return `${(supply / 1e9).toFixed(2)}B`;
+    if (supply >= 1e6) return `${(supply / 1e6).toFixed(2)}M`;
+    if (supply >= 1e3) return `${(supply / 1e3).toFixed(2)}K`;
+    return supply.toLocaleString();
+  };
 
-  const currentPrice = coinData.market_data.current_price.usd
-  const athPrice = coinData.market_data.ath.usd
-  const atlPrice = coinData.market_data.atl.usd
-  const high24h = coinData.market_data.high_24h.usd
-  const low24h = coinData.market_data.low_24h.usd
-  const athChangePercentage = coinData.market_data.ath_change_percentage.usd
-  const atlChangePercentage = coinData.market_data.atl_change_percentage.usd
-  const athDate = new Date(coinData.market_data.ath_date.usd).toLocaleDateString()
-  const atlDate = new Date(coinData.market_data.atl_date.usd).toLocaleDateString()
-  const progress = ((currentPrice - atlPrice) / (athPrice - atlPrice)) * 100
+  const currentPrice = coinData.market_data.current_price.usd;
+  const athPrice = coinData.market_data.ath.usd;
+  const atlPrice = coinData.market_data.atl.usd;
+  const high24h = coinData.market_data.high_24h.usd;
+  const low24h = coinData.market_data.low_24h.usd;
+  const athChangePercentage = coinData.market_data.ath_change_percentage.usd;
+  const atlChangePercentage = coinData.market_data.atl_change_percentage.usd;
+  const athDate = new Date(
+    coinData.market_data.ath_date.usd
+  ).toLocaleDateString();
+  const atlDate = new Date(
+    coinData.market_data.atl_date.usd
+  ).toLocaleDateString();
+  const progress = ((currentPrice - atlPrice) / (athPrice - atlPrice)) * 100;
 
-  const priceChange24h = coinData.market_data.price_change_24h
-  const priceChangePercentage24h = coinData.market_data.price_change_percentage_24h
-  const marketCapChangePercentage24h = coinData.market_data.market_cap_change_percentage_24h
+  const priceChange24h = coinData.market_data.price_change_24h;
+  const priceChangePercentage24h =
+    coinData.market_data.price_change_percentage_24h;
+  const marketCapChangePercentage24h =
+    coinData.market_data.market_cap_change_percentage_24h;
 
   const tabItems = [
     { name: "Overview", icon: <FaChartLine className="mr-2" /> },
     { name: "Market Stats", icon: <FaChartBar className="mr-2" /> },
     { name: "Links", icon: <FaLink className="mr-2" /> },
-  ]
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-primary p-4 md:p-8 transition-colors duration-300">
@@ -168,7 +185,9 @@ function CurrencyStats(): JSX.Element {
               </div>
               <div>
                 <div className="flex items-center flex-wrap gap-2">
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{coinData.name}</h1>
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                    {coinData.name}
+                  </h1>
                   <span className="text-xl font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-md">
                     {coinData.symbol.toUpperCase()}
                   </span>
@@ -184,7 +203,7 @@ function CurrencyStats(): JSX.Element {
                           >
                             {category}
                           </span>
-                        ),
+                        )
                     )}
                 </div>
               </div>
@@ -193,7 +212,9 @@ function CurrencyStats(): JSX.Element {
             {/* Price Data */}
             <div className="flex flex-col items-end">
               <div className="flex items-baseline gap-3">
-                <span className="text-4xl font-bold text-gray-900 dark:text-white">${formatPrice(currentPrice)}</span>
+                <span className="text-4xl font-bold text-gray-900 dark:text-white">
+                  ${formatPrice(currentPrice)}
+                </span>
                 <span
                   className={`flex items-center text-lg font-medium px-3 py-1 rounded-full ${
                     priceChangePercentage24h >= 0
@@ -201,7 +222,11 @@ function CurrencyStats(): JSX.Element {
                       : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
                   }`}
                 >
-                  {priceChangePercentage24h >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
+                  {priceChangePercentage24h >= 0 ? (
+                    <FaArrowUp className="mr-1" />
+                  ) : (
+                    <FaArrowDown className="mr-1" />
+                  )}
                   {Math.abs(priceChangePercentage24h).toFixed(2)}%
                 </span>
               </div>
@@ -284,52 +309,76 @@ function CurrencyStats(): JSX.Element {
 
                     <div className="flex justify-between text-sm mt-6">
                       <div className="text-center">
-                        <p className="text-gray-600 dark:text-gray-300 mb-1">All Time Low</p>
+                        <p className="text-gray-600 dark:text-gray-300 mb-1">
+                          All Time Low
+                        </p>
                         <p className="font-medium text-teal-500 px-3 py-1 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
                           ${formatPrice(atlPrice)}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{atlDate}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {atlDate}
+                        </p>
                       </div>
                       <div className="text-center">
-                        <p className="text-gray-600 dark:text-gray-300 mb-1">Current</p>
+                        <p className="text-gray-600 dark:text-gray-300 mb-1">
+                          Current
+                        </p>
                         <p className="font-medium text-gray-900 dark:text-white px-3 py-1 bg-gray-50 dark:bg-gray-700 rounded-lg">
                           ${formatPrice(currentPrice)}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Today</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Today
+                        </p>
                       </div>
                       <div className="text-center">
-                        <p className="text-gray-600 dark:text-gray-300 mb-1">All Time High</p>
+                        <p className="text-gray-600 dark:text-gray-300 mb-1">
+                          All Time High
+                        </p>
                         <p className="font-medium text-orange-500 px-3 py-1 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                           ${formatPrice(athPrice)}
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{athDate}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {athDate}
+                        </p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 mt-6">
                       <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl border border-gray-200 dark:border-gray-600">
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">ATH Change</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                          ATH Change
+                        </p>
                         <p
                           className={`text-2xl font-bold ${
-                            athChangePercentage >= 0 ? "text-green-500" : "text-red-500"
+                            athChangePercentage >= 0
+                              ? "text-green-500"
+                              : "text-red-500"
                           }`}
                         >
                           {athChangePercentage >= 0 ? "+" : ""}
                           {athChangePercentage.toFixed(2)}%
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">From All Time High</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          From All Time High
+                        </p>
                       </div>
                       <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl border border-gray-200 dark:border-gray-600">
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">ATL Change</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                          ATL Change
+                        </p>
                         <p
                           className={`text-2xl font-bold ${
-                            atlChangePercentage >= 0 ? "text-green-500" : "text-red-500"
+                            atlChangePercentage >= 0
+                              ? "text-green-500"
+                              : "text-red-500"
                           }`}
                         >
                           {atlChangePercentage >= 0 ? "+" : ""}
                           {atlChangePercentage.toFixed(2)}%
                         </p>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">From All Time Low</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          From All Time Low
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -373,7 +422,8 @@ function CurrencyStats(): JSX.Element {
                         Circulating Supply
                       </span>
                       <span className="font-medium text-gray-900 dark:text-white">
-                        {formatSupply(coinData.market_data.circulating_supply)} {coinData.symbol.toUpperCase()}
+                        {formatSupply(coinData.market_data.circulating_supply)}{" "}
+                        {coinData.symbol.toUpperCase()}
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
@@ -382,7 +432,8 @@ function CurrencyStats(): JSX.Element {
                         Total Supply
                       </span>
                       <span className="font-medium text-gray-900 dark:text-white">
-                        {formatSupply(coinData.market_data.total_supply)} {coinData.symbol.toUpperCase()}
+                        {formatSupply(coinData.market_data.total_supply)}{" "}
+                        {coinData.symbol.toUpperCase()}
                       </span>
                     </div>
                     <div className="flex justify-between items-center py-3">
@@ -391,7 +442,8 @@ function CurrencyStats(): JSX.Element {
                         Max Supply
                       </span>
                       <span className="font-medium text-gray-900 dark:text-white">
-                        {formatSupply(coinData.market_data.max_supply)} {coinData.symbol.toUpperCase()}
+                        {formatSupply(coinData.market_data.max_supply)}{" "}
+                        {coinData.symbol.toUpperCase()}
                       </span>
                     </div>
                   </div>
@@ -565,8 +617,10 @@ function CurrencyStats(): JSX.Element {
                   </h2>
                   <div className="space-y-4">
                     {["7d", "14d", "30d", "60d", "200d", "1y"].map((period) => {
-                      const changeKey = `price_change_percentage_${period}`
-                      const changeValue = coinData.market_data[changeKey as keyof typeof coinData.market_data] as number
+                      const changeKey = `price_change_percentage_${period}`;
+                      const changeValue = coinData.market_data[
+                        changeKey as keyof typeof coinData.market_data
+                      ] as number;
                       return (
                         <div
                           key={period}
@@ -576,14 +630,14 @@ function CurrencyStats(): JSX.Element {
                             {period === "7d"
                               ? "7 Days"
                               : period === "14d"
-                                ? "14 Days"
-                                : period === "30d"
-                                  ? "30 Days"
-                                  : period === "60d"
-                                    ? "60 Days"
-                                    : period === "200d"
-                                      ? "200 Days"
-                                      : "1 Year"}
+                              ? "14 Days"
+                              : period === "30d"
+                              ? "30 Days"
+                              : period === "60d"
+                              ? "60 Days"
+                              : period === "200d"
+                              ? "200 Days"
+                              : "1 Year"}
                           </span>
                           <span
                             className={`font-medium px-3 py-1 rounded-lg ${
@@ -596,7 +650,7 @@ function CurrencyStats(): JSX.Element {
                             {changeValue ? changeValue.toFixed(2) : "0.00"}%
                           </span>
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 </motion.div>
@@ -629,9 +683,14 @@ function CurrencyStats(): JSX.Element {
                         <CgWebsite className="text-blue-500 text-2xl" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-white">Official Website</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          Official Website
+                        </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                          {coinData.links.homepage[0]?.replace(/^https?:\/\//, "")}
+                          {coinData.links.homepage[0]?.replace(
+                            /^https?:\/\//,
+                            ""
+                          )}
                         </p>
                       </div>
                       <FaExternalLinkAlt className="ml-auto text-gray-400" />
@@ -649,32 +708,42 @@ function CurrencyStats(): JSX.Element {
                         <FaLink className="text-purple-500 text-2xl" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-white">Blockchain Explorer</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          Blockchain Explorer
+                        </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                          {coinData.links.blockchain_site[0]?.replace(/^https?:\/\//, "")}
+                          {coinData.links.blockchain_site[0]?.replace(
+                            /^https?:\/\//,
+                            ""
+                          )}
                         </p>
                       </div>
                       <FaExternalLinkAlt className="ml-auto text-gray-400" />
                     </a>
                   )}
 
-                  {coinData.links.repos_url.github && coinData.links.repos_url.github.length > 0 && (
-                    <a
-                      href={coinData.links.repos_url.github[0]}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center p-4 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 border border-gray-100 dark:border-gray-700"
-                    >
-                      <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-xl mr-4">
-                        <FaGithub className="text-gray-800 dark:text-gray-200 text-2xl" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-white">GitHub</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Source Code Repository</p>
-                      </div>
-                      <FaExternalLinkAlt className="ml-auto text-gray-400" />
-                    </a>
-                  )}
+                  {coinData.links.repos_url.github &&
+                    coinData.links.repos_url.github.length > 0 && (
+                      <a
+                        href={coinData.links.repos_url.github[0]}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center p-4 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 border border-gray-100 dark:border-gray-700"
+                      >
+                        <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-xl mr-4">
+                          <FaGithub className="text-gray-800 dark:text-gray-200 text-2xl" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            GitHub
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                            Source Code Repository
+                          </p>
+                        </div>
+                        <FaExternalLinkAlt className="ml-auto text-gray-400" />
+                      </a>
+                    )}
 
                   {coinData.links.twitter_screen_name && (
                     <a
@@ -687,7 +756,9 @@ function CurrencyStats(): JSX.Element {
                         <FaTwitter className="text-blue-500 text-2xl" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-white">Twitter</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          Twitter
+                        </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                           @{coinData.links.twitter_screen_name}
                         </p>
@@ -707,34 +778,45 @@ function CurrencyStats(): JSX.Element {
                         <FaReddit className="text-orange-500 text-2xl" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-white">Reddit</p>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          Reddit
+                        </p>
                         <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                          {coinData.links.subreddit_url?.replace(/^https?:\/\//, "")}
+                          {coinData.links.subreddit_url?.replace(
+                            /^https?:\/\//,
+                            ""
+                          )}
                         </p>
                       </div>
                       <FaExternalLinkAlt className="ml-auto text-gray-400" />
                     </a>
                   )}
 
-                  {coinData.links.official_forum_url && coinData.links.official_forum_url[0] && (
-                    <a
-                      href={coinData.links.official_forum_url[0]}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center p-4 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 border border-gray-100 dark:border-gray-700"
-                    >
-                      <div className="bg-teal-100 dark:bg-teal-900/30 p-3 rounded-xl mr-4">
-                        <FaGlobe className="text-teal-500 text-2xl" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 dark:text-white">Official Forum</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                          {coinData.links.official_forum_url[0]?.replace(/^https?:\/\//, "")}
-                        </p>
-                      </div>
-                      <FaExternalLinkAlt className="ml-auto text-gray-400" />
-                    </a>
-                  )}
+                  {coinData.links.official_forum_url &&
+                    coinData.links.official_forum_url[0] && (
+                      <a
+                        href={coinData.links.official_forum_url[0]}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center p-4 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 border border-gray-100 dark:border-gray-700"
+                      >
+                        <div className="bg-teal-100 dark:bg-teal-900/30 p-3 rounded-xl mr-4">
+                          <FaGlobe className="text-teal-500 text-2xl" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 dark:text-white">
+                            Official Forum
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                            {coinData.links.official_forum_url[0]?.replace(
+                              /^https?:\/\//,
+                              ""
+                            )}
+                          </p>
+                        </div>
+                        <FaExternalLinkAlt className="ml-auto text-gray-400" />
+                      </a>
+                    )}
                 </div>
               </motion.div>
             </Tab.Panel>
@@ -742,7 +824,7 @@ function CurrencyStats(): JSX.Element {
         </Tab.Group>
       </div>
     </div>
-  )
+  );
 }
 
-export default CurrencyStats
+export default CurrencyStats;

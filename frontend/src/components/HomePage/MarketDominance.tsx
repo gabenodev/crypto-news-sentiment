@@ -1,11 +1,11 @@
-"use client"
-import type React from "react"
-import { motion } from "framer-motion"
-import useMarketDominance from "../../hooks/homepage/useMarketDominance"
-import type { MarketDominanceItem } from "../../types"
+"use client";
+import React from "react";
+import { motion } from "framer-motion";
+import useMarketDominance from "../../hooks/homepage/useMarketDominance";
+import type { MarketDominanceItem } from "../../types";
 
 const MarketDominanceCard = (): JSX.Element => {
-  const { dominance, loading, error } = useMarketDominance()
+  const { dominance, loading, error } = useMarketDominance();
 
   // Define colors for each cryptocurrency
   const coinColors = {
@@ -17,7 +17,7 @@ const MarketDominanceCard = (): JSX.Element => {
       text: "#A6B7D4",
       light: "rgba(166, 183, 212, 0.1)",
     },
-  }
+  };
 
   return (
     <motion.div
@@ -49,7 +49,10 @@ const MarketDominanceCard = (): JSX.Element => {
           {loading ? (
             <div className="animate-pulse space-y-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                <div
+                  key={i}
+                  className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg"
+                ></div>
               ))}
             </div>
           ) : error ? (
@@ -70,7 +73,9 @@ const MarketDominanceCard = (): JSX.Element => {
                   />
                 </svg>
               </div>
-              <h4 className="font-bold text-gray-800 dark:text-gray-200">Failed to load data</h4>
+              <h4 className="font-bold text-gray-800 dark:text-gray-200">
+                Failed to load data
+              </h4>
               <p className="text-gray-500 dark:text-gray-400 text-xs">
                 Couldn't connect to API. Please try again later.
               </p>
@@ -85,10 +90,20 @@ const MarketDominanceCard = (): JSX.Element => {
             <>
               {/* Pie chart visualization */}
               <div className="relative w-full h-40 flex items-center justify-center mb-2">
-                <svg viewBox="0 0 100 100" className="w-40 h-40 transform -rotate-90">
+                <svg
+                  viewBox="0 0 100 100"
+                  className="w-40 h-40 transform -rotate-90"
+                >
                   {dominance.reduce((acc, item, i) => {
-                    const prevTotal = i === 0 ? 0 : dominance.slice(0, i).reduce((sum, d) => sum + d.value, 0)
-                    const color = coinColors[item.name as keyof typeof coinColors]?.bg || "#A6B7D4"
+                    const prevTotal =
+                      i === 0
+                        ? 0
+                        : dominance
+                            .slice(0, i)
+                            .reduce((sum, d) => sum + d.value, 0);
+                    const color =
+                      coinColors[item.name as keyof typeof coinColors]?.bg ||
+                      "#A6B7D4";
 
                     return [
                       ...acc,
@@ -104,9 +119,15 @@ const MarketDominanceCard = (): JSX.Element => {
                         strokeDashoffset={`${-prevTotal * 2.51}`}
                         className="transition-all duration-1000 ease-out"
                       />,
-                    ]
+                    ];
                   }, [] as React.ReactNode[])}
-                  <circle cx="50" cy="50" r="30" fill="white" className="dark:fill-dark-secondary" />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="30"
+                    fill="white"
+                    className="dark:fill-dark-secondary"
+                  />
                 </svg>
               </div>
 
@@ -124,15 +145,20 @@ const MarketDominanceCard = (): JSX.Element => {
                       className="flex justify-between items-center px-4 py-3 rounded-xl border border-gray-200/50 dark:border-gray-600/50 hover:shadow-md transition-all duration-200"
                       style={{
                         backgroundColor:
-                          coinColors[item.name as keyof typeof coinColors]?.light || "rgba(166, 183, 212, 0.1)",
-                        borderColor: coinColors[item.name as keyof typeof coinColors]?.bg || "#A6B7D4",
+                          coinColors[item.name as keyof typeof coinColors]
+                            ?.light || "rgba(166, 183, 212, 0.1)",
+                        borderColor:
+                          coinColors[item.name as keyof typeof coinColors]
+                            ?.bg || "#A6B7D4",
                       }}
                     >
                       <div className="flex items-center space-x-3">
                         <div
                           className="w-3 h-3 rounded-full flex-shrink-0 shadow-sm"
                           style={{
-                            backgroundColor: coinColors[item.name as keyof typeof coinColors]?.bg || "#A6B7D4",
+                            backgroundColor:
+                              coinColors[item.name as keyof typeof coinColors]
+                                ?.bg || "#A6B7D4",
                           }}
                         />
                         <span className="font-medium text-gray-800 dark:text-dark-text-primary text-sm">
@@ -143,7 +169,9 @@ const MarketDominanceCard = (): JSX.Element => {
                         <span
                           className="font-bold text-sm"
                           style={{
-                            color: coinColors[item.name as keyof typeof coinColors]?.text || "#A6B7D4",
+                            color:
+                              coinColors[item.name as keyof typeof coinColors]
+                                ?.text || "#A6B7D4",
                           }}
                         >
                           {item.value}%
@@ -158,7 +186,7 @@ const MarketDominanceCard = (): JSX.Element => {
         </div>
       </div>
     </motion.div>
-  )
-}
+  );
+};
 
-export default MarketDominanceCard
+export default MarketDominanceCard;

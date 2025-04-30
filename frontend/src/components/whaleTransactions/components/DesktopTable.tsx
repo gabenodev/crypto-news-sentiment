@@ -1,19 +1,19 @@
-"use client"
+"use client";
 
 // components/whaleTransactions/DesktopTable.tsx
 
-import type React from "react"
-import { AnimatePresence, motion } from "framer-motion"
-import type { WhaleTransaction } from "../../../types"
-import type { CryptoData } from "./../types"
-import { truncate, formatValue } from "../utils/formatters"
-import { getExchangeColor, getTrendIcon } from "../utils/exchanges"
-import { getUsdValue } from "../utils/cryptoData"
+import React from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import type { WhaleTransaction } from "../../../types";
+import type { CryptoData } from "./../types";
+import { truncate, formatValue } from "../utils/formatters";
+import { getExchangeColor, getTrendIcon } from "../utils/exchanges";
+import { getUsdValue } from "../utils/cryptoData";
 
 type Props = {
-  transactions: WhaleTransaction[]
-  cryptoData: Record<string, CryptoData>
-}
+  transactions: WhaleTransaction[];
+  cryptoData: Record<string, CryptoData>;
+};
 
 const DesktopTable: React.FC<Props> = ({ transactions, cryptoData }) => {
   return (
@@ -64,10 +64,18 @@ const DesktopTable: React.FC<Props> = ({ transactions, cryptoData }) => {
               >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    <div className={`w-2 h-2 rounded-full mr-2 ${getExchangeColor(tx.exchange)}`} />
+                    <div
+                      className={`w-2 h-2 rounded-full mr-2 ${getExchangeColor(
+                        tx.exchange
+                      )}`}
+                    />
                     <span className="font-medium text-gray-900 dark:text-white flex items-center">
                       {tx.exchange}
-                      {getTrendIcon(tx.exchange) && <span className="ml-2">{getTrendIcon(tx.exchange)}</span>}
+                      {getTrendIcon(tx.exchange) && (
+                        <span className="ml-2">
+                          {getTrendIcon(tx.exchange)}
+                        </span>
+                      )}
                     </span>
                   </div>
                 </td>
@@ -92,7 +100,9 @@ const DesktopTable: React.FC<Props> = ({ transactions, cryptoData }) => {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900 dark:text-white">
                     {getUsdValue(tx.value, tx.blockchain, cryptoData) || (
-                      <span className="text-gray-400 dark:text-gray-500">N/A</span>
+                      <span className="text-gray-400 dark:text-gray-500">
+                        N/A
+                      </span>
                     )}
                   </div>
                 </td>
@@ -130,7 +140,9 @@ const DesktopTable: React.FC<Props> = ({ transactions, cryptoData }) => {
                   </td>
                 )}
                 {tx.fee && (
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{tx.fee}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                    {tx.fee}
+                  </td>
                 )}
                 <td className="px-6 py-4 whitespace-nowrap text-right">
                   <div className="flex justify-end space-x-2">
@@ -165,15 +177,15 @@ const DesktopTable: React.FC<Props> = ({ transactions, cryptoData }) => {
         </tbody>
       </table>
     </div>
-  )
-}
+  );
+};
 
 const AddressLink = ({
   address,
   label,
 }: {
-  address: string
-  label: string
+  address: string;
+  label: string;
 }) => (
   <div className="group relative inline-flex mt-1">
     <a
@@ -205,6 +217,6 @@ const AddressLink = ({
       </div>
     </div>
   </div>
-)
+);
 
-export default DesktopTable
+export default DesktopTable;

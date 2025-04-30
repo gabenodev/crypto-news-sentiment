@@ -1,37 +1,45 @@
-"use client"
+"use client";
 
-import type React from "react"
+import React from "react";
 
-import { useState, useEffect, useRef } from "react"
-import { CHAIN_NATIVE_TOKENS } from "../../utils/API/etherScanAPI"
-import { motion } from "framer-motion"
-import { FiExternalLink, FiArrowUp, FiArrowDown, FiFilter, FiSearch, FiClock, FiRefreshCw } from "react-icons/fi"
-import WalletLoadingState from "./components/WalletLoadingState"
+import { useState, useEffect, useRef } from "react";
+import { CHAIN_NATIVE_TOKENS } from "../../utils/API/etherScanAPI";
+import { motion } from "framer-motion";
+import {
+  FiExternalLink,
+  FiArrowUp,
+  FiArrowDown,
+  FiFilter,
+  FiSearch,
+  FiClock,
+  FiRefreshCw,
+} from "react-icons/fi";
+import WalletLoadingState from "./components/WalletLoadingState";
 
 // Update the interface to include chainId
 interface WalletTransactionHistoryProps {
-  address: string
-  onLoadingChange?: (loading: boolean) => void
-  transactions?: TransactionData[]
-  isLoading?: boolean
-  error?: string | null
-  loadingStatus?: string
-  refreshData?: () => void
-  chainId?: number
+  address: string;
+  onLoadingChange?: (loading: boolean) => void;
+  transactions?: TransactionData[];
+  isLoading?: boolean;
+  error?: string | null;
+  loadingStatus?: string;
+  refreshData?: () => void;
+  chainId?: number;
 }
 
 interface TransactionData {
-  timestamp: number
-  transactionHash: string
-  value: number
-  from: string
-  to: string
-  isError?: string
-  gasUsed?: string
-  gasPrice?: string
-  tokenSymbol?: string
-  tokenName?: string
-  tokenDecimal?: string
+  timestamp: number;
+  transactionHash: string;
+  value: number;
+  from: string;
+  to: string;
+  isError?: string;
+  gasUsed?: string;
+  gasPrice?: string;
+  tokenSymbol?: string;
+  tokenName?: string;
+  tokenDecimal?: string;
 }
 
 // Update the component to use chainId
@@ -45,81 +53,89 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
   refreshData,
   chainId = 1,
 }) => {
-  const [loading, setLoading] = useState(isLoading)
-  const [localError, setLocalError] = useState<string | null>(error)
-  const [processedTransactions, setProcessedTransactions] = useState<TransactionData[]>([])
-  const [filteredTransactions, setFilteredTransactions] = useState<TransactionData[]>([])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filter, setFilter] = useState<"all" | "incoming" | "outgoing">("all")
-  const [currentPage, setCurrentPage] = useState(1)
-  const transactionsPerPage = 10
+  const [loading, setLoading] = useState(isLoading);
+  const [localError, setLocalError] = useState<string | null>(error);
+  const [processedTransactions, setProcessedTransactions] = useState<
+    TransactionData[]
+  >([]);
+  const [filteredTransactions, setFilteredTransactions] = useState<
+    TransactionData[]
+  >([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filter, setFilter] = useState<"all" | "incoming" | "outgoing">("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const transactionsPerPage = 10;
 
   // Use refs to prevent duplicate requests and infinite loops
-  const isLoadingRef = useRef(false)
-  const previousAddressRef = useRef("")
-  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isLoadingRef = useRef(false);
+  const previousAddressRef = useRef("");
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup effect
   useEffect(() => {
     return () => {
       if (retryTimeoutRef.current) {
-        clearTimeout(retryTimeoutRef.current)
-        retryTimeoutRef.current = null
+        clearTimeout(retryTimeoutRef.current);
+        retryTimeoutRef.current = null;
       }
-    }
-  }, [address])
+    };
+  }, [address]);
 
   // Înlocuim useEffect-ul care face fetch cu unul care procesează datele primite
   useEffect(() => {
     if (isLoading) {
-      setLoading(true)
-      return
+      setLoading(true);
+      return;
     }
 
     try {
       // Sortăm tranzacțiile după timestamp (cele mai noi primele)
       const sortedTransactions: TransactionData[] = [...transactions].sort(
-        (a: TransactionData, b: TransactionData) => b.timestamp - a.timestamp,
-      )
+        (a: TransactionData, b: TransactionData) => b.timestamp - a.timestamp
+      );
 
-      setProcessedTransactions(sortedTransactions)
-      setFilteredTransactions(sortedTransactions)
-      setLocalError(null)
+      setProcessedTransactions(sortedTransactions);
+      setFilteredTransactions(sortedTransactions);
+      setLocalError(null);
     } catch (err: any) {
-      console.error("Eroare la procesarea tranzacțiilor:", err)
-      setLocalError(err.message || "Eroare la procesarea datelor")
+      console.error("Eroare la procesarea tranzacțiilor:", err);
+      setLocalError(err.message || "Eroare la procesarea datelor");
     } finally {
-      setLoading(false)
-      if (onLoadingChange) onLoadingChange(false)
+      setLoading(false);
+      if (onLoadingChange) onLoadingChange(false);
     }
-  }, [transactions, isLoading, onLoadingChange])
+  }, [transactions, isLoading, onLoadingChange]);
 
   // Filter transactions based on search term and filter type
   useEffect(() => {
-    let filtered = [...processedTransactions]
+    let filtered = [...processedTransactions];
 
     // Apply type filter
     if (filter === "incoming") {
-      filtered = filtered.filter((tx) => tx.to && tx.to.toLowerCase() === address.toLowerCase())
+      filtered = filtered.filter(
+        (tx) => tx.to && tx.to.toLowerCase() === address.toLowerCase()
+      );
     } else if (filter === "outgoing") {
-      filtered = filtered.filter((tx) => tx.from && tx.from.toLowerCase() === address.toLowerCase())
+      filtered = filtered.filter(
+        (tx) => tx.from && tx.from.toLowerCase() === address.toLowerCase()
+      );
     }
 
     // Apply search filter
     if (searchTerm) {
-      const term = searchTerm.toLowerCase()
+      const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
         (tx) =>
           tx.transactionHash.toLowerCase().includes(term) ||
           (tx.from && tx.from.toLowerCase().includes(term)) ||
           (tx.to && tx.to.toLowerCase().includes(term)) ||
-          (tx.tokenSymbol && tx.tokenSymbol.toLowerCase().includes(term)),
-      )
+          (tx.tokenSymbol && tx.tokenSymbol.toLowerCase().includes(term))
+      );
     }
 
-    setFilteredTransactions(filtered)
-    setCurrentPage(1) // Reset to first page when filtering
-  }, [processedTransactions, searchTerm, filter, address])
+    setFilteredTransactions(filtered);
+    setCurrentPage(1); // Reset to first page when filtering
+  }, [processedTransactions, searchTerm, filter, address]);
 
   // Format timestamp to readable date
   const formatDate = (timestamp: number) => {
@@ -129,70 +145,78 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    })
-  }
+    });
+  };
 
   // Format address for display
   const formatAddress = (addr: string, isCurrentWallet: boolean) => {
     if (isCurrentWallet) {
-      return "This Wallet"
+      return "This Wallet";
     }
-    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`
-  }
+    return `${addr.substring(0, 6)}...${addr.substring(addr.length - 4)}`;
+  };
 
   // Update formatEthValue function to use the correct token symbol
   const formatNativeTokenValue = (value: number) => {
     try {
-      if (value === 0) return `0 ${CHAIN_NATIVE_TOKENS[chainId]}`
+      if (value === 0) return `0 ${CHAIN_NATIVE_TOKENS[chainId]}`;
 
       // Format with 6 decimal places for small values, fewer for larger values
       const formattedValue = value.toLocaleString("en-US", {
         maximumFractionDigits: value < 0.01 ? 6 : value < 1 ? 4 : 2,
-      })
+      });
 
-      return `${formattedValue} ${CHAIN_NATIVE_TOKENS[chainId]}`
+      return `${formattedValue} ${CHAIN_NATIVE_TOKENS[chainId]}`;
     } catch (error) {
-      console.error(`Error formatting ${CHAIN_NATIVE_TOKENS[chainId]} value:`, error)
-      return `${value} ${CHAIN_NATIVE_TOKENS[chainId]}`
+      console.error(
+        `Error formatting ${CHAIN_NATIVE_TOKENS[chainId]} value:`,
+        error
+      );
+      return `${value} ${CHAIN_NATIVE_TOKENS[chainId]}`;
     }
-  }
+  };
 
   // Update the explorer URL based on the chain
   const getExplorerUrl = (txHash: string) => {
-    return chainId === 56 ? `https://bscscan.com/tx/${txHash}` : `https://etherscan.io/tx/${txHash}`
-  }
+    return chainId === 56
+      ? `https://bscscan.com/tx/${txHash}`
+      : `https://etherscan.io/tx/${txHash}`;
+  };
 
   // Get transaction direction
   const getTransactionDirection = (tx: TransactionData) => {
     if (tx.to && tx.to.toLowerCase() === address.toLowerCase()) {
-      return "incoming"
+      return "incoming";
     }
-    return "outgoing"
-  }
+    return "outgoing";
+  };
 
   // Get current page transactions
   const getCurrentTransactions = () => {
-    const indexOfLastTx = currentPage * transactionsPerPage
-    const indexOfFirstTx = indexOfLastTx - transactionsPerPage
-    return filteredTransactions.slice(indexOfFirstTx, indexOfLastTx)
-  }
+    const indexOfLastTx = currentPage * transactionsPerPage;
+    const indexOfFirstTx = indexOfLastTx - transactionsPerPage;
+    return filteredTransactions.slice(indexOfFirstTx, indexOfLastTx);
+  };
 
   // Change page
-  const paginate = (pageNumber: number) => setCurrentPage(pageNumber)
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   // Modificăm funcția handleRetry pentru a utiliza funcția primită prin props
   const handleRetry = () => {
     if (refreshData) {
-      refreshData()
+      refreshData();
     }
-  }
+  };
 
   if (loading) {
     return (
       <div className="flex justify-center items-center py-8">
-        <WalletLoadingState message="Loading Transaction History" status={loadingStatus} />
+        <WalletLoadingState
+          message="Loading Transaction History"
+          status={loadingStatus}
+        />
       </div>
-    )
+    );
   }
 
   if (localError) {
@@ -210,7 +234,7 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
           <FiRefreshCw className="mr-2" /> Retry
         </button>
       </div>
-    )
+    );
   }
 
   if (processedTransactions.length === 0) {
@@ -219,12 +243,15 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
         <div className="bg-gray-100 dark:bg-dark-tertiary rounded-full p-6 inline-flex mb-4">
           <FiClock className="h-12 w-12 text-dark-text-secondary" />
         </div>
-        <h3 className="text-xl font-medium text-gray-800 dark:text-dark-text-primary mb-2">No transactions found</h3>
+        <h3 className="text-xl font-medium text-gray-800 dark:text-dark-text-primary mb-2">
+          No transactions found
+        </h3>
         <p className="text-gray-500 dark:text-dark-text-secondary max-w-md mx-auto">
-          This wallet has no transactions or we couldn't retrieve the data. Check the address and try again.
+          This wallet has no transactions or we couldn't retrieve the data.
+          Check the address and try again.
         </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -331,10 +358,13 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
               </thead>
               <tbody className="bg-white dark:bg-dark-secondary divide-y divide-gray-200 dark:divide-dark-tertiary">
                 {getCurrentTransactions().map((tx, idx) => {
-                  const direction = getTransactionDirection(tx)
+                  const direction = getTransactionDirection(tx);
 
                   return (
-                    <tr key={idx} className="hover:bg-gray-50 dark:hover:bg-dark-tertiary/50 transition-colors">
+                    <tr
+                      key={idx}
+                      className="hover:bg-gray-50 dark:hover:bg-dark-tertiary/50 transition-colors"
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div
@@ -345,9 +375,13 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
                             }`}
                           >
                             {direction === "incoming" ? (
-                              <FiArrowDown className={`h-4 w-4 text-green-600 dark:text-green-400`} />
+                              <FiArrowDown
+                                className={`h-4 w-4 text-green-600 dark:text-green-400`}
+                              />
                             ) : (
-                              <FiArrowUp className={`h-4 w-4 text-red-600 dark:text-red-400`} />
+                              <FiArrowUp
+                                className={`h-4 w-4 text-red-600 dark:text-red-400`}
+                              />
                             )}
                           </div>
                           <div>
@@ -355,8 +389,11 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
                               {direction === "incoming" ? "Received" : "Sent"}
                             </div>
                             <div className="text-xs text-gray-500 dark:text-dark-text-secondary">
-                              {`${tx.transactionHash.substring(0, 8)}...${tx.transactionHash.substring(
-                                tx.transactionHash.length - 8,
+                              {`${tx.transactionHash.substring(
+                                0,
+                                8
+                              )}...${tx.transactionHash.substring(
+                                tx.transactionHash.length - 8
                               )}`}
                             </div>
                           </div>
@@ -369,12 +406,18 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900 dark:text-dark-text-primary">
-                          {formatAddress(tx.from, tx.from.toLowerCase() === address.toLowerCase())}
+                          {formatAddress(
+                            tx.from,
+                            tx.from.toLowerCase() === address.toLowerCase()
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900 dark:text-dark-text-primary">
-                          {formatAddress(tx.to, tx.to.toLowerCase() === address.toLowerCase())}
+                          {formatAddress(
+                            tx.to,
+                            tx.to.toLowerCase() === address.toLowerCase()
+                          )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -400,14 +443,16 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
                         </a>
                       </td>
                     </tr>
-                  )
+                  );
                 })}
               </tbody>
             </table>
           </div>
         ) : (
           <div className="text-center py-8">
-            <p className="text-gray-500 dark:text-dark-text-secondary">No transactions found matching your filters</p>
+            <p className="text-gray-500 dark:text-dark-text-secondary">
+              No transactions found matching your filters
+            </p>
           </div>
         )}
       </motion.div>
@@ -429,12 +474,16 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
             </button>
 
             {Array.from({
-              length: Math.ceil(filteredTransactions.length / transactionsPerPage),
+              length: Math.ceil(
+                filteredTransactions.length / transactionsPerPage
+              ),
             }).map((_, index) => {
               // Show only a window of page numbers
               if (
                 index === 0 ||
-                index === Math.ceil(filteredTransactions.length / transactionsPerPage) - 1 ||
+                index ===
+                  Math.ceil(filteredTransactions.length / transactionsPerPage) -
+                    1 ||
                 (index >= currentPage - 2 && index <= currentPage + 2)
               ) {
                 return (
@@ -449,11 +498,15 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
                   >
                     {index + 1}
                   </button>
-                )
+                );
               } else if (
                 (index === currentPage - 3 && currentPage > 3) ||
                 (index === currentPage + 3 &&
-                  currentPage < Math.ceil(filteredTransactions.length / transactionsPerPage) - 3)
+                  currentPage <
+                    Math.ceil(
+                      filteredTransactions.length / transactionsPerPage
+                    ) -
+                      3)
               ) {
                 return (
                   <button
@@ -463,22 +516,27 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
                   >
                     ...
                   </button>
-                )
+                );
               }
-              return null
+              return null;
             })}
 
             <button
               onClick={() =>
                 paginate(
-                  currentPage < Math.ceil(filteredTransactions.length / transactionsPerPage)
+                  currentPage <
+                    Math.ceil(filteredTransactions.length / transactionsPerPage)
                     ? currentPage + 1
-                    : currentPage,
+                    : currentPage
                 )
               }
-              disabled={currentPage === Math.ceil(filteredTransactions.length / transactionsPerPage)}
+              disabled={
+                currentPage ===
+                Math.ceil(filteredTransactions.length / transactionsPerPage)
+              }
               className={`px-4 py-2 rounded-r-md border border-gray-300 dark:border-dark-tertiary ${
-                currentPage === Math.ceil(filteredTransactions.length / transactionsPerPage)
+                currentPage ===
+                Math.ceil(filteredTransactions.length / transactionsPerPage)
                   ? "bg-gray-100 text-gray-400 dark:bg-dark-tertiary dark:text-dark-text-secondary cursor-not-allowed"
                   : "bg-white text-gray-700 hover:bg-gray-50 dark:bg-dark-secondary dark:text-dark-text-primary dark:hover:bg-dark-tertiary/80 transition-colors"
               }`}
@@ -489,7 +547,7 @@ const WalletTransactionHistory: React.FC<WalletTransactionHistoryProps> = ({
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default WalletTransactionHistory
+export default WalletTransactionHistory;

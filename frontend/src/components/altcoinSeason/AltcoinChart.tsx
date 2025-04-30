@@ -1,40 +1,63 @@
-"use client"
-import { fetchMarketData, fetchHistoricalData, fetchBitcoinData } from "../../utils/API/CoinGeckoAPI"
-import { useEffect, useState, useRef } from "react"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area } from "recharts"
-import { motion, AnimatePresence } from "framer-motion"
-import { FiX, FiMinimize2, FiMaximize2, FiInfo, FiClock, FiDollarSign, FiTrendingUp, FiBarChart2 } from "react-icons/fi"
-import { FaArrowUp, FaArrowDown, FaExchangeAlt } from "react-icons/fa"
-import type { ChartDataPoint } from "../../types"
+"use client";
+import React from "react";
+import {
+  fetchMarketData,
+  fetchHistoricalData,
+  fetchBitcoinData,
+} from "../../utils/API/CoinGeckoAPI";
+import { useEffect, useState, useRef } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Area,
+} from "recharts";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  FiX,
+  FiMinimize2,
+  FiMaximize2,
+  FiInfo,
+  FiClock,
+  FiDollarSign,
+  FiTrendingUp,
+  FiBarChart2,
+} from "react-icons/fi";
+import { FaArrowUp, FaArrowDown, FaExchangeAlt } from "react-icons/fa";
+import type { ChartDataPoint } from "../../types";
 
 // Helper function for price formatting
 const formatPrice = (price: number): string => {
   if (price < 0.001) {
-    return price.toFixed(6)
+    return price.toFixed(6);
   }
   return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: price < 1 ? 6 : 2,
-  }).format(price)
-}
+  }).format(price);
+};
 
 const formatMarketCap = (cap: number | null): string => {
-  if (!cap) return "N/A"
-  if (cap >= 1e12) return `${(cap / 1e12).toFixed(2)}T`
-  if (cap >= 1e9) return `${(cap / 1e9).toFixed(2)}B`
-  if (cap >= 1e6) return `${(cap / 1e6).toFixed(2)}M`
-  return `${cap.toLocaleString()}`
-}
+  if (!cap) return "N/A";
+  if (cap >= 1e12) return `${(cap / 1e12).toFixed(2)}T`;
+  if (cap >= 1e9) return `${(cap / 1e9).toFixed(2)}B`;
+  if (cap >= 1e6) return `${(cap / 1e6).toFixed(2)}M`;
+  return `${cap.toLocaleString()}`;
+};
 
 interface CustomTooltipProps {
-  active?: boolean
-  payload?: any[]
-  label?: string
+  active?: boolean;
+  payload?: any[];
+  label?: string;
 }
 
 const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
-    const dataPoint = payload[0].payload as ChartDataPoint
+    const dataPoint = payload[0].payload as ChartDataPoint;
     const fullDate = dataPoint.fullDate?.toLocaleString("en-GB", {
       day: "2-digit",
       month: "short",
@@ -42,30 +65,36 @@ const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
       hour: "2-digit",
       minute: "2-digit",
       hour12: false,
-    })
+    });
 
     return (
       <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 backdrop-blur-sm">
-        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">{fullDate}</p>
-        <p className="text-lg font-bold text-gray-900 dark:text-white">${formatPrice(payload[0].value)}</p>
+        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">
+          {fullDate}
+        </p>
+        <p className="text-lg font-bold text-gray-900 dark:text-white">
+          ${formatPrice(payload[0].value)}
+        </p>
         <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-500 dark:text-gray-400">Volume:</span>
-            <span className="font-medium text-gray-900 dark:text-white">$1.2M</span>
+            <span className="font-medium text-gray-900 dark:text-white">
+              $1.2M
+            </span>
           </div>
         </div>
       </div>
-    )
+    );
   }
-  return null
-}
+  return null;
+};
 
 interface PriceChangeIndicatorProps {
-  change: number
+  change: number;
 }
 
 const PriceChangeIndicator = ({ change }: PriceChangeIndicatorProps) => {
-  const isPositive = change >= 0
+  const isPositive = change >= 0;
   return (
     <span
       className={`inline-flex items-center px-2.5 py-1.5 rounded-full text-sm font-medium ${
@@ -74,12 +103,16 @@ const PriceChangeIndicator = ({ change }: PriceChangeIndicatorProps) => {
           : "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
       }`}
     >
-      {isPositive ? <FaArrowUp className="mr-1 text-xs" /> : <FaArrowDown className="mr-1 text-xs" />}
+      {isPositive ? (
+        <FaArrowUp className="mr-1 text-xs" />
+      ) : (
+        <FaArrowDown className="mr-1 text-xs" />
+      )}
       {change > 0 ? "+" : ""}
       {change.toFixed(2)}%
     </span>
-  )
-}
+  );
+};
 
 const LoadingSkeleton = () => (
   <div className="w-full p-6 bg-white dark:bg-gray-800 shadow-xl rounded-2xl animate-pulse">
@@ -95,17 +128,22 @@ const LoadingSkeleton = () => (
     <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded-xl"></div>
     <div className="mt-4 h-4 w-full bg-gray-200 dark:bg-gray-700 rounded"></div>
   </div>
-)
+);
 
 interface ErrorMessageProps {
-  error: string
+  error: string;
 }
 
 const ErrorMessage = ({ error }: ErrorMessageProps) => (
   <div className="w-full p-6 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-2xl shadow-xl">
     <div className="flex flex-col items-center text-center">
       <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mb-3">
-        <svg className="w-6 h-6 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg
+          className="w-6 h-6 text-red-500 dark:text-red-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -114,98 +152,104 @@ const ErrorMessage = ({ error }: ErrorMessageProps) => (
           ></path>
         </svg>
       </div>
-      <h3 className="text-lg font-medium text-red-800 dark:text-red-200 mb-2">Error Loading Data</h3>
+      <h3 className="text-lg font-medium text-red-800 dark:text-red-200 mb-2">
+        Error Loading Data
+      </h3>
       <p className="text-red-600 dark:text-red-300 mb-4">{error}</p>
       <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
         Try Again
       </button>
     </div>
   </div>
-)
+);
 
 interface CoinData {
-  id: string
-  name: string
-  symbol: string
-  image: string
-  priceChange: number
-  marketCap?: number
-  volume?: number
-  rank?: number
+  id: string;
+  name: string;
+  symbol: string;
+  image: string;
+  priceChange: number;
+  marketCap?: number;
+  volume?: number;
+  rank?: number;
 }
 
 interface AltcoinChartProps {
-  coin: CoinData
-  onClose: () => void
+  coin: CoinData;
+  onClose: () => void;
 }
 
 const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
-  const [chartData, setChartData] = useState<ChartDataPoint[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
-  const [isExpanded, setIsExpanded] = useState<boolean>(false)
-  const [marketCap, setMarketCap] = useState<number | null>(null)
-  const [rank, setRank] = useState<number | null>(null)
-  const [timeframe, setTimeframe] = useState<string>("30")
-  const [showStats, setShowStats] = useState<boolean>(true)
-  const chartRef = useRef<HTMLDivElement>(null)
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [marketCap, setMarketCap] = useState<number | null>(null);
+  const [rank, setRank] = useState<number | null>(null);
+  const [timeframe, setTimeframe] = useState<string>("30");
+  const [showStats, setShowStats] = useState<boolean>(true);
+  const chartRef = useRef<HTMLDivElement>(null);
   const [bitcoinData, setBitcoinData] = useState<{
-    price_change_percentage_24h: number
-  } | null>(null)
+    price_change_percentage_24h: number;
+  } | null>(null);
 
   useEffect(() => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     const fetchData = async () => {
       try {
         // Fetch historical data
-        const historicalData = await fetchHistoricalData(coin.id, timeframe)
+        const historicalData = await fetchHistoricalData(coin.id, timeframe);
 
-        const formattedData = historicalData.prices.map((priceData: [number, number]) => ({
-          date: new Date(priceData[0]).toLocaleDateString("en-GB", {
-            day: "2-digit",
-            month: "short",
-          }),
-          price: priceData[1],
-          fullDate: new Date(priceData[0]),
-        }))
-        setChartData(formattedData)
+        const formattedData = historicalData.prices.map(
+          (priceData: [number, number]) => ({
+            date: new Date(priceData[0]).toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+            }),
+            price: priceData[1],
+            fullDate: new Date(priceData[0]),
+          })
+        );
+        setChartData(formattedData);
 
         // Fetch market cap and rank
-        const { market_cap, rank } = await fetchMarketData(coin.id)
-        setMarketCap(market_cap)
-        setRank(rank)
+        const { market_cap, rank } = await fetchMarketData(coin.id);
+        setMarketCap(market_cap);
+        setRank(rank);
 
         // Fetch Bitcoin data
-        const bitcoinData = await fetchBitcoinData()
-        setBitcoinData(bitcoinData)
+        const bitcoinData = await fetchBitcoinData();
+        setBitcoinData(bitcoinData);
       } catch (error: any) {
-        console.error("Error fetching data:", error)
-        setError(error.message || "Failed to load data.")
+        console.error("Error fetching data:", error);
+        setError(error.message || "Failed to load data.");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchData()
-  }, [coin.id, timeframe])
+    fetchData();
+  }, [coin.id, timeframe]);
 
   if (loading) {
-    return <LoadingSkeleton />
+    return <LoadingSkeleton />;
   }
 
   if (error) {
-    return <ErrorMessage error={error} />
+    return <ErrorMessage error={error} />;
   }
 
-  const prices = chartData.map((data) => Number.parseFloat(data.price.toString()))
-  const minPrice = Math.min(...prices)
-  const maxPrice = Math.max(...prices)
-  const priceRange = maxPrice - minPrice
-  const margin = priceRange * 0.1
-  const yDomain = [Math.max(0, minPrice - margin), maxPrice + margin]
-  const currentPrice = prices[prices.length - 1]
+  const prices = chartData.map((data) =>
+    Number.parseFloat(data.price.toString())
+  );
+  const minPrice = Math.min(...prices);
+  const maxPrice = Math.max(...prices);
+  const priceRange = maxPrice - minPrice;
+  const margin = priceRange * 0.1;
+  const yDomain = [Math.max(0, minPrice - margin), maxPrice + margin];
+  const currentPrice = prices[prices.length - 1];
 
   const timeframeOptions = [
     { value: "1", label: "24h" },
@@ -213,7 +257,7 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
     { value: "30", label: "30d" },
     { value: "90", label: "90d" },
     { value: "365", label: "1y" },
-  ]
+  ];
 
   return (
     <AnimatePresence>
@@ -223,7 +267,9 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
         exit={{ opacity: 0, y: 20 }}
         transition={{ duration: 0.25, ease: "easeOut" }}
         className={`${
-          isExpanded ? "fixed inset-0 z-50 p-4 bg-gray-900/80 flex items-center justify-center" : "w-full"
+          isExpanded
+            ? "fixed inset-0 z-50 p-4 bg-gray-900/80 flex items-center justify-center"
+            : "w-full"
         }`}
       >
         <div
@@ -233,7 +279,11 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
         >
           <div className="p-6 pb-0 flex justify-between items-start">
             <div className="flex items-center space-x-3">
-              <img src={coin.image || "/placeholder.svg"} alt={coin.name} className="w-10 h-10 rounded-full" />
+              <img
+                src={coin.image || "/placeholder.svg"}
+                alt={coin.name}
+                className="w-10 h-10 rounded-full"
+              />
               <div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
                   {coin.name}
@@ -257,7 +307,11 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
                 className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 aria-label={isExpanded ? "Minimize" : "Expand"}
               >
-                {isExpanded ? <FiMinimize2 className="w-5 h-5" /> : <FiMaximize2 className="w-5 h-5" />}
+                {isExpanded ? (
+                  <FiMinimize2 className="w-5 h-5" />
+                ) : (
+                  <FiMaximize2 className="w-5 h-5" />
+                )}
               </button>
               <button
                 onClick={onClose}
@@ -272,7 +326,9 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
           {/* Timeframe selector */}
           <div className="px-6 pt-4 flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-500 dark:text-gray-400">Timeframe:</span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                Timeframe:
+              </span>
               <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                 {timeframeOptions.map((option) => (
                   <button
@@ -336,7 +392,9 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
                       <FiTrendingUp className="mr-1" size={10} />
                       All-Time High
                     </div>
-                    <div className="text-sm font-semibold text-gray-900 dark:text-white">${formatPrice(maxPrice)}</div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                      ${formatPrice(maxPrice)}
+                    </div>
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                     <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 mb-1">
@@ -354,7 +412,10 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
 
           <div className="flex-1 p-4 pt-2" ref={chartRef}>
             <ResponsiveContainer width="100%" height={isExpanded ? 500 : 300}>
-              <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 10 }}>
+              <LineChart
+                data={chartData}
+                margin={{ top: 10, right: 10, left: 0, bottom: 10 }}
+              >
                 <defs>
                   <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
@@ -431,7 +492,12 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
               <div className="flex items-center">
                 <FaExchangeAlt className="mr-1" size={10} />
                 <span>
-                  vs Bitcoin: {(coin.priceChange - (bitcoinData?.price_change_percentage_24h || 0)).toFixed(2)}%
+                  vs Bitcoin:{" "}
+                  {(
+                    coin.priceChange -
+                    (bitcoinData?.price_change_percentage_24h || 0)
+                  ).toFixed(2)}
+                  %
                 </span>
               </div>
             </div>
@@ -439,7 +505,7 @@ const AltcoinChart = ({ coin, onClose }: AltcoinChartProps): JSX.Element => {
         </div>
       </motion.div>
     </AnimatePresence>
-  )
-}
+  );
+};
 
-export default AltcoinChart
+export default AltcoinChart;

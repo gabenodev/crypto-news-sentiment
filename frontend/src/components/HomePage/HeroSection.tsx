@@ -1,59 +1,60 @@
-"use client"
-import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
-import { Link } from "react-router-dom"
-import { fetchCryptoData } from "../../utils/API/CoinGeckoAPI"
-import type { Cryptocurrency } from "../../types"
+"use client";
+import React from "react";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
+import { fetchCryptoData } from "../../utils/API/CoinGeckoAPI";
+import type { Cryptocurrency } from "../../types";
 
 const HeroSection = () => {
-  const [btcData, setBtcData] = useState<Cryptocurrency | null>(null)
-  const [ethData, setEthData] = useState<Cryptocurrency | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [btcData, setBtcData] = useState<Cryptocurrency | null>(null);
+  const [ethData, setEthData] = useState<Cryptocurrency | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTopCoins = async () => {
       try {
-        setLoading(true)
-        const data = await fetchCryptoData(1)
-        const bitcoin = data.find((coin) => coin.id === "bitcoin") || null
-        const ethereum = data.find((coin) => coin.id === "ethereum") || null
+        setLoading(true);
+        const data = await fetchCryptoData(1);
+        const bitcoin = data.find((coin) => coin.id === "bitcoin") || null;
+        const ethereum = data.find((coin) => coin.id === "ethereum") || null;
 
-        setBtcData(bitcoin)
-        setEthData(ethereum)
-        setLoading(false)
+        setBtcData(bitcoin);
+        setEthData(ethereum);
+        setLoading(false);
       } catch (error) {
-        console.error("Error fetching top coins:", error)
-        setLoading(false)
+        console.error("Error fetching top coins:", error);
+        setLoading(false);
       }
-    }
+    };
 
-    fetchTopCoins()
-  }, [])
+    fetchTopCoins();
+  }, []);
 
   const formatPrice = (price: number | undefined): string => {
-    if (!price && price !== 0) return "—"
+    if (!price && price !== 0) return "—";
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
-    }).format(price)
-  }
+    }).format(price);
+  };
 
   const formatPercentage = (percentage: number | undefined): string => {
-    if (!percentage && percentage !== 0) return "—"
-    return `${percentage >= 0 ? "+" : ""}${percentage.toFixed(2)}%`
-  }
+    if (!percentage && percentage !== 0) return "—";
+    return `${percentage >= 0 ? "+" : ""}${percentage.toFixed(2)}%`;
+  };
 
   const formatCurrency = (value: number | undefined): string => {
-    if (!value && value !== 0) return "—"
+    if (!value && value !== 0) return "—";
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: "USD",
       notation: "compact",
       compactDisplay: "short",
-    }).format(value)
-  }
+    }).format(value);
+  };
 
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-teal-500/10 to-emerald-500/10 dark:from-teal-900/20 dark:to-emerald-900/20 rounded-2xl">
@@ -79,8 +80,9 @@ const HeroSection = () => {
               Crypto Market Insights
             </h1>
             <p className="text-lg md:text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto lg:mx-0">
-              Track cryptocurrency prices, market trends, and sentiment analysis all in one place. Make informed
-              decisions with our comprehensive data and analytics.
+              Track cryptocurrency prices, market trends, and sentiment analysis
+              all in one place. Make informed decisions with our comprehensive
+              data and analytics.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Link
@@ -114,14 +116,18 @@ const HeroSection = () => {
                       alt="Bitcoin"
                       className="w-8 h-8"
                       onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.src = "/placeholder.svg?height=32&width=32"
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/placeholder.svg?height=32&width=32";
                       }}
                     />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">Bitcoin</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">BTC</p>
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                      Bitcoin
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      BTC
+                    </p>
                   </div>
                 </div>
 
@@ -137,10 +143,13 @@ const HeroSection = () => {
                     </div>
                     <div
                       className={`text-sm font-medium ${
-                        (btcData?.price_change_percentage_24h || 0) >= 0 ? "text-emerald-500" : "text-rose-500"
+                        (btcData?.price_change_percentage_24h || 0) >= 0
+                          ? "text-emerald-500"
+                          : "text-rose-500"
                       }`}
                     >
-                      {formatPercentage(btcData?.price_change_percentage_24h)} (24h)
+                      {formatPercentage(btcData?.price_change_percentage_24h)}{" "}
+                      (24h)
                     </div>
                   </>
                 )}
@@ -155,14 +164,18 @@ const HeroSection = () => {
                       alt="Ethereum"
                       className="w-8 h-8"
                       onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.src = "/placeholder.svg?height=32&width=32"
+                        const target = e.target as HTMLImageElement;
+                        target.src = "/placeholder.svg?height=32&width=32";
                       }}
                     />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">Ethereum</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">ETH</p>
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                      Ethereum
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      ETH
+                    </p>
                   </div>
                 </div>
 
@@ -178,10 +191,13 @@ const HeroSection = () => {
                     </div>
                     <div
                       className={`text-sm font-medium ${
-                        (ethData?.price_change_percentage_24h || 0) >= 0 ? "text-emerald-500" : "text-rose-500"
+                        (ethData?.price_change_percentage_24h || 0) >= 0
+                          ? "text-emerald-500"
+                          : "text-rose-500"
                       }`}
                     >
-                      {formatPercentage(ethData?.price_change_percentage_24h)} (24h)
+                      {formatPercentage(ethData?.price_change_percentage_24h)}{" "}
+                      (24h)
                     </div>
                   </>
                 )}
@@ -207,8 +223,12 @@ const HeroSection = () => {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">Bitcoin Market Cap</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">24h Change</p>
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                      Bitcoin Market Cap
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      24h Change
+                    </p>
                   </div>
                 </div>
 
@@ -225,8 +245,15 @@ const HeroSection = () => {
                     <div className="text-sm font-medium text-emerald-500">
                       {loading
                         ? "—"
-                        : `${(btcData?.market_cap_change_percentage_24h ?? 0) >= 0 ? "+" : ""}${
-                            btcData?.market_cap_change_percentage_24h?.toFixed(2) || 0
+                        : `${
+                            (btcData?.market_cap_change_percentage_24h ?? 0) >=
+                            0
+                              ? "+"
+                              : ""
+                          }${
+                            btcData?.market_cap_change_percentage_24h?.toFixed(
+                              2
+                            ) || 0
                           }% (24h)`}
                     </div>
                   </>
@@ -253,8 +280,12 @@ const HeroSection = () => {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">Bitcoin Volume</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">BTC Volume</p>
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                      Bitcoin Volume
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      BTC Volume
+                    </p>
                   </div>
                 </div>
 
@@ -266,9 +297,13 @@ const HeroSection = () => {
                 ) : (
                   <>
                     <div className="text-2xl font-bold text-gray-800 dark:text-white mb-1">
-                      {loading ? "—" : formatCurrency(btcData?.total_volume || 0)}
+                      {loading
+                        ? "—"
+                        : formatCurrency(btcData?.total_volume || 0)}
                     </div>
-                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400">24h trading volume</div>
+                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      24h trading volume
+                    </div>
                   </>
                 )}
               </div>
@@ -277,7 +312,7 @@ const HeroSection = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default HeroSection
+export default HeroSection;
