@@ -1,23 +1,22 @@
-"use client";
-import React from "react";
-import { useEffect } from "react";
-import { motion } from "framer-motion";
-import HeroSection from "../components/HomePage/HeroSection";
-import TopMovers from "../components/HomePage/TopMovers";
-import TrendingCoins from "../components/HomePage/TrendingCoins";
-import MarketDominance from "../components/HomePage/MarketDominance";
-import CryptoTable from "../components/HomePage/CryptoTable";
-import NewsHighlights from "../components/HomePage/NewsHighlights";
-import SentimentSummary from "../components/HomePage/SentimentSummary";
-import useCryptoData from "../hooks/homepage/useCryptoData";
+"use client"
+import { useEffect } from "react"
+import { motion } from "framer-motion"
+import HeroSection from "../components/HomePage/HeroSection"
+import TopMovers from "../components/HomePage/TopMovers"
+import TrendingCoins from "../components/HomePage/TrendingCoins"
+import MarketDominance from "../components/HomePage/MarketDominance"
+import CryptoTable from "../components/HomePage/CryptoTable"
+import NewsHighlights from "../components/HomePage/NewsHighlights"
+import SentimentSummary from "../components/HomePage/SentimentSummary"
+import useCryptoData from "../hooks/homepage/useCryptoData"
 
 function Homepage(): JSX.Element {
-  const { cryptoData, loading, error: cryptoError } = useCryptoData();
+  const { cryptoData, loading, error: cryptoError } = useCryptoData()
 
   // Scroll to top on component mount
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+    window.scrollTo(0, 0)
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-dark-primary dark:to-dark-primary">
@@ -37,8 +36,7 @@ function Homepage(): JSX.Element {
               Market Insights
             </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-3xl mx-auto text-center mb-6">
-              Stay informed with real-time data on market trends, top
-              performers, and key indicators
+              Stay informed with real-time data on market trends, top performers, and key indicators
             </p>
             <div className="w-24 h-1 bg-gradient-to-r from-teal-400 to-green-500 mx-auto"></div>
           </motion.div>
@@ -71,8 +69,7 @@ function Homepage(): JSX.Element {
               News & Sentiment
             </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-3xl mx-auto text-center mb-6">
-              Latest crypto news and market sentiment analysis to help you make
-              informed decisions
+              Latest crypto news and market sentiment analysis to help you make informed decisions
             </p>
             <div className="w-24 h-1 bg-gradient-to-r from-teal-400 to-green-500 mx-auto"></div>
           </motion.div>
@@ -100,30 +97,23 @@ function Homepage(): JSX.Element {
               Complete Cryptocurrency Market
             </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-4xl mx-auto">
-              Explore our comprehensive list of cryptocurrencies with real-time
-              price data, market capitalization, and 24h trading volume. Analyze
-              trends, compare performance, and discover new investment
-              opportunities.
+              Explore our comprehensive list of cryptocurrencies with real-time price data, market capitalization, and
+              24h trading volume. Analyze trends, compare performance, and discover new investment opportunities.
             </p>
             <div className="w-24 h-1 bg-gradient-to-r from-teal-400 to-green-500 mx-auto mt-4"></div>
           </motion.div>
         </div>
 
         <div className="overflow-x-auto">
-          <CryptoTable
-            cryptoData={cryptoData}
-            isLoading={loading}
-            error={cryptoError}
-          />
+          <CryptoTable cryptoData={cryptoData} isLoading={loading} error={cryptoError} />
         </div>
 
         <div className="max-w-7xl mx-auto px-4 mt-4 text-sm text-gray-500 dark:text-gray-400 text-center">
-          Data refreshes every minute. Includes all actively traded
-          cryptocurrencies.
+          Data refreshes every minute. Includes all actively traded cryptocurrencies.
         </div>
       </section>
     </div>
-  );
+  )
 }
 
-export default Homepage;
+export default Homepage

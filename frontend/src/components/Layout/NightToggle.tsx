@@ -1,37 +1,36 @@
-"use client";
-import React from "react";
-import { useState, useEffect } from "react";
-import { Sun, Moon } from "react-feather";
-import { motion } from "framer-motion";
+"use client"
+import { useState, useEffect } from "react"
+import { Sun, Moon } from "react-feather"
+import { motion } from "framer-motion"
 
 function NightToggle(): JSX.Element {
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(true)
 
   // Check theme from localStorage on load
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme");
+    const savedTheme = localStorage.getItem("theme")
     if (savedTheme === "dark") {
-      setIsDarkMode(true);
-      document.documentElement.classList.add("dark");
+      setIsDarkMode(true)
+      document.documentElement.classList.add("dark")
     } else {
-      setIsDarkMode(false);
-      document.documentElement.classList.remove("dark");
+      setIsDarkMode(false)
+      document.documentElement.classList.remove("dark")
     }
-  }, []);
+  }, [])
 
   const toggleTheme = (): void => {
     setIsDarkMode((prevMode) => {
-      const newMode = !prevMode;
+      const newMode = !prevMode
       if (newMode) {
-        document.documentElement.classList.add("dark");
-        localStorage.setItem("theme", "dark");
+        document.documentElement.classList.add("dark")
+        localStorage.setItem("theme", "dark")
       } else {
-        document.documentElement.classList.remove("dark");
-        localStorage.setItem("theme", "light");
+        document.documentElement.classList.remove("dark")
+        localStorage.setItem("theme", "light")
       }
-      return newMode;
-    });
-  };
+      return newMode
+    })
+  }
 
   return (
     <motion.button
@@ -39,9 +38,7 @@ function NightToggle(): JSX.Element {
       whileTap={{ scale: 0.9 }}
       whileHover={{
         scale: 1.1,
-        boxShadow: isDarkMode
-          ? "0px 0px 12px rgba(255, 215, 0, 0.9)"
-          : "0px 0px 12px rgba(26, 25, 25, 0.8)",
+        boxShadow: isDarkMode ? "0px 0px 12px rgba(255, 215, 0, 0.9)" : "0px 0px 12px rgba(26, 25, 25, 0.8)",
       }}
       className="relative p-2 rounded-full bg-transparent dark:bg-transparent transition-colors duration-300"
     >
@@ -59,7 +56,7 @@ function NightToggle(): JSX.Element {
         )}
       </motion.div>
     </motion.button>
-  );
+  )
 }
 
-export default NightToggle;
+export default NightToggle

@@ -1,16 +1,15 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Header from "./components/Layout/Header";
-import SentimentChart from "./components/sentimentTrend/SentimentChart";
-import NewsCard from "./components/News/NewsCard";
-import AltcoinSeason from "./components/altcoinSeason/AltcoinSeason";
-import WhaleTransactions from "./components/whaleTransactions/WhaleTransactions";
-import Footer from "./components/Layout/Footer";
-import Homepage from "./pages/HomePage";
-import CurrencyDetails from "./components/CurrencyDetails/CurrencyDetails";
-import ScrollToTop from "./utils/ScrollToTop";
-import WalletHoldingsPage from "./pages/WalletHoldingsPage";
-import WalletDetailsPage from "./pages/WalletDetailsPage";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import Header from "./components/Layout/Header"
+import SentimentChart from "./components/sentimentTrend/SentimentChart"
+import NewsCard from "./components/News/NewsCard"
+import AltcoinSeason from "./components/altcoinSeason/AltcoinSeason"
+import WhaleTransactions from "./components/whaleTransactions/WhaleTransactions"
+import Footer from "./components/Layout/Footer"
+import Homepage from "./pages/HomePage"
+import CurrencyDetails from "./components/CurrencyDetails/CurrencyDetails"
+import ScrollToTop from "./utils/ScrollToTop"
+import WalletHoldingsPage from "./pages/WalletHoldingsPage"
+import WalletDetailsPage from "./pages/WalletDetailsPage"
 
 function App(): JSX.Element {
   return (
@@ -27,16 +26,13 @@ function App(): JSX.Element {
             <Route path="/whale-transactions" element={<WhaleTransactions />} />
             <Route path="/currencies/:coinId" element={<CurrencyDetails />} />
             <Route path="/wallet-holdings" element={<WalletHoldingsPage />} />
-            <Route
-              path="/wallet-holdings/:address"
-              element={<WalletDetailsPage />}
-            />
+            <Route path="/wallet-holdings/:address" element={<WalletDetailsPage />} />
           </Routes>
         </main>
         <Footer />
       </div>
     </Router>
-  );
+  )
 }
 
-export default App;
+export default App

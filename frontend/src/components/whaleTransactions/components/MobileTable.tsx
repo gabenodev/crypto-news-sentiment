@@ -1,22 +1,19 @@
-"use client";
+"use client"
 
-import React from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import type { WhaleTransaction } from "../../../types";
-import type { CryptoData } from "../types";
-import { truncate, formatValue } from "../utils/formatters";
-import { getExchangeColor, getTrendIcon } from "../utils/exchanges";
-import { getUsdValue } from "../utils/cryptoData";
+import type React from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import type { WhaleTransaction } from "../../../types"
+import type { CryptoData } from "../types"
+import { truncate, formatValue } from "../utils/formatters"
+import { getExchangeColor, getTrendIcon } from "../utils/exchanges"
+import { getUsdValue } from "../utils/cryptoData"
 
 interface MobileTableProps {
-  transactions: WhaleTransaction[];
-  cryptoData: Record<string, CryptoData>;
+  transactions: WhaleTransaction[]
+  cryptoData: Record<string, CryptoData>
 }
 
-const MobileTable: React.FC<MobileTableProps> = ({
-  transactions,
-  cryptoData,
-}) => {
+const MobileTable: React.FC<MobileTableProps> = ({ transactions, cryptoData }) => {
   return (
     <div className="md:hidden space-y-3 px-4 py-4">
       <AnimatePresence>
@@ -31,17 +28,9 @@ const MobileTable: React.FC<MobileTableProps> = ({
           >
             <div className="flex justify-between items-center mb-3">
               <div className="flex items-center">
-                <div
-                  className={`w-2 h-2 rounded-full mr-2 ${getExchangeColor(
-                    tx.exchange
-                  )}`}
-                />
-                <span className="font-medium text-gray-900 dark:text-white">
-                  {tx.exchange}
-                </span>
-                {getTrendIcon(tx.exchange) && (
-                  <span className="ml-2">{getTrendIcon(tx.exchange)}</span>
-                )}
+                <div className={`w-2 h-2 rounded-full mr-2 ${getExchangeColor(tx.exchange)}`} />
+                <span className="font-medium text-gray-900 dark:text-white">{tx.exchange}</span>
+                {getTrendIcon(tx.exchange) && <span className="ml-2">{getTrendIcon(tx.exchange)}</span>}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
                 <svg
@@ -177,7 +166,7 @@ const MobileTable: React.FC<MobileTableProps> = ({
         ))}
       </AnimatePresence>
     </div>
-  );
-};
+  )
+}
 
-export default MobileTable;
+export default MobileTable

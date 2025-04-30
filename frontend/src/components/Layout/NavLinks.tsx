@@ -1,24 +1,19 @@
-"use client";
-
-import * as React from "react";
-import { Link } from "react-router-dom";
+"use client"
+import { Link } from "react-router-dom"
 
 interface NavLinksProps {
-  mobile?: boolean;
-  onClose?: () => void;
+  mobile?: boolean
+  onClose?: () => void
 }
 
-const NavLinks = ({
-  mobile = false,
-  onClose = () => {},
-}: NavLinksProps): JSX.Element => {
+const NavLinks = ({ mobile = false, onClose = () => {} }: NavLinksProps): JSX.Element => {
   const links = [
     { to: "/news", text: "News" },
     { to: "/altcoin-season-index", text: "Altcoin Index" },
     { to: "/sentiment-trend", text: "Sentiment" },
     { to: "/whale-transactions", text: "Whale Watch" },
     { to: "/wallet-holdings", text: "Wallet Holdings" },
-  ];
+  ]
 
   return (
     <>
@@ -41,10 +36,10 @@ const NavLinks = ({
             {link.text}
             <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-teal-500 transition-all duration-300 group-hover:w-full"></span>
           </Link>
-        )
+        ),
       )}
     </>
-  );
-};
+  )
+}
 
-export default NavLinks;
+export default NavLinks

@@ -1,16 +1,15 @@
-"use client";
-import React from "react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Logo from "../Layout/Logo";
-import NavLinks from "../Layout/NavLinks";
-import SearchBar from "../Layout/SearchBar";
-import UserControls from "../Layout/UserControls";
-import MobileMenu from "../Layout/MobileMenu";
+"use client"
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import Logo from "../Layout/Logo"
+import NavLinks from "../Layout/NavLinks"
+import SearchBar from "../Layout/SearchBar"
+import UserControls from "../Layout/UserControls"
+import MobileMenu from "../Layout/MobileMenu"
 
 function Header(): JSX.Element {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
-  const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false)
+  const navigate = useNavigate()
 
   return (
     <header className="bg-white dark:bg-dark-primary text-gray-900 dark:text-dark-text-primary shadow-sm w-full sticky top-0 z-50 border-b border-gray-200 dark:border-gray-700">
@@ -30,19 +29,9 @@ function Header(): JSX.Element {
                 xmlns="http://www.w3.org/2000/svg"
               >
                 {isMobileMenuOpen ? (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 ) : (
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 6h16M4 12h16M4 18h16"
-                  />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 )}
               </svg>
             </button>
@@ -62,14 +51,10 @@ function Header(): JSX.Element {
         </div>
 
         {/* Mobile Menu */}
-        <MobileMenu
-          isOpen={isMobileMenuOpen}
-          onClose={() => setIsMobileMenuOpen(false)}
-          navigate={navigate}
-        />
+        <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} navigate={navigate} />
       </div>
     </header>
-  );
+  )
 }
 
-export default Header;
+export default Header

@@ -1,5 +1,4 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router-dom"
 
 const Logo = (): JSX.Element => (
   <Link to="/" className="flex items-center space-x-2 group">
@@ -10,6 +9,6 @@ const Logo = (): JSX.Element => (
       SentimentX
     </span>
   </Link>
-);
+)
 
-export default Logo;
+export default Logo

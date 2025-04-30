@@ -1,23 +1,22 @@
-"use client";
-import React from "react";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { fetchCryptoData } from "../../utils/API/CoinGeckoAPI";
-import type { Cryptocurrency } from "../../types";
+"use client"
+import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
+import { fetchCryptoData } from "../../utils/API/CoinGeckoAPI"
+import type { Cryptocurrency } from "../../types"
 
 const MarketOverview = () => {
   const [marketData, setMarketData] = useState<{
-    totalMarketCap: number;
-    totalVolume: number;
-    btcDominance: number;
-    activeCryptos: number;
+    totalMarketCap: number
+    totalVolume: number
+    btcDominance: number
+    activeCryptos: number
   }>({
     totalMarketCap: 0,
     totalVolume: 0,
     btcDominance: 0,
     activeCryptos: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // Rezolvare pentru datele de market cap și volume
@@ -26,59 +25,56 @@ const MarketOverview = () => {
     // Modificăm funcția fetchMarketData pentru a obține date mai precise
     const fetchMarketData = async () => {
       try {
-        const data = await fetchCryptoData(1);
+        const data = await fetchCryptoData(1)
 
         // Calculate total market cap and volume
-        let totalMarketCap = 0;
-        let totalVolume = 0;
-        let btcMarketCap = 0;
-        const activeCryptos = data.length;
+        let totalMarketCap = 0
+        let totalVolume = 0
+        let btcMarketCap = 0
+        const activeCryptos = data.length
 
         data.forEach((coin: Cryptocurrency) => {
-          if (coin.market_cap) totalMarketCap += coin.market_cap;
-          if (coin.total_volume) totalVolume += coin.total_volume;
+          if (coin.market_cap) totalMarketCap += coin.market_cap
+          if (coin.total_volume) totalVolume += coin.total_volume
 
           if (coin.id === "bitcoin") {
-            btcMarketCap = coin.market_cap || 0;
+            btcMarketCap = coin.market_cap || 0
           }
-        });
+        })
 
         // Calculate BTC dominance
-        const btcDominance =
-          totalMarketCap > 0
-            ? Math.min(100, (btcMarketCap / totalMarketCap) * 100)
-            : 0;
+        const btcDominance = totalMarketCap > 0 ? Math.min(100, (btcMarketCap / totalMarketCap) * 100) : 0
 
         setMarketData({
           totalMarketCap,
           totalVolume,
           btcDominance,
           activeCryptos,
-        });
+        })
 
-        setLoading(false);
+        setLoading(false)
       } catch (error) {
-        console.error("Error fetching market data:", error);
-        setLoading(false);
+        console.error("Error fetching market data:", error)
+        setLoading(false)
       }
-    };
+    }
 
-    fetchMarketData();
-  }, []);
+    fetchMarketData()
+  }, [])
 
   // Îmbunătățim formatarea valorilor pentru a fi mai precise
   const formatCurrency = (value: number): string => {
     if (value >= 1_000_000_000_000) {
-      return `$${(value / 1_000_000_000_000).toFixed(2)}T`;
+      return `$${(value / 1_000_000_000_000).toFixed(2)}T`
     }
     if (value >= 1_000_000_000) {
-      return `$${(value / 1_000_000_000).toFixed(2)}B`;
+      return `$${(value / 1_000_000_000).toFixed(2)}B`
     }
     if (value >= 1_000_000) {
-      return `$${(value / 1_000_000).toFixed(2)}M`;
+      return `$${(value / 1_000_000).toFixed(2)}M`
     }
-    return `$${value.toLocaleString()}`;
-  };
+    return `$${value.toLocaleString()}`
+  }
 
   const metrics = [
     {
@@ -134,12 +130,7 @@ const MarketOverview = () => {
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
         </svg>
       ),
       bgColor: "bg-amber-100 dark:bg-amber-900/30",
@@ -165,7 +156,7 @@ const MarketOverview = () => {
       ),
       bgColor: "bg-emerald-100 dark:bg-emerald-900/30",
     },
-  ];
+  ]
 
   return (
     <div className="w-full">
@@ -189,25 +180,19 @@ const MarketOverview = () => {
             ) : (
               <>
                 <div className="flex items-center mb-4">
-                  <div
-                    className={`w-10 h-10 ${metric.bgColor} rounded-full flex items-center justify-center mr-4`}
-                  >
+                  <div className={`w-10 h-10 ${metric.bgColor} rounded-full flex items-center justify-center mr-4`}>
                     {metric.icon}
                   </div>
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                    {metric.title}
-                  </h3>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{metric.title}</h3>
                 </div>
-                <div className="text-2xl font-bold text-gray-800 dark:text-white">
-                  {metric.value}
-                </div>
+                <div className="text-2xl font-bold text-gray-800 dark:text-white">{metric.value}</div>
               </>
             )}
           </motion.div>
         ))}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default MarketOverview;
+export default MarketOverview

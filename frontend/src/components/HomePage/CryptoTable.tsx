@@ -1,6 +1,6 @@
-"use client";
-import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+"use client"
+import React, { useState, useMemo, useEffect, useCallback } from "react"
+import { useNavigate } from "react-router-dom"
 import {
   FiArrowUp,
   FiArrowDown,
@@ -17,174 +17,147 @@ import {
   FiTrendingUp,
   FiBarChart2,
   FiCircle,
-} from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
-import type { Cryptocurrency } from "../../types";
+} from "react-icons/fi"
+import { motion, AnimatePresence } from "framer-motion"
+import type { Cryptocurrency } from "../../types"
 
 // Utility for price formatting
 const formatPrice = (price: number | undefined): string => {
-  if (!price && price !== 0) return "—";
-  if (price < 0.01) return price.toFixed(8).replace(/\.?0+$/, "");
+  if (!price && price !== 0) return "—"
+  if (price < 0.01) return price.toFixed(8).replace(/\.?0+$/, "")
   return new Intl.NumberFormat(undefined, {
     minimumFractionDigits: 2,
     maximumFractionDigits: price < 1 ? 6 : 2,
-  }).format(price);
-};
+  }).format(price)
+}
 
 // Utility for formatting large numbers
 const formatNumber = (num: number | undefined): string => {
-  if (!num && num !== 0) return "—";
-  return new Intl.NumberFormat().format(num);
-};
+  if (!num && num !== 0) return "—"
+  return new Intl.NumberFormat().format(num)
+}
 
 // Utility for formatting market cap
 const formatMarketCap = (marketCap: number | undefined): string => {
-  if (!marketCap && marketCap !== 0) return "—";
+  if (!marketCap && marketCap !== 0) return "—"
   if (marketCap >= 1_000_000_000_000) {
-    return `${(marketCap / 1_000_000_000_000).toFixed(2)}T`;
+    return `${(marketCap / 1_000_000_000_000).toFixed(2)}T`
   }
   if (marketCap >= 1_000_000_000) {
-    return `${(marketCap / 1_000_000_000).toFixed(2)}B`;
+    return `${(marketCap / 1_000_000_000).toFixed(2)}B`
   }
   if (marketCap >= 1_000_000) {
-    return `${(marketCap / 1_000_000).toFixed(2)}M`;
+    return `${(marketCap / 1_000_000).toFixed(2)}M`
   }
-  return `${formatNumber(marketCap)}`;
-};
+  return `${formatNumber(marketCap)}`
+}
 
 interface CryptoRowProps {
-  crypto: Cryptocurrency;
-  index: number;
-  itemsPerPage: number;
-  currentPage: number;
-  navigate: (path: string) => void;
-  isEven: boolean;
+  crypto: Cryptocurrency
+  index: number
+  itemsPerPage: number
+  currentPage: number
+  navigate: (path: string) => void
+  isEven: boolean
 }
 
 // Table row component for better performance
-const CryptoRow = React.memo(
-  ({
-    crypto,
-    index,
-    itemsPerPage,
-    currentPage,
-    navigate,
-    isEven,
-  }: CryptoRowProps) => {
-    const maxSupply = crypto.max_supply || crypto.total_supply;
-    const progress = maxSupply
-      ? (crypto.circulating_supply / maxSupply) * 100
-      : 0;
-    const priceChangeClass =
-      crypto.price_change_percentage_24h >= 0
-        ? "text-emerald-500 dark:text-emerald-400"
-        : "text-rose-500 dark:text-rose-400";
+const CryptoRow = React.memo(({ crypto, index, itemsPerPage, currentPage, navigate, isEven }: CryptoRowProps) => {
+  const maxSupply = crypto.max_supply || crypto.total_supply
+  const progress = maxSupply ? (crypto.circulating_supply / maxSupply) * 100 : 0
+  const priceChangeClass =
+    crypto.price_change_percentage_24h >= 0
+      ? "text-emerald-500 dark:text-emerald-400"
+      : "text-rose-500 dark:text-rose-400"
 
-    return (
-      <motion.tr
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.2, delay: index * 0.03 }}
-        onClick={() => navigate(`/currencies/${crypto.id}`)}
-        className={`group hover:bg-teal-50/60 dark:hover:bg-teal-900/30 transition-colors cursor-pointer border-b border-gray-200/20 dark:border-gray-700/20 ${
-          isEven ? "bg-white/20 dark:bg-gray-800/20" : "bg-transparent"
-        }`}
-      >
-        <td className="py-5 px-6 text-gray-600 dark:text-gray-300 font-medium text-base">
-          {index + 1 + (currentPage - 1) * itemsPerPage}
-        </td>
-        <td className="py-5 px-6">
-          <div className="flex items-center space-x-3">
-            <div className="relative flex-shrink-0">
-              <img
-                src={crypto.image || "/placeholder.svg"}
-                alt={crypto.name}
-                className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-600 shadow-sm group-hover:border-teal-300 transition-colors"
-                loading="lazy"
-              />
-              {crypto.market_cap_rank <= 10 && (
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center">
-                  <span className="text-[10px] font-bold text-white">
-                    {crypto.market_cap_rank}
-                  </span>
-                </div>
-              )}
-            </div>
-            <div>
-              <div className="font-medium text-gray-800 dark:text-gray-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-                {crypto.name}
+  return (
+    <motion.tr
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.03 }}
+      onClick={() => navigate(`/currencies/${crypto.id}`)}
+      className={`group hover:bg-teal-50/60 dark:hover:bg-teal-900/30 transition-colors cursor-pointer border-b border-gray-200/20 dark:border-gray-700/20 ${
+        isEven ? "bg-white/20 dark:bg-gray-800/20" : "bg-transparent"
+      }`}
+    >
+      <td className="py-5 px-6 text-gray-600 dark:text-gray-300 font-medium text-base">
+        {index + 1 + (currentPage - 1) * itemsPerPage}
+      </td>
+      <td className="py-5 px-6">
+        <div className="flex items-center space-x-3">
+          <div className="relative flex-shrink-0">
+            <img
+              src={crypto.image || "/placeholder.svg"}
+              alt={crypto.name}
+              className="w-8 h-8 rounded-full border-2 border-white dark:border-gray-600 shadow-sm group-hover:border-teal-300 transition-colors"
+              loading="lazy"
+            />
+            {crypto.market_cap_rank <= 10 && (
+              <div className="absolute -top-1 -right-1 w-4 h-4 bg-amber-400 rounded-full flex items-center justify-center">
+                <span className="text-[10px] font-bold text-white">{crypto.market_cap_rank}</span>
               </div>
-              <div className="text-xs text-teal-500 dark:text-teal-400 font-medium">
-                {crypto.symbol.toUpperCase()}
-              </div>
-            </div>
-          </div>
-        </td>
-        <td className="py-5 px-6 font-medium text-gray-800 dark:text-gray-100 text-base">
-          ${formatPrice(crypto.current_price)}
-        </td>
-        <td
-          className={`py-5 px-6 text-right font-medium ${priceChangeClass} text-base`}
-        >
-          <div className="flex items-center justify-end">
-            {crypto.price_change_percentage_24h >= 0 ? (
-              <FiArrowUp className="mr-1" size={12} />
-            ) : (
-              <FiArrowDown className="mr-1" size={12} />
             )}
-            {Math.abs(crypto.price_change_percentage_24h).toFixed(2)}%
           </div>
-        </td>
-        <td className="py-5 px-6 text-right font-medium text-gray-800 dark:text-gray-100 text-base">
-          {formatMarketCap(crypto.market_cap)}
-        </td>
-        <td className="py-5 px-6 text-right text-base">
-          {progress >= 100 ? (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {formatNumber(crypto.circulating_supply)}
-            </span>
-          ) : (
-            <div className="flex flex-col items-end space-y-1">
-              <div className="w-full max-w-[120px] bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                <div
-                  className="h-1.5 rounded-full bg-gradient-to-r from-teal-400 to-emerald-500"
-                  style={{
-                    width: `${progress.toFixed(2)}%`,
-                  }}
-                />
-              </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">
-                <span className="text-teal-500 dark:text-teal-400 font-medium">
-                  {progress.toFixed(0)}%
-                </span>
-              </div>
+          <div>
+            <div className="font-medium text-gray-800 dark:text-gray-100 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+              {crypto.name}
             </div>
+            <div className="text-xs text-teal-500 dark:text-teal-400 font-medium">{crypto.symbol.toUpperCase()}</div>
+          </div>
+        </div>
+      </td>
+      <td className="py-5 px-6 font-medium text-gray-800 dark:text-gray-100 text-base">
+        ${formatPrice(crypto.current_price)}
+      </td>
+      <td className={`py-5 px-6 text-right font-medium ${priceChangeClass} text-base`}>
+        <div className="flex items-center justify-end">
+          {crypto.price_change_percentage_24h >= 0 ? (
+            <FiArrowUp className="mr-1" size={12} />
+          ) : (
+            <FiArrowDown className="mr-1" size={12} />
           )}
-        </td>
-      </motion.tr>
-    );
-  }
-);
+          {Math.abs(crypto.price_change_percentage_24h).toFixed(2)}%
+        </div>
+      </td>
+      <td className="py-5 px-6 text-right font-medium text-gray-800 dark:text-gray-100 text-base">
+        {formatMarketCap(crypto.market_cap)}
+      </td>
+      <td className="py-5 px-6 text-right text-base">
+        {progress >= 100 ? (
+          <span className="text-xs text-gray-500 dark:text-gray-400">{formatNumber(crypto.circulating_supply)}</span>
+        ) : (
+          <div className="flex flex-col items-end space-y-1">
+            <div className="w-full max-w-[120px] bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+              <div
+                className="h-1.5 rounded-full bg-gradient-to-r from-teal-400 to-emerald-500"
+                style={{
+                  width: `${progress.toFixed(2)}%`,
+                }}
+              />
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              <span className="text-teal-500 dark:text-teal-400 font-medium">{progress.toFixed(0)}%</span>
+            </div>
+          </div>
+        )}
+      </td>
+    </motion.tr>
+  )
+})
 
 interface EmptyStateProps {
-  message: string;
-  icon: React.ReactNode;
+  message: string
+  icon: React.ReactNode
 }
 
 // Empty state component
 const EmptyState = ({ message, icon }: EmptyStateProps) => (
   <div className="flex flex-col items-center justify-center py-20 px-4">
-    <div className="bg-white/30 dark:bg-gray-800/30 rounded-full p-6 mb-6">
-      {icon}
-    </div>
-    <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
-      No results found
-    </h3>
-    <p className="text-gray-500 dark:text-gray-400 text-center max-w-md">
-      {message}
-    </p>
+    <div className="bg-white/30 dark:bg-gray-800/30 rounded-full p-6 mb-6">{icon}</div>
+    <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">No results found</h3>
+    <p className="text-gray-500 dark:text-gray-400 text-center max-w-md">{message}</p>
   </div>
-);
+)
 
 // Loading skeleton component
 const TableSkeleton = () => (
@@ -194,11 +167,11 @@ const TableSkeleton = () => (
       <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 mb-2"></div>
     ))}
   </div>
-);
+)
 
 interface ErrorStateProps {
-  error: string;
-  onRetry: () => void;
+  error: string
+  onRetry: () => void
 }
 
 // Error state component
@@ -207,12 +180,8 @@ const ErrorState = ({ error, onRetry }: ErrorStateProps) => (
     <div className="bg-red-100 dark:bg-red-900/30 rounded-full p-4 mb-4">
       <FiInfo className="text-red-500 h-6 w-6" />
     </div>
-    <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
-      Failed to load data
-    </h3>
-    <p className="text-gray-500 dark:text-gray-400 text-center max-w-md mb-4">
-      {error}
-    </p>
+    <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">Failed to load data</h3>
+    <p className="text-gray-500 dark:text-gray-400 text-center max-w-md mb-4">{error}</p>
     <button
       onClick={onRetry}
       className="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-white rounded-lg transition-colors flex items-center"
@@ -220,184 +189,164 @@ const ErrorState = ({ error, onRetry }: ErrorStateProps) => (
       <FiRefreshCw className="mr-2" /> Try Again
     </button>
   </div>
-);
+)
 
 interface CryptoTableProps {
-  cryptoData: Cryptocurrency[];
-  isLoading: boolean;
-  error: string | null;
+  cryptoData: Cryptocurrency[]
+  isLoading: boolean
+  error: string | null
 }
 
 function CryptoTable({ cryptoData, isLoading, error }: CryptoTableProps) {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   const [sortConfig, setSortConfig] = useState<{
-    key: keyof Cryptocurrency;
-    direction: "asc" | "desc";
+    key: keyof Cryptocurrency
+    direction: "asc" | "desc"
   }>({
     key: "market_cap_rank",
     direction: "asc",
-  });
+  })
   const [itemsPerPage, setItemsPerPage] = useState<number>(() => {
-    return Number(localStorage.getItem("cryptoItemsPerPage")) || 10;
-  });
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [searchTerm, setSearchTerm] = useState<string>("");
+    return Number(localStorage.getItem("cryptoItemsPerPage")) || 10
+  })
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const [searchTerm, setSearchTerm] = useState<string>("")
   const [filterConfig, setFilterConfig] = useState<{
-    priceChange: "all" | "positive" | "negative";
-    marketCap: "all" | "large" | "medium" | "small";
+    priceChange: "all" | "positive" | "negative"
+    marketCap: "all" | "large" | "medium" | "small"
   }>({
     priceChange: "all", // all, positive, negative
     marketCap: "all", // all, large, medium, small
-  });
-  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false);
+  })
+  const [isFilterOpen, setIsFilterOpen] = useState<boolean>(false)
 
   // Reset page when data changes
   useEffect(() => {
-    setCurrentPage(1);
-  }, [cryptoData, searchTerm, filterConfig]);
+    setCurrentPage(1)
+  }, [cryptoData, searchTerm, filterConfig])
 
   // Apply sorting and filtering
   const filteredAndSortedData = useMemo(() => {
-    if (!cryptoData) return [];
+    if (!cryptoData) return []
 
     // First apply search filter
     let filtered = cryptoData.filter(
       (coin) =>
         coin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        coin.symbol.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+        coin.symbol.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
 
     // Then apply other filters
     if (filterConfig.priceChange === "positive") {
-      filtered = filtered.filter(
-        (coin) => coin.price_change_percentage_24h >= 0
-      );
+      filtered = filtered.filter((coin) => coin.price_change_percentage_24h >= 0)
     } else if (filterConfig.priceChange === "negative") {
-      filtered = filtered.filter(
-        (coin) => coin.price_change_percentage_24h < 0
-      );
+      filtered = filtered.filter((coin) => coin.price_change_percentage_24h < 0)
     }
 
-    const ONE_BILLION = 1_000_000_000;
-    const TEN_BILLION = 10_000_000_000;
+    const ONE_BILLION = 1_000_000_000
+    const TEN_BILLION = 10_000_000_000
 
     if (filterConfig.marketCap === "large") {
-      filtered = filtered.filter((coin) => coin.market_cap >= TEN_BILLION); // $10B+
+      filtered = filtered.filter((coin) => coin.market_cap >= TEN_BILLION) // $10B+
     } else if (filterConfig.marketCap === "medium") {
-      filtered = filtered.filter(
-        (coin) =>
-          coin.market_cap >= ONE_BILLION && coin.market_cap < TEN_BILLION
-      ); // $1B-$10B
+      filtered = filtered.filter((coin) => coin.market_cap >= ONE_BILLION && coin.market_cap < TEN_BILLION) // $1B-$10B
     } else if (filterConfig.marketCap === "small") {
-      filtered = filtered.filter((coin) => coin.market_cap < ONE_BILLION); // <$1B
+      filtered = filtered.filter((coin) => coin.market_cap < ONE_BILLION) // <$1B
     }
 
     // Then sort
     return [...filtered].sort((a, b) => {
-      const { key, direction } = sortConfig;
-      const aValue = a[key];
-      const bValue = b[key];
+      const { key, direction } = sortConfig
+      const aValue = a[key]
+      const bValue = b[key]
 
-      if (aValue == null) return direction === "asc" ? 1 : -1;
-      if (bValue == null) return direction === "asc" ? -1 : 1;
+      if (aValue == null) return direction === "asc" ? 1 : -1
+      if (bValue == null) return direction === "asc" ? -1 : 1
 
       if (typeof aValue === "number" && typeof bValue === "number") {
-        return direction === "asc" ? aValue - bValue : bValue - aValue;
+        return direction === "asc" ? aValue - bValue : bValue - aValue
       }
 
       if (typeof aValue === "string" && typeof bValue === "string") {
-        return direction === "asc"
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
+        return direction === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue)
       }
 
-      return 0;
-    });
-  }, [cryptoData, sortConfig, searchTerm, filterConfig]);
+      return 0
+    })
+  }, [cryptoData, sortConfig, searchTerm, filterConfig])
 
   const requestSort = (key: keyof Cryptocurrency) => {
     setSortConfig((prev) => ({
       key,
       direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
-    }));
-  };
+    }))
+  }
 
   const getSortIcon = (key: keyof Cryptocurrency) => {
-    if (sortConfig.key !== key) return null;
+    if (sortConfig.key !== key) return null
     return sortConfig.direction === "asc" ? (
       <FiArrowUp className="ml-1" size={12} />
     ) : (
       <FiArrowDown className="ml-1" size={12} />
-    );
-  };
+    )
+  }
 
-  const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
-  const currentData = filteredAndSortedData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage)
+  const currentData = filteredAndSortedData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
 
   const handlePageChange = (pageNumber: number) => {
-    setCurrentPage(Math.max(1, Math.min(pageNumber, totalPages)));
+    setCurrentPage(Math.max(1, Math.min(pageNumber, totalPages)))
     // Scroll to top of table
-    document
-      .getElementById("crypto-table-container")
-      ?.scrollIntoView({ behavior: "smooth" });
-  };
+    document.getElementById("crypto-table-container")?.scrollIntoView({ behavior: "smooth" })
+  }
 
-  const handleItemsPerPageChange = (
-    event: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const value = Number(event.target.value);
-    setItemsPerPage(value);
-    localStorage.setItem("cryptoItemsPerPage", value.toString());
-    setCurrentPage(1);
-  };
+  const handleItemsPerPageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = Number(event.target.value)
+    setItemsPerPage(value)
+    localStorage.setItem("cryptoItemsPerPage", value.toString())
+    setCurrentPage(1)
+  }
 
   const clearFilters = () => {
-    setSearchTerm("");
+    setSearchTerm("")
     setFilterConfig({
       priceChange: "all",
       marketCap: "all",
-    });
-    setIsFilterOpen(false);
-  };
+    })
+    setIsFilterOpen(false)
+  }
 
   const handleRetry = useCallback(() => {
-    window.location.reload();
-  }, []);
+    window.location.reload()
+  }, [])
 
   // Calculate visible page numbers for pagination
   const getVisiblePageNumbers = () => {
-    const delta = 2; // Number of pages to show before and after current page
-    const range: Array<number | string> = [];
+    const delta = 2 // Number of pages to show before and after current page
+    const range: Array<number | string> = []
 
-    for (
-      let i = Math.max(1, currentPage - delta);
-      i <= Math.min(totalPages, currentPage + delta);
-      i++
-    ) {
-      range.push(i);
+    for (let i = Math.max(1, currentPage - delta); i <= Math.min(totalPages, currentPage + delta); i++) {
+      range.push(i)
     }
     // Add first page if not already in range
     if (typeof range[0] === "number" && range[0] > 1) {
       if (range[0] > 2) {
-        range.unshift("...");
+        range.unshift("...")
       }
-      range.unshift(1);
+      range.unshift(1)
     }
 
     // Add last page if not already in range
-    const last = range[range.length - 1];
+    const last = range[range.length - 1]
     if (typeof last === "number" && last < totalPages) {
       if (last < totalPages - 1) {
-        range.push("...");
+        range.push("...")
       }
-      range.push(totalPages);
+      range.push(totalPages)
     }
 
-    return range;
-  };
+    return range
+  }
 
   if (isLoading) {
     return (
@@ -405,16 +354,14 @@ function CryptoTable({ cryptoData, isLoading, error }: CryptoTableProps) {
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-200/50 dark:border-gray-700/50">
           <div className="p-6">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-                Cryptocurrency Market
-              </h2>
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white">Cryptocurrency Market</h2>
               <div className="animate-pulse w-32 h-8 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
             </div>
             <TableSkeleton />
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {
@@ -426,14 +373,11 @@ function CryptoTable({ cryptoData, isLoading, error }: CryptoTableProps) {
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div
-      id="crypto-table-container"
-      className="w-full max-w-full mx-auto px-6 py-8"
-    >
+    <div id="crypto-table-container" className="w-full max-w-full mx-auto px-6 py-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -479,20 +423,16 @@ function CryptoTable({ cryptoData, isLoading, error }: CryptoTableProps) {
                 <button
                   onClick={() => setIsFilterOpen(!isFilterOpen)}
                   className={`px-4 py-2 rounded-lg flex items-center justify-center transition-colors ${
-                    isFilterOpen ||
-                    filterConfig.priceChange !== "all" ||
-                    filterConfig.marketCap !== "all"
+                    isFilterOpen || filterConfig.priceChange !== "all" || filterConfig.marketCap !== "all"
                       ? "bg-teal-500 text-white"
                       : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                   }`}
                 >
                   <FiFilter className="mr-2" />
                   Filters
-                  {(filterConfig.priceChange !== "all" ||
-                    filterConfig.marketCap !== "all") && (
+                  {(filterConfig.priceChange !== "all" || filterConfig.marketCap !== "all") && (
                     <span className="ml-2 bg-white text-teal-500 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                      {(filterConfig.priceChange !== "all" ? 1 : 0) +
-                        (filterConfig.marketCap !== "all" ? 1 : 0)}
+                      {(filterConfig.priceChange !== "all" ? 1 : 0) + (filterConfig.marketCap !== "all" ? 1 : 0)}
                     </span>
                   )}
                 </button>
@@ -509,9 +449,7 @@ function CryptoTable({ cryptoData, isLoading, error }: CryptoTableProps) {
                     >
                       <div className="p-4">
                         <div className="flex justify-between items-center mb-4">
-                          <h3 className="font-medium text-gray-800 dark:text-white">
-                            Filters
-                          </h3>
+                          <h3 className="font-medium text-gray-800 dark:text-white">Filters</h3>
                           <button
                             onClick={clearFilters}
                             className="text-xs text-teal-500 hover:text-teal-600 dark:text-teal-400 dark:hover:text-teal-300"
@@ -670,9 +608,7 @@ function CryptoTable({ cryptoData, isLoading, error }: CryptoTableProps) {
                     className="py-4 px-4 font-medium text-left cursor-pointer hover:text-teal-500 transition-colors"
                     onClick={() => requestSort("market_cap_rank")}
                   >
-                    <div className="flex items-center">
-                      # {getSortIcon("market_cap_rank")}
-                    </div>
+                    <div className="flex items-center"># {getSortIcon("market_cap_rank")}</div>
                   </th>
                   <th className="py-4 px-4 font-medium text-left">Coin</th>
                   <th
@@ -743,11 +679,7 @@ function CryptoTable({ cryptoData, isLoading, error }: CryptoTableProps) {
           <div className="flex items-center">
             <div className="hidden sm:flex mr-4 text-sm text-gray-600 dark:text-gray-300">
               Showing {(currentPage - 1) * itemsPerPage + 1} -{" "}
-              {Math.min(
-                currentPage * itemsPerPage,
-                filteredAndSortedData.length
-              )}{" "}
-              of {filteredAndSortedData.length}
+              {Math.min(currentPage * itemsPerPage, filteredAndSortedData.length)} of {filteredAndSortedData.length}
             </div>
 
             <div className="flex items-center space-x-1">
@@ -773,16 +705,14 @@ function CryptoTable({ cryptoData, isLoading, error }: CryptoTableProps) {
                 {getVisiblePageNumbers().map((page, index) => (
                   <button
                     key={index}
-                    onClick={() =>
-                      typeof page === "number" ? handlePageChange(page) : null
-                    }
+                    onClick={() => (typeof page === "number" ? handlePageChange(page) : null)}
                     disabled={page === "..."}
                     className={`w-12 h-12 flex items-center justify-center rounded-md text-base ${
                       page === currentPage
                         ? "bg-teal-500 text-white"
                         : page === "..."
-                        ? "text-gray-600 dark:text-gray-300 cursor-default"
-                        : "text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/50"
+                          ? "text-gray-600 dark:text-gray-300 cursor-default"
+                          : "text-gray-600 dark:text-gray-300 hover:bg-white/50 dark:hover:bg-gray-700/50"
                     }`}
                   >
                     {page}
@@ -816,7 +746,7 @@ function CryptoTable({ cryptoData, isLoading, error }: CryptoTableProps) {
         </div>
       </motion.div>
     </div>
-  );
+  )
 }
 
-export default React.memo(CryptoTable);
+export default React.memo(CryptoTable)

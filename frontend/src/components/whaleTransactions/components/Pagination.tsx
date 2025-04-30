@@ -1,20 +1,16 @@
-"use client";
+"use client"
 
 // Pagination.tsx
 
-import React from "react";
+import type React from "react"
 
 interface PaginationProps {
-  page: number;
-  totalPages: number;
-  setPage: (page: number) => void;
+  page: number
+  totalPages: number
+  setPage: (page: number) => void
 }
 
-const Pagination: React.FC<PaginationProps> = ({
-  page,
-  totalPages,
-  setPage,
-}) => {
+const Pagination: React.FC<PaginationProps> = ({ page, totalPages, setPage }) => {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between px-4 py-4 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-dark-secondary">
       <div className="text-sm text-gray-500 dark:text-gray-400 mb-2 sm:mb-0">
@@ -37,18 +33,13 @@ const Pagination: React.FC<PaginationProps> = ({
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Previous
         </button>
         <div className="flex items-center space-x-1 px-2">
           {Array.from({ length: Math.min(3, totalPages) }, (_, i) => {
-            const pageNum = Math.max(1, Math.min(page, totalPages - 2)) + i;
+            const pageNum = Math.max(1, Math.min(page, totalPages - 2)) + i
             return (
               <button
                 key={pageNum}
@@ -61,11 +52,9 @@ const Pagination: React.FC<PaginationProps> = ({
               >
                 {pageNum}
               </button>
-            );
+            )
           })}
-          {totalPages > 3 && page < totalPages - 2 && (
-            <span className="px-1">...</span>
-          )}
+          {totalPages > 3 && page < totalPages - 2 && <span className="px-1">...</span>}
           {totalPages > 3 && page < totalPages - 1 && (
             <button
               onClick={() => setPage(totalPages)}
@@ -96,17 +85,12 @@ const Pagination: React.FC<PaginationProps> = ({
             viewBox="0 0 24 24"
             stroke="currentColor"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 5l7 7-7 7"
-            />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Pagination;
+export default Pagination

@@ -1,75 +1,72 @@
-"use client";
-import React from "react";
-import { useEffect, useState } from "react";
+"use client"
+import type React from "react"
+import { useEffect, useState } from "react"
 
-import axios from "axios";
-import { motion } from "framer-motion";
-import ClipLoader from "react-spinners/ClipLoader";
-import type { FearGreedIndexData } from "../../types";
+import axios from "axios"
+import { motion } from "framer-motion"
+import ClipLoader from "react-spinners/ClipLoader"
+import type { FearGreedIndexData } from "../../types"
 
 const FearGreedIndexCard: React.FC = () => {
-  const [fearGreedIndex, setFearGreedIndex] =
-    useState<FearGreedIndexData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [fearGreedIndex, setFearGreedIndex] = useState<FearGreedIndexData | null>(null)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchFearGreedIndex = async (): Promise<void> => {
     try {
-      const response = await axios.get(
-        "https://api.alternative.me/fng/?limit=1&format=json"
-      );
-      setFearGreedIndex(response.data.data[0]);
-      setLoading(false);
+      const response = await axios.get("https://api.alternative.me/fng/?limit=1&format=json")
+      setFearGreedIndex(response.data.data[0])
+      setLoading(false)
     } catch (error) {
-      console.error("Error fetching Fear & Greed Index:", error);
-      setError("Failed to fetch Fear & Greed Index");
-      setLoading(false);
+      console.error("Error fetching Fear & Greed Index:", error)
+      setError("Failed to fetch Fear & Greed Index")
+      setLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchFearGreedIndex();
-  }, []);
+    fetchFearGreedIndex()
+  }, [])
 
   const getIndexColor = (value: string | undefined): string => {
-    if (!value) return "text-gray-500";
-    const num = Number.parseInt(value);
-    if (num <= 25) return "text-red-500"; // Extreme Fear
-    if (num <= 45) return "text-orange-500"; // Fear
-    if (num <= 55) return "text-yellow-500"; // Neutral
-    if (num <= 75) return "text-teal-500"; // Greed
-    return "text-green-500"; // Extreme Greed
-  };
+    if (!value) return "text-gray-500"
+    const num = Number.parseInt(value)
+    if (num <= 25) return "text-red-500" // Extreme Fear
+    if (num <= 45) return "text-orange-500" // Fear
+    if (num <= 55) return "text-yellow-500" // Neutral
+    if (num <= 75) return "text-teal-500" // Greed
+    return "text-green-500" // Extreme Greed
+  }
 
   const getBarColor = (value: string | undefined): string => {
-    if (!value) return "bg-gray-400";
-    const num = Number.parseInt(value);
-    if (num <= 25) return "bg-red-500"; // Extreme Fear
-    if (num <= 45) return "bg-orange-500"; // Fear
-    if (num <= 55) return "bg-yellow-500"; // Neutral
-    if (num <= 75) return "bg-teal-500"; // Greed
-    return "bg-green-500"; // Extreme Greed
-  };
+    if (!value) return "bg-gray-400"
+    const num = Number.parseInt(value)
+    if (num <= 25) return "bg-red-500" // Extreme Fear
+    if (num <= 45) return "bg-orange-500" // Fear
+    if (num <= 55) return "bg-yellow-500" // Neutral
+    if (num <= 75) return "bg-teal-500" // Greed
+    return "bg-green-500" // Extreme Greed
+  }
 
   const getGradientColor = (value: string | undefined): string => {
-    if (!value) return "from-gray-400 to-gray-500";
-    const num = Number.parseInt(value);
-    if (num <= 25) return "from-red-500 to-red-600"; // Extreme Fear
-    if (num <= 45) return "from-orange-500 to-orange-600"; // Fear
-    if (num <= 55) return "from-yellow-500 to-yellow-600"; // Neutral
-    if (num <= 75) return "from-teal-500 to-teal-600"; // Greed
-    return "from-green-500 to-green-600"; // Extreme Greed
-  };
+    if (!value) return "from-gray-400 to-gray-500"
+    const num = Number.parseInt(value)
+    if (num <= 25) return "from-red-500 to-red-600" // Extreme Fear
+    if (num <= 45) return "from-orange-500 to-orange-600" // Fear
+    if (num <= 55) return "from-yellow-500 to-yellow-600" // Neutral
+    if (num <= 75) return "from-teal-500 to-teal-600" // Greed
+    return "from-green-500 to-green-600" // Extreme Greed
+  }
 
   const getIndexLabel = (value: string | undefined): string => {
-    if (!value) return "Unknown";
-    const num = Number.parseInt(value);
-    if (num <= 25) return "Extreme Fear";
-    if (num <= 45) return "Fear";
-    if (num <= 55) return "Neutral";
-    if (num <= 75) return "Greed";
-    return "Extreme Greed";
-  };
+    if (!value) return "Unknown"
+    const num = Number.parseInt(value)
+    if (num <= 25) return "Extreme Fear"
+    if (num <= 45) return "Fear"
+    if (num <= 55) return "Neutral"
+    if (num <= 75) return "Greed"
+    return "Extreme Greed"
+  }
 
   return (
     <motion.div
@@ -143,22 +140,12 @@ const FearGreedIndexCard: React.FC = () => {
                     stroke={getBarColor(fearGreedIndex?.value)}
                     strokeWidth="12"
                     strokeDasharray="251"
-                    strokeDashoffset={`${
-                      251 -
-                      (Number.parseInt(fearGreedIndex?.value || "0") / 100) *
-                        251
-                    }`}
+                    strokeDashoffset={`${251 - (Number.parseInt(fearGreedIndex?.value || "0") / 100) * 251}`}
                     className="transition-all duration-1000 ease-out"
                   />
 
                   {/* Needle */}
-                  <g
-                    transform={`rotate(${
-                      (Number.parseInt(fearGreedIndex?.value || "0") / 100) *
-                        180 -
-                      90
-                    }, 100, 90)`}
-                  >
+                  <g transform={`rotate(${(Number.parseInt(fearGreedIndex?.value || "0") / 100) * 180 - 90}, 100, 90)`}>
                     <line
                       x1="100"
                       y1="90"
@@ -168,12 +155,7 @@ const FearGreedIndexCard: React.FC = () => {
                       strokeWidth="2"
                       className="dark:stroke-white"
                     />
-                    <circle
-                      cx="100"
-                      cy="90"
-                      r="5"
-                      fill={getBarColor(fearGreedIndex?.value)}
-                    />
+                    <circle cx="100" cy="90" r="5" fill={getBarColor(fearGreedIndex?.value)} />
                   </g>
 
                   {/* Value text */}
@@ -192,11 +174,7 @@ const FearGreedIndexCard: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-center mb-4">
-              <div
-                className={`text-xl font-bold ${getIndexColor(
-                  fearGreedIndex?.value
-                )}`}
-              >
+              <div className={`text-xl font-bold ${getIndexColor(fearGreedIndex?.value)}`}>
                 {getIndexLabel(fearGreedIndex?.value)}
               </div>
             </div>
@@ -215,9 +193,7 @@ const FearGreedIndexCard: React.FC = () => {
               </div>
               <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                 <div
-                  className={`h-full bg-gradient-to-r ${getGradientColor(
-                    fearGreedIndex?.value
-                  )}`}
+                  className={`h-full bg-gradient-to-r ${getGradientColor(fearGreedIndex?.value)}`}
                   style={{
                     width: `${fearGreedIndex?.value || 0}%`,
                     transition: "width 1s ease-out",
@@ -233,7 +209,7 @@ const FearGreedIndexCard: React.FC = () => {
         )}
       </div>
     </motion.div>
-  );
-};
+  )
+}
 
-export default FearGreedIndexCard;
+export default FearGreedIndexCard

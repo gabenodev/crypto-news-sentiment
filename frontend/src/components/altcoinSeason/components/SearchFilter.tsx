@@ -1,19 +1,11 @@
-"use client";
-import React from "react";
-import { FiSearch, FiX } from "react-icons/fi";
-import type { SearchFilterProps } from "../types";
+"use client"
+import { FiSearch, FiX } from "react-icons/fi"
+import type { SearchFilterProps } from "../types"
 
-const SearchFilter = ({
-  searchTerm,
-  setSearchTerm,
-  isFilterOpen,
-  setIsFilterOpen,
-}: SearchFilterProps) => {
+const SearchFilter = ({ searchTerm, setSearchTerm, isFilterOpen, setIsFilterOpen }: SearchFilterProps) => {
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-      <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-        Top Performing Altcoins
-      </h3>
+      <h3 className="text-xl font-bold text-gray-800 dark:text-white">Top Performing Altcoins</h3>
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative">
@@ -36,7 +28,7 @@ const SearchFilter = ({
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SearchFilter;
+export default SearchFilter

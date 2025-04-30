@@ -1,9 +1,8 @@
-"use client";
-import React from "react";
-import SentimentGauge from "./SentimentGauge";
-import { useEffect, useState } from "react";
-import { Line } from "react-chartjs-2";
-import { fetchSentimentData } from "../../utils/API/sentimentAPI";
+"use client"
+import SentimentGauge from "./SentimentGauge"
+import { useEffect, useState } from "react"
+import { Line } from "react-chartjs-2"
+import { fetchSentimentData } from "../../utils/API/sentimentAPI"
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,35 +12,25 @@ import {
   Title,
   Tooltip,
   Legend,
-} from "chart.js";
-import type { SentimentChartData } from "../../types";
+} from "chart.js"
+import type { SentimentChartData } from "../../types"
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
 
 function SentimentChart(): JSX.Element {
   const [sentimentData, setSentimentData] = useState<SentimentChartData>({
     labels: [],
     datasets: [],
-  });
-  const [timeframe, setTimeframe] = useState<string | number>("30");
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  })
+  const [timeframe, setTimeframe] = useState<string | number>("30")
+  const [isLoading, setIsLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
 
   const loadSentimentData = async (limit: string | number) => {
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true)
+    setError(null)
     try {
-      const { sentimentScores, sentimentTimestamps } = await fetchSentimentData(
-        limit
-      );
+      const { sentimentScores, sentimentTimestamps } = await fetchSentimentData(limit)
       setSentimentData({
         labels: sentimentTimestamps,
         datasets: [
@@ -53,11 +42,11 @@ function SentimentChart(): JSX.Element {
             backgroundColor: "rgba(59, 130, 246, 0.1)",
             tension: 0.4,
             pointBackgroundColor: (context) => {
-              const value = context.dataset.data[context.dataIndex];
-              if (value <= 25) return "#ef4444";
-              if (value <= 45) return "#f59e0b";
-              if (value <= 55) return "#facc15";
-              return "#10b981";
+              const value = context.dataset.data[context.dataIndex]
+              if (value <= 25) return "#ef4444"
+              if (value <= 45) return "#f59e0b"
+              if (value <= 55) return "#facc15"
+              return "#10b981"
             },
             pointBorderColor: "transparent",
             pointRadius: 3,
@@ -65,21 +54,21 @@ function SentimentChart(): JSX.Element {
             borderWidth: 2,
           },
         ],
-      });
+      })
     } catch (error) {
-      setError("Failed to load sentiment data. Please try again later.");
+      setError("Failed to load sentiment data. Please try again later.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    loadSentimentData(timeframe);
-  }, [timeframe]);
+    loadSentimentData(timeframe)
+  }, [timeframe])
 
   const handleTimeframeChange = (newTimeframe: string | number): void => {
-    setTimeframe(newTimeframe);
-  };
+    setTimeframe(newTimeframe)
+  }
 
   const options = {
     responsive: true,
@@ -118,21 +107,21 @@ function SentimentChart(): JSX.Element {
         },
         callbacks: {
           label: (context: any) => {
-            let label = context.dataset.label || "";
+            let label = context.dataset.label || ""
             if (label) {
-              label += ": ";
+              label += ": "
             }
-            label += context.parsed.y;
-            return label;
+            label += context.parsed.y
+            return label
           },
           footer: (tooltipItems: any[]) => {
-            const value = tooltipItems[0].parsed.y;
-            let sentiment;
-            if (value <= 25) sentiment = "Extreme Fear";
-            else if (value <= 45) sentiment = "Fear";
-            else if (value <= 55) sentiment = "Neutral";
-            else sentiment = "Greed";
-            return `Sentiment: ${sentiment}`;
+            const value = tooltipItems[0].parsed.y
+            let sentiment
+            if (value <= 25) sentiment = "Extreme Fear"
+            else if (value <= 45) sentiment = "Fear"
+            else if (value <= 55) sentiment = "Neutral"
+            else sentiment = "Greed"
+            return `Sentiment: ${sentiment}`
           },
         },
       },
@@ -171,7 +160,7 @@ function SentimentChart(): JSX.Element {
       axis: "x" as const,
       intersect: false,
     },
-  };
+  }
 
   const timeframes = [
     { value: "7", label: "7D" },
@@ -179,19 +168,16 @@ function SentimentChart(): JSX.Element {
     { value: "90", label: "3M" },
     { value: "365", label: "1Y" },
     { value: "max", label: "All" },
-  ];
+  ]
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-primary p-4 md:p-8 transition-colors duration-200">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Market Sentiment Analysis
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Market Sentiment Analysis</h1>
           <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Track the Fear & Greed Index to understand investor emotions and
-            potential market trends
+            Track the Fear & Greed Index to understand investor emotions and potential market trends
           </p>
         </div>
 
@@ -200,9 +186,7 @@ function SentimentChart(): JSX.Element {
           {/* Left Column - Gauge */}
           <div className="bg-white dark:bg-dark-secondary rounded-xl shadow-md p-6 lg:col-span-1 transition-all duration-200 hover:shadow-lg">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-dark-text-primary">
-                Current Sentiment
-              </h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-dark-text-primary">Current Sentiment</h2>
             </div>
 
             {error ? (
@@ -232,63 +216,41 @@ function SentimentChart(): JSX.Element {
             ) : isLoading ? (
               <div className="h-64 flex flex-col items-center justify-center space-y-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-                <p className="text-gray-500 dark:text-gray-400">
-                  Loading sentiment data...
-                </p>
+                <p className="text-gray-500 dark:text-gray-400">Loading sentiment data...</p>
               </div>
             ) : (
               <>
                 <SentimentGauge
-                  value={
-                    sentimentData.datasets.length > 0
-                      ? sentimentData.datasets[0].data.slice(-1)[0]
-                      : 50
-                  }
+                  value={sentimentData.datasets.length > 0 ? sentimentData.datasets[0].data.slice(-1)[0] : 50}
                 />
                 <div className="mt-6 space-y-3">
                   <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-dark-tertiary">
                     <div className="flex items-center">
                       <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
-                      <span className="text-sm text-gray-600 dark:text-dark-text-primary">
-                        Extreme Fear
-                      </span>
+                      <span className="text-sm text-gray-600 dark:text-dark-text-primary">Extreme Fear</span>
                     </div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      0-25
-                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">0-25</span>
                   </div>
                   <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-dark-tertiary">
                     <div className="flex items-center">
                       <div className="w-3 h-3 rounded-full bg-amber-500 mr-2"></div>
-                      <span className="text-sm text-gray-600 dark:text-dark-text-primary">
-                        Fear
-                      </span>
+                      <span className="text-sm text-gray-600 dark:text-dark-text-primary">Fear</span>
                     </div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      26-50
-                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">26-50</span>
                   </div>
                   <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-dark-tertiary">
                     <div className="flex items-center">
                       <div className="w-3 h-3 rounded-full bg-yellow-400 mr-2"></div>
-                      <span className="text-sm text-gray-600 dark:text-dark-text-primary">
-                        Neutral
-                      </span>
+                      <span className="text-sm text-gray-600 dark:text-dark-text-primary">Neutral</span>
                     </div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      51-75
-                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">51-75</span>
                   </div>
                   <div className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-dark-tertiary">
                     <div className="flex items-center">
                       <div className="w-3 h-3 rounded-full bg-emerald-500 mr-2"></div>
-                      <span className="text-sm text-gray-600 dark:text-dark-text-primary">
-                        Greed
-                      </span>
+                      <span className="text-sm text-gray-600 dark:text-dark-text-primary">Greed</span>
                     </div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                      76-100
-                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">76-100</span>
                   </div>
                 </div>
               </>
@@ -310,9 +272,7 @@ function SentimentChart(): JSX.Element {
                       timeframe === tf.value
                         ? "bg-blue-600 text-white"
                         : "bg-white dark:bg-slate-700 text-gray-900 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600"
-                    } ${tf.value === "7" ? "rounded-l-lg" : ""} ${
-                      tf.value === "max" ? "rounded-r-lg" : ""
-                    }`}
+                    } ${tf.value === "7" ? "rounded-l-lg" : ""} ${tf.value === "max" ? "rounded-r-lg" : ""}`}
                   >
                     {tf.label}
                   </button>
@@ -347,9 +307,7 @@ function SentimentChart(): JSX.Element {
             ) : isLoading ? (
               <div className="h-96 flex flex-col items-center justify-center space-y-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-                <p className="text-gray-500 dark:text-gray-400">
-                  Loading chart data...
-                </p>
+                <p className="text-gray-500 dark:text-gray-400">Loading chart data...</p>
               </div>
             ) : (
               <div className="h-96">
@@ -382,10 +340,9 @@ function SentimentChart(): JSX.Element {
                 What It Measures
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
-                The Fear & Greed Index analyzes emotions and sentiments from
-                different sources including volatility, market momentum, social
-                media, surveys, and more. It ranges from 0 (extreme fear) to 100
-                (extreme greed).
+                The Fear & Greed Index analyzes emotions and sentiments from different sources including volatility,
+                market momentum, social media, surveys, and more. It ranges from 0 (extreme fear) to 100 (extreme
+                greed).
               </p>
             </div>
             <div className="bg-gray-50 dark:bg-dark-tertiary p-4 rounded-lg">
@@ -406,17 +363,15 @@ function SentimentChart(): JSX.Element {
                 How To Use It
               </h3>
               <p className="text-gray-600 dark:text-gray-300">
-                Extreme fear can indicate potential buying opportunities, while
-                extreme greed may signal the market is due for a correction. Use
-                this alongside technical and fundamental analysis for better
-                decision making.
+                Extreme fear can indicate potential buying opportunities, while extreme greed may signal the market is
+                due for a correction. Use this alongside technical and fundamental analysis for better decision making.
               </p>
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }
 
-export default SentimentChart;
+export default SentimentChart

@@ -1,12 +1,11 @@
-"use client";
-import React from "react";
-import { useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import WalletDashboard from "../components/whaleWatchHoldings/WalletDashboard";
+"use client"
+import { useEffect } from "react"
+import { useParams, useNavigate } from "react-router-dom"
+import WalletDashboard from "../components/whaleWatchHoldings/WalletDashboard"
 
 const WalletDetailsPage = () => {
-  const { address = "" } = useParams<{ address: string }>();
-  const navigate = useNavigate();
+  const { address = "" } = useParams<{ address: string }>()
+  const navigate = useNavigate()
 
   // Redirect to the dashboard component
   useEffect(() => {
@@ -14,11 +13,11 @@ const WalletDetailsPage = () => {
       // This is just a wrapper component that renders the dashboard
       // All the functionality is in the WalletDashboard component
     } else {
-      navigate("/wallet-holdings");
+      navigate("/wallet-holdings")
     }
-  }, [address, navigate]);
+  }, [address, navigate])
 
-  return <WalletDashboard />;
-};
+  return <WalletDashboard />
+}
 
-export default WalletDetailsPage;
+export default WalletDetailsPage
