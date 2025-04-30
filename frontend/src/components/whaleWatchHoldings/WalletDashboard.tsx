@@ -23,6 +23,14 @@ import InvalidAddressError from "./dashboard/InvalidAddressError";
 import type { TabType } from "./types";
 import { KNOWN_WALLETS } from "./utils/constants";
 
+// Add this to make the refreshWalletData function available globally
+// Using the same declaration as in ChainSelector.tsx
+declare global {
+  interface Window {
+    refreshWalletData?: () => void;
+  }
+}
+
 const WalletDashboard: React.FC = () => {
   const { address = "" } = useParams<{ address: string }>();
   const [isValidAddress, setIsValidAddress] = useState(true);
@@ -53,13 +61,35 @@ const WalletDashboard: React.FC = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [hideFooter] = useState(true); // State pentru a ascunde footer-ul
 
+  // Initialize state variables that might be conditionally set
+  const [footerElementDisplay, setFooterElementDisplay] = useState<
+    string | null
+  >(null);
+
   // Get wallet info if it's a known wallet
   const walletInfo = KNOWN_WALLETS[address] || null;
 
   // Funcție pentru a reîmprospăta datele
+  const isFetchingRef = useRef(false);
+  const prevChainRef = useRef<number>(1); // Default to Ethereum (1)
+
+  // Funcție pentru a reîmprospăta datele
   const refreshData = () => {
+    isFetchingRef.current = false; // Reset the flag to allow a new fetch
     setRefreshKey((prev) => prev + 1);
   };
+
+  // Add this code near the beginning of the component function to expose the refresh function globally
+  // Add this right after the refreshData function declaration
+  useEffect(() => {
+    // Expose the refresh function globally so it can be called from the chain selector
+    window.refreshWalletData = refreshData;
+
+    return () => {
+      // Clean up when component unmounts
+      delete window.refreshWalletData;
+    };
+  }, []);
 
   // Handle clicks outside of dropdown to close it
   useEffect(() => {
@@ -88,6 +118,7 @@ const WalletDashboard: React.FC = () => {
     // Ascundem footer-ul când suntem pe pagina de wallet holdings
     const footerElement = document.querySelector("footer");
     if (footerElement && hideFooter) {
+      setFooterElementDisplay(footerElement.style.display);
       footerElement.style.display = "none";
     }
 
@@ -95,10 +126,10 @@ const WalletDashboard: React.FC = () => {
     return () => {
       const footerElement = document.querySelector("footer");
       if (footerElement) {
-        footerElement.style.display = "block";
+        footerElement.style.display = footerElementDisplay || "block";
       }
     };
-  }, [hideFooter]);
+  }, [hideFooter, footerElementDisplay]);
 
   // Add current wallet to recent wallets
   useEffect(() => {
@@ -120,9 +151,6 @@ const WalletDashboard: React.FC = () => {
       setIsValidAddress(isValidEthereumAddress(address));
     }
   }, [address]);
-
-  // Add a ref to track if we're already fetching data
-  const isFetchingRef = useRef(false);
 
   // Calculate total value function - memoize with useCallback
   const calculateTotalValue = useCallback(
@@ -162,167 +190,178 @@ const WalletDashboard: React.FC = () => {
 
   // Update the data fetching useEffect to include chainId
   useEffect(() => {
-    if (address && isValidAddress && !isFetchingRef.current) {
-      // Set the flag to prevent concurrent fetches
-      isFetchingRef.current = true;
-
-      const fetchAllData = async () => {
-        setIsLoading(true);
-        setLoadingStatus(
-          `Loading wallet data from ${CHAIN_NAMES[selectedChain]}...`
+    if (address && isValidAddress) {
+      // Reset the fetching flag when chain changes to ensure data is fetched
+      if (selectedChain !== prevChainRef.current) {
+        console.log(
+          `Chain changed from ${prevChainRef.current} to ${selectedChain}, triggering data refresh`
         );
-        setError(null); // Reset any previous errors
+        isFetchingRef.current = false;
+        prevChainRef.current = selectedChain;
+      }
 
-        try {
-          console.log(
-            `🔄 Starting data fetch for wallet: ${address} on ${CHAIN_NAMES[selectedChain]}`
-          );
+      if (!isFetchingRef.current) {
+        // Set the flag to prevent concurrent fetches
+        isFetchingRef.current = true;
 
-          // Fetch ETH/BNB price first
-          console.log(
-            `🔍 Fetching ${CHAIN_NATIVE_TOKENS[selectedChain]} price...`
+        const fetchAllData = async () => {
+          setIsLoading(true);
+          setLoadingStatus(
+            `Loading wallet data from ${CHAIN_NAMES[selectedChain]}...`
           );
-          const nativePriceData = await getEthPrice(selectedChain);
-          console.log(
-            `💲 ${CHAIN_NATIVE_TOKENS[selectedChain]} price:`,
-            nativePriceData
-          );
-          const currentNativePrice =
-            nativePriceData || (selectedChain === 56 ? 300 : 3500); // Use appropriate fallback
-          setEthPrice(currentNativePrice);
-          console.log(
-            `💲 Updated ${CHAIN_NATIVE_TOKENS[selectedChain]} price state:`,
-            currentNativePrice
-          );
+          setError(null); // Reset any previous errors
 
-          // Fetch ETH/BNB balance
-          console.log(
-            `🔍 Fetching ${CHAIN_NATIVE_TOKENS[selectedChain]} balance...`
-          );
-          const nativeData = await fetchEthBalance(address, selectedChain);
-          console.log(
-            `📥 ${CHAIN_NATIVE_TOKENS[selectedChain]} balance response:`,
-            JSON.stringify(nativeData)
-          );
-          let nativeBalanceValue = 0;
-
-          // Check if we have a valid result
-          if (
-            typeof nativeData.result === "string" &&
-            !isNaN(Number(nativeData.result))
-          ) {
-            nativeBalanceValue = Number.parseFloat(nativeData.result) / 1e18;
+          try {
             console.log(
-              `💰 ${CHAIN_NATIVE_TOKENS[selectedChain]} balance in ${CHAIN_NATIVE_TOKENS[selectedChain]}:`,
-              nativeBalanceValue
+              `🔄 Starting data fetch for wallet: ${address} on ${CHAIN_NAMES[selectedChain]}`
             );
-            setEthBalance(nativeBalanceValue);
-          } else {
+
+            // Fetch ETH/BNB price first
             console.log(
-              `⚠️ Invalid ${
-                CHAIN_NATIVE_TOKENS[selectedChain]
-              } balance result, setting to ${
-                selectedChain === 56 ? "10" : "1"
-              } ${CHAIN_NATIVE_TOKENS[selectedChain]}`
+              `🔍 Fetching ${CHAIN_NATIVE_TOKENS[selectedChain]} price...`
             );
-            nativeBalanceValue = selectedChain === 56 ? 10 : 1; // Use appropriate default value
-            setEthBalance(nativeBalanceValue);
+            const nativePriceData = await getEthPrice(selectedChain);
+            console.log(
+              `💲 ${CHAIN_NATIVE_TOKENS[selectedChain]} price:`,
+              nativePriceData
+            );
+            const currentNativePrice =
+              nativePriceData || (selectedChain === 56 ? 300 : 3500); // Use appropriate fallback
+            setEthPrice(currentNativePrice);
+            console.log(
+              `💲 Updated ${CHAIN_NATIVE_TOKENS[selectedChain]} price state:`,
+              currentNativePrice
+            );
+
+            // Fetch ETH/BNB balance
+            console.log(
+              `🔍 Fetching ${CHAIN_NATIVE_TOKENS[selectedChain]} balance...`
+            );
+            const nativeData = await fetchEthBalance(address, selectedChain);
+            console.log(
+              `📥 ${CHAIN_NATIVE_TOKENS[selectedChain]} balance response:`,
+              JSON.stringify(nativeData)
+            );
+            let nativeBalanceValue = 0;
+
+            // Check if we have a valid result
+            if (
+              typeof nativeData.result === "string" &&
+              !isNaN(Number(nativeData.result))
+            ) {
+              nativeBalanceValue = Number.parseFloat(nativeData.result) / 1e18;
+              console.log(
+                `💰 ${CHAIN_NATIVE_TOKENS[selectedChain]} balance in ${CHAIN_NATIVE_TOKENS[selectedChain]}:`,
+                nativeBalanceValue
+              );
+              setEthBalance(nativeBalanceValue);
+            } else {
+              console.log(
+                `⚠️ Invalid ${
+                  CHAIN_NATIVE_TOKENS[selectedChain]
+                } balance result, setting to ${
+                  selectedChain === 56 ? "10" : "1"
+                } ${CHAIN_NATIVE_TOKENS[selectedChain]}`
+              );
+              nativeBalanceValue = selectedChain === 56 ? 10 : 1; // Use appropriate default value
+              setEthBalance(nativeBalanceValue);
+            }
+
+            // Fetch token balances with a small delay to avoid rate limiting
+            setLoadingStatus("Loading tokens...");
+            console.log("⏱️ Waiting before token balance request...");
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
+            console.log(
+              `🔍 Fetching token balances on ${CHAIN_NAMES[selectedChain]}...`
+            );
+            const tokenData = await fetchTokenBalances(address, selectedChain);
+            console.log(
+              "📥 Token balances response:",
+              tokenData.length,
+              "tokens found"
+            );
+            console.log("📊 Token data sample:", tokenData.slice(0, 2));
+            setHoldings(tokenData || []);
+
+            // Fetch transaction history with a small delay to avoid rate limiting
+            setLoadingStatus("Loading transaction history...");
+            console.log("⏱️ Waiting before transaction history request...");
+            await new Promise((resolve) => setTimeout(resolve, 500));
+
+            console.log(
+              `🔍 Fetching transaction history on ${CHAIN_NAMES[selectedChain]}...`
+            );
+            const txHistory = await fetchTransactionHistory(
+              address,
+              selectedChain
+            );
+            console.log(
+              "📥 Transaction history response:",
+              txHistory.length,
+              "transactions found"
+            );
+            console.log("📊 Transaction sample:", txHistory.slice(0, 2));
+            setTransactions(txHistory || []);
+
+            // Calculate total value once here and pass it to all components
+            // Use the real native token price for calculation
+            const totalValue = calculateTotalValue(
+              tokenData || [],
+              nativeBalanceValue,
+              currentNativePrice
+            );
+            console.log("💰 Calculated total value:", totalValue);
+
+            // Update statistics once
+            const updatedStats = {
+              totalValue: totalValue,
+              tokenCount: (tokenData || []).length,
+              ethBalance: nativeBalanceValue,
+            };
+
+            // Update local state
+            setWalletStats(updatedStats);
+
+            // Pass updated statistics to all child components
+            handleStatsUpdate(updatedStats);
+
+            console.log("✅ Data fetch complete");
+          } catch (err: any) {
+            console.error(
+              `❌ Error loading wallet data from ${CHAIN_NAMES[selectedChain]}:`,
+              err
+            );
+            setError(
+              err.message ||
+                `Error loading data. ${
+                  selectedChain === 1 ? "Etherscan" : "BscScan"
+                } API may be temporarily unavailable.`
+            );
+
+            // Set empty data in case of error
+            setHoldings([]);
+            setTransactions([]);
+            setEthBalance(0);
+
+            // Reset statistics in case of error
+            const emptyStats = {
+              totalValue: 0,
+              tokenCount: 0,
+              ethBalance: 0,
+            };
+            setWalletStats(emptyStats);
+            handleStatsUpdate(emptyStats);
+          } finally {
+            setIsLoading(false);
+            setLoadingStatus("");
+            // Reset the fetching flag
+            isFetchingRef.current = false;
           }
+        };
 
-          // Fetch token balances with a small delay to avoid rate limiting
-          setLoadingStatus("Loading tokens...");
-          console.log("⏱️ Waiting before token balance request...");
-          await new Promise((resolve) => setTimeout(resolve, 500));
-
-          console.log(
-            `🔍 Fetching token balances on ${CHAIN_NAMES[selectedChain]}...`
-          );
-          const tokenData = await fetchTokenBalances(address, selectedChain);
-          console.log(
-            "📥 Token balances response:",
-            tokenData.length,
-            "tokens found"
-          );
-          console.log("📊 Token data sample:", tokenData.slice(0, 2));
-          setHoldings(tokenData || []);
-
-          // Fetch transaction history with a small delay to avoid rate limiting
-          setLoadingStatus("Loading transaction history...");
-          console.log("⏱️ Waiting before transaction history request...");
-          await new Promise((resolve) => setTimeout(resolve, 500));
-
-          console.log(
-            `🔍 Fetching transaction history on ${CHAIN_NAMES[selectedChain]}...`
-          );
-          const txHistory = await fetchTransactionHistory(
-            address,
-            selectedChain
-          );
-          console.log(
-            "📥 Transaction history response:",
-            txHistory.length,
-            "transactions found"
-          );
-          console.log("📊 Transaction sample:", txHistory.slice(0, 2));
-          setTransactions(txHistory || []);
-
-          // Calculate total value once here and pass it to all components
-          // Use the real native token price for calculation
-          const totalValue = calculateTotalValue(
-            tokenData || [],
-            nativeBalanceValue,
-            currentNativePrice
-          );
-          console.log("💰 Calculated total value:", totalValue);
-
-          // Update statistics once
-          const updatedStats = {
-            totalValue: totalValue,
-            tokenCount: (tokenData || []).length,
-            ethBalance: nativeBalanceValue,
-          };
-
-          // Update local state
-          setWalletStats(updatedStats);
-
-          // Pass updated statistics to all child components
-          handleStatsUpdate(updatedStats);
-
-          console.log("✅ Data fetch complete");
-        } catch (err: any) {
-          console.error(
-            `❌ Error loading wallet data from ${CHAIN_NAMES[selectedChain]}:`,
-            err
-          );
-          setError(
-            err.message ||
-              `Error loading data. ${
-                selectedChain === 1 ? "Etherscan" : "BscScan"
-              } API may be temporarily unavailable.`
-          );
-
-          // Set empty data in case of error
-          setHoldings([]);
-          setTransactions([]);
-          setEthBalance(0);
-
-          // Reset statistics in case of error
-          const emptyStats = {
-            totalValue: 0,
-            tokenCount: 0,
-            ethBalance: 0,
-          };
-          setWalletStats(emptyStats);
-          handleStatsUpdate(emptyStats);
-        } finally {
-          setIsLoading(false);
-          setLoadingStatus("");
-          // Reset the fetching flag
-          isFetchingRef.current = false;
-        }
-      };
-
-      fetchAllData();
+        fetchAllData();
+      }
     }
   }, [address, isValidAddress, refreshKey, selectedChain, calculateTotalValue]);
 
@@ -333,7 +372,7 @@ const WalletDashboard: React.FC = () => {
 
   // Handle stats updates from child components
   const handleStatsUpdate = (stats: any) => {
-    setWalletStats((prevStats) => ({
+    setWalletStats((prevStats: any) => ({
       ...prevStats,
       ...stats,
     }));

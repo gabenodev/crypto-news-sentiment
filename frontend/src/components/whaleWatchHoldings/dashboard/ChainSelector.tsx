@@ -5,6 +5,13 @@ import { FiGlobe, FiChevronDown, FiCheck } from "react-icons/fi";
 import type { ChainSelectorProps } from "../types";
 import { AVAILABLE_CHAINS } from "../utils/constants";
 
+// Add this at the top of the file, after the imports
+declare global {
+  interface Window {
+    refreshWalletData?: () => void;
+  }
+}
+
 const ChainSelector: React.FC<ChainSelectorProps> = ({
   selectedChain,
   setSelectedChain,
@@ -12,12 +19,19 @@ const ChainSelector: React.FC<ChainSelectorProps> = ({
   setDropdownOpen,
   dropdownRef,
 }) => {
-  // Handle chain change
+  // Update the handleChainChange function to force a data refresh when chain changes
   const handleChainChange = (chainId: number) => {
     if (chainId !== selectedChain) {
       setSelectedChain(chainId);
       // Close the dropdown after selection
       setDropdownOpen(false);
+
+      // Add a small delay to ensure the UI updates before data fetching starts
+      setTimeout(() => {
+        if (window.refreshWalletData) {
+          window.refreshWalletData();
+        }
+      }, 100);
     }
   };
 
