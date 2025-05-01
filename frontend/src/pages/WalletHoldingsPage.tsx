@@ -32,19 +32,19 @@ const POPULAR_WALLETS = [
     description: "Cryptocurrency exchange",
   },
   {
-    name: "Coinbase",
-    address: "0x503828976D22510aad0201ac7EC88293211D23Da",
-    description: "Popular exchange",
+    name: "Wintermute",
+    address: "0xF977814e90dA44bFA03b6295A0616a897441aceC",
+    description: "Major crypto market maker",
   },
   {
-    name: "Kraken",
-    address: "0x2910543Af39abA0Cd09dBb2D50200b3E800A63D2",
-    description: "Top exchange",
+    name: "Jump Trading",
+    address: "0x8EB8a3b98659Cce290402893d0123abb75E3ab28",
+    description: "Quantitative trading firm",
   },
   {
-    name: "US Government Seized",
-    address: "0x9F4cda013E354b8fC285BF4b9A60460cEe7f7Ea9",
-    description: "Seized by US government",
+    name: "Alameda Research",
+    address: "0x5a52E96BAcdaBb82fd05763E25335261B270Efcb",
+    description: "Former FTX trading arm",
   },
 ];
 
