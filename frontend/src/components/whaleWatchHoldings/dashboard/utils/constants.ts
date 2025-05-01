@@ -1,5 +1,8 @@
 // Popular wallets with names
-export const KNOWN_WALLETS: Record<string, { name: string; description: string }> = {
+export const KNOWN_WALLETS: Record<
+  string,
+  { name: string; description: string }
+> = {
   "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045": {
     name: "Vitalik Buterin",
     description: "Ethereum Co-founder",
@@ -24,10 +27,23 @@ export const KNOWN_WALLETS: Record<string, { name: string; description: string }
     name: "US Government Seized",
     description: "Seized by US government",
   },
-}
+};
 
 // Available chains with better icons
 export const AVAILABLE_CHAINS = [
-  { id: 1, name: "Ethereum", icon: "Ξ", color: "#627EEA" },
-  { id: 56, name: "BSC", icon: "B", color: "#F3BA2F" },
-]
+  {
+    id: 1,
+    name: "Ethereum",
+    icon: "Ξ",
+    color: "#627EEA",
+    iconUrl: "https://assets.coingecko.com/coins/images/279/thumb/ethereum.png",
+  },
+  {
+    id: 56,
+    name: "BSC",
+    icon: "B",
+    color: "#F3BA2F",
+    iconUrl:
+      "https://assets.coingecko.com/coins/images/825/thumb/bnb-icon2_2x.png",
+  },
+];

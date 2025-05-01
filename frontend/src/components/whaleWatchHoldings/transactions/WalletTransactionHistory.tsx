@@ -3,7 +3,7 @@
 import React from "react";
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { CHAIN_NATIVE_TOKENS } from "../../../utils/API/etherScanAPI";
+import { CHAIN_NATIVE_TOKENS } from "../API/etherScanAPI";
 import {
   FiExternalLink,
   FiArrowUp,

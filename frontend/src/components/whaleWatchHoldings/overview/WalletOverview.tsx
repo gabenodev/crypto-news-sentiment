@@ -38,7 +38,7 @@ import WalletLoadingState from "../components/WalletLoadingState";
 import {
   CHAIN_NATIVE_TOKENS,
   CHAIN_NATIVE_TOKEN_NAMES,
-} from "../../../utils/API/etherScanAPI";
+} from "../API/etherScanAPI";
 import { COLORS } from "./utils/constants";
 import {
   formatCurrency,

@@ -3,7 +3,7 @@
 import React from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "react-router-dom";
-import { isValidEthereumAddress } from "../../utils/API/etherScanAPI";
+import { isValidEthereumAddress } from "./API/utils";
 import {
   fetchEthBalance,
   fetchTokenBalances,
@@ -11,7 +11,7 @@ import {
   getEthPrice,
   CHAIN_NAMES,
   CHAIN_NATIVE_TOKENS,
-} from "../../utils/API/etherScanAPI";
+} from "./API/etherScanAPI";
 
 // Import dashboard components
 import Sidebar from "./dashboard/Sidebar";

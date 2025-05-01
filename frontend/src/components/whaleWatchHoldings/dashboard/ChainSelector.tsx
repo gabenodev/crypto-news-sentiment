@@ -60,18 +60,31 @@ const ChainSelector: React.FC<ChainSelectorProps> = ({
           className="w-full flex items-center justify-between p-2.5 rounded-md bg-white dark:bg-dark-tertiary border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-dark-text-primary hover:bg-gray-50 dark:hover:bg-dark-tertiary/80 transition-colors"
         >
           <div className="flex items-center">
-            <div
-              className="flex items-center justify-center w-6 h-6 rounded-full mr-2"
-              style={{
-                backgroundColor: `${selectedChainData.color}20`,
-              }}
-            >
-              <span
-                className="text-sm font-medium"
-                style={{ color: selectedChainData.color }}
-              >
-                {selectedChainData.icon}
-              </span>
+            <div className="flex items-center justify-center w-6 h-6 rounded-full mr-2 overflow-hidden">
+              {selectedChainData.iconUrl ? (
+                <img
+                  src={selectedChainData.iconUrl || "/placeholder.svg"}
+                  alt={`${selectedChainData.name} icon`}
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    // If image fails to load, show the text icon as fallback
+                    e.currentTarget.style.display = "none";
+                    const sibling = e.currentTarget.nextSibling as HTMLElement;
+                    if (sibling) sibling.style.display = "flex";
+                  }}
+                />
+              ) : (
+                <span
+                  className="text-sm font-medium flex items-center justify-center w-full h-full"
+                  style={{
+                    color: selectedChainData.color,
+                    backgroundColor: `${selectedChainData.color}20`,
+                    display: selectedChainData.iconUrl ? "none" : "flex",
+                  }}
+                >
+                  {selectedChainData.icon}
+                </span>
+              )}
             </div>
             <span className="font-medium">{selectedChainData.name}</span>
           </div>
@@ -99,16 +112,32 @@ const ChainSelector: React.FC<ChainSelectorProps> = ({
                   }
                 `}
               >
-                <div
-                  className="flex items-center justify-center w-6 h-6 rounded-full mr-2"
-                  style={{ backgroundColor: `${chain.color}20` }}
-                >
-                  <span
-                    className="text-sm font-medium"
-                    style={{ color: chain.color }}
-                  >
-                    {chain.icon}
-                  </span>
+                <div className="flex items-center justify-center w-6 h-6 rounded-full mr-2 overflow-hidden">
+                  {chain.iconUrl ? (
+                    <img
+                      src={chain.iconUrl || "/placeholder.svg"}
+                      alt={`${chain.name} icon`}
+                      className="w-full h-full object-contain"
+                      onError={(e) => {
+                        // If image fails to load, show the text icon as fallback
+                        e.currentTarget.style.display = "none";
+                        const sibling = e.currentTarget
+                          .nextSibling as HTMLElement;
+                        if (sibling) sibling.style.display = "flex";
+                      }}
+                    />
+                  ) : (
+                    <span
+                      className="text-sm font-medium flex items-center justify-center w-full h-full"
+                      style={{
+                        color: chain.color,
+                        backgroundColor: `${chain.color}20`,
+                        display: chain.iconUrl ? "none" : "flex",
+                      }}
+                    >
+                      {chain.icon}
+                    </span>
+                  )}
                 </div>
                 <span className="flex-grow text-left">{chain.name}</span>
                 {selectedChain === chain.id && (
