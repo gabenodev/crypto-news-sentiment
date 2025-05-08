@@ -124,6 +124,25 @@ function PriceChart({ coinId }: PriceChartProps): JSX.Element {
     fetchPriceData();
   }, [fetchPriceData]);
 
+  // Adaugă efectul de cleanup pentru fullscreen
+  useEffect(() => {
+    // Cleanup function pentru a reseta stilurile body-ului dacă componenta este demontată în fullscreen
+    return () => {
+      if (fullscreen) {
+        document.body.style.overflow = "";
+        document.body.style.position = "";
+        document.body.style.width = "";
+        document.body.style.top = "";
+
+        const scrollPosition = Number.parseInt(
+          document.body.dataset.scrollPosition || "0",
+          10
+        );
+        window.scrollTo(0, scrollPosition);
+      }
+    };
+  }, [fullscreen]);
+
   const toggleMovingAverage = (key: keyof typeof movingAverages) => {
     setMovingAverages((prev) => ({
       ...prev,
@@ -158,7 +177,35 @@ function PriceChart({ coinId }: PriceChartProps): JSX.Element {
   };
 
   const toggleFullscreen = () => {
-    setFullscreen(!fullscreen);
+    if (!fullscreen) {
+      // Salvăm poziția de scroll înainte de a intra în fullscreen
+      const scrollPosition = window.scrollY;
+      setFullscreen(true);
+      // Adăugăm o clasă pentru a preveni scrollarea body-ului
+      document.body.style.overflow = "hidden";
+      document.body.style.position = "fixed";
+      document.body.style.width = "100%";
+      document.body.style.top = `-${scrollPosition}px`;
+      document.body.dataset.scrollPosition = String(scrollPosition);
+    } else {
+      // Restaurăm scrollarea și poziția
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.style.top = "";
+
+      // Restaurăm poziția de scroll
+      const scrollPosition = Number.parseInt(
+        document.body.dataset.scrollPosition || "0",
+        10
+      );
+      setFullscreen(false);
+
+      // Folosim setTimeout pentru a ne asigura că starea s-a actualizat înainte de a face scroll
+      setTimeout(() => {
+        window.scrollTo(0, scrollPosition);
+      }, 0);
+    }
   };
 
   if (loading) {
@@ -291,8 +338,8 @@ function PriceChart({ coinId }: PriceChartProps): JSX.Element {
   ];
 
   const containerClass = fullscreen
-    ? "fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-auto"
-    : "w-full max-w-7xl mx-auto p-4";
+    ? "fixed inset-0 z-50 bg-white dark:bg-dark-primary overflow-auto pt-4 pb-20"
+    : "w-full max-w-7xl mx-auto";
 
   return (
     <div className={`${containerClass} ${fullscreen ? "p-4 md:p-6" : ""}`}>
@@ -376,10 +423,7 @@ function PriceChart({ coinId }: PriceChartProps): JSX.Element {
             {/* Back to Details Button - Only visible in fullscreen mode */}
             {fullscreen && (
               <button
-                onClick={() => {
-                  window.scrollTo(0, 0);
-                  setFullscreen(false);
-                }}
+                onClick={toggleFullscreen}
                 className="ml-2 px-3 py-2 text-sm font-medium text-white bg-teal-500 hover:bg-teal-600 rounded-lg transition-colors flex items-center"
               >
                 <svg
